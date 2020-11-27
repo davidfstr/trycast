@@ -22,8 +22,11 @@ def trycast(type: Type[_T], value: object, failure: _F=None) -> Union[_T, _F]:
     if the shape does not match. This is useful if the shape itself could match
     None.
     
-    This is similar to `value if isinstance(type, value) else None` except that
-    `trycast` supports many more types, including:
+    This method logically performs an operation similar to:
+    
+        return value if isinstance(type, value) else failure
+    
+    except that it supports many more types that `isinstance`, including:
         * List[T]
         * Dict[K, V]
         * Optional[T]
@@ -40,7 +43,6 @@ def trycast(type: Type[_T], value: object, failure: _F=None) -> Union[_T, _F]:
     considered a valid float value.
         > trycast(float, 1) -> None
         > x: float = 1  # accepted by mypy without complaint
-    
     If you want to accept any kind of "number" type, check against the type
     Union[float, int] or its alias FloatInt instead:
         > trycast(FloatInt, 1) -> 1
