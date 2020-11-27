@@ -1,7 +1,8 @@
 # trycast
 
 > **Status:** In development. Current limitations in mypy prevent the examples
-> below from actually typechecking successfully.
+> below from actually typechecking successfully, despite functioning correctly
+> at runtime.
 
 This module provides a single function `trycast` which can be used to parse a
 JSON-like value.
