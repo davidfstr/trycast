@@ -1,4 +1,4 @@
-from typing import cast, List, Literal, Optional, Type, TypeVar, Union
+from typing import cast, List, Literal, Optional, overload, Type, TypeVar, Union
 from typing import _GenericAlias, _TypedDictMeta  # type: ignore  # private API not in stubs
 
 
@@ -14,7 +14,12 @@ _F = TypeVar('_F')
 _MISSING = object()
 _FAILURE = object()
 
-def trycast(type: Type[_T], value: object, failure: _F=None) -> Union[_T, _F]:
+@overload
+def trycast(type: Type[_T], value: object) -> Optional[_T]: ...
+@overload
+def trycast(type: Type[_T], value: object, failure: _F) -> Union[_T, _F]: ...
+
+def trycast(type: Type[_T], value: object, failure: _F=None):
     """
     If `value` is in the shape of `type` then returns it,
     otherwise returns `failure` (which is None by default).
@@ -52,7 +57,7 @@ def trycast(type: Type[_T], value: object, failure: _F=None) -> Union[_T, _F]:
         if isinstance(value, int) and not isinstance(value, bool):
             return cast(_T, value)
         else:
-            return cast(_F, failure)
+            return failure
     elif isinstance(type, _GenericAlias) and type.__origin__ is list:  # List, List[T]
         if isinstance(value, list):
             (T,) = type.__args__
@@ -61,10 +66,10 @@ def trycast(type: Type[_T], value: object, failure: _F=None) -> Union[_T, _F]:
             else:
                 for x in value:
                     if trycast(T, x, _FAILURE) is _FAILURE:
-                        return cast(_F, failure)
+                        return failure
             return cast(_T, value)
         else:
-            return cast(_F, failure)
+            return failure
     elif isinstance(type, _GenericAlias) and type.__origin__ is dict:  # Dict, Dict[K, V]
         if isinstance(value, dict):
             (K, V) = type.__args__
@@ -74,36 +79,36 @@ def trycast(type: Type[_T], value: object, failure: _F=None) -> Union[_T, _F]:
                 for (k, v) in value.items():
                     if trycast(K, k, _FAILURE) is _FAILURE or \
                             trycast(V, v, _FAILURE) is _FAILURE:
-                        return cast(_F, failure)
+                        return failure
             return cast(_T, value)
         else:
-            return cast(_F, failure)
+            return failure
     elif isinstance(type, _GenericAlias) and type.__origin__ is Union:  # Union[T1, T2, ...]
         for T in type.__args__:
             if trycast(T, value, _FAILURE) is not _FAILURE:
                 return cast(_T, value)
-        return cast(_F, failure)
+        return failure
     elif isinstance(type, _GenericAlias) and type.__origin__ is Literal:  # Literal[...]
         for literal in type.__args__:
             if value == literal:
                 return cast(_T, value)
-        return cast(_F, failure)
+        return failure
     elif isinstance(type, _TypedDictMeta):  # T extends TypedDict
         if isinstance(value, dict):
             if type.__total__ and len(value) != len(type.__annotations__):
-                return cast(_F, failure)
+                return failure
             for (k, V) in type.__annotations__.items():
                 v = value.get(k, _MISSING)
                 if v is _MISSING or trycast(V, v, _FAILURE) is _FAILURE:
-                    return cast(_F, failure)
+                    return failure
             return cast(_T, value)
         else:
-            return cast(_F, failure)
+            return failure
     else:
         if isinstance(value, type):
             return value
         else:
-            return cast(_F, failure)
+            return failure
 
 
 def _is_simple_typevar(T: object) -> bool:
