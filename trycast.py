@@ -16,11 +16,8 @@ _FAILURE = object()
 
 def trycast(type: Type[_T], value: object, failure: _F=None) -> Union[_T, _F]:
     """
-    If `value` is in the shape of `type` then returns it, otherwise returns None.
-    
-    If a `failure` object is provided then it will be returned instead of None
-    if the shape does not match. This is useful if the shape itself could match
-    None.
+    If `value` is in the shape of `type` then returns it,
+    otherwise returns `failure` (which is None by default).
     
     This method logically performs an operation similar to:
     
@@ -39,8 +36,8 @@ def trycast(type: Type[_T], value: object, failure: _F=None) -> Union[_T, _F]:
         > trycast(int, False) -> None
         > isinstance(False, int) -> True
     
-    Note that unlike many typecheckers (such as mypy), an int value is NOT also
-    considered a valid float value.
+    Note that unlike many typecheckers (such as mypy), this method does NOT
+    consider an int value to be also be a valid float value.
         > trycast(float, 1) -> None
         > x: float = 1  # accepted by mypy without complaint
     If you want to accept any kind of "number" type, check against the type
