@@ -54,7 +54,7 @@ def trycast(type: Type[_T], value: object, failure: _F=None):
         # 1. Accept ints as valid float values
         # 2. Do not accept bools as valid float values
         if isinstance(value, float) or (isinstance(value, int) and not isinstance(value, bool)):
-            return value
+            return cast(_T, value)
         else:
             return failure
     elif isinstance(type, _GenericAlias) and type.__origin__ is list:  # List, List[T]
