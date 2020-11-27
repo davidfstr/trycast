@@ -1,0 +1,8 @@
+# virtualenv
+venv
+
+# macOS
+.DS_Store
+
+# Python
+*.py[co]

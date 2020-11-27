@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "trycast"
+version = "0.0.1"
+description = ""
+authors = ["David Foster <david@dafoster.net>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+
+[tool.poetry.dev-dependencies]
+mypy = "^0.790"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
