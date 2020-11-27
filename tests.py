@@ -1,4 +1,4 @@
-from trycast import FloatInt, trycast
+from trycast import trycast
 from typing import Dict, List, Literal, Optional, TypedDict, Union
 from unittest import skip, TestCase
 
@@ -80,10 +80,12 @@ class TestTryCast(TestCase):
         self.assertIs(x := float('-inf'), trycast(float, x))
         self.assertIs(x := float('nan'), trycast(float, x))
         
-        # float-like ints
-        self.assertIs(None, trycast(float, 0))
-        self.assertIs(None, trycast(float, 1))
-        self.assertIs(None, trycast(float, 2))
+        # Actual ints
+        self.assertIs(x := 0, trycast(float, x))
+        self.assertIs(x := 1, trycast(float, x))
+        self.assertIs(x := 2, trycast(float, x))
+        self.assertIs(x := -1, trycast(float, x))
+        self.assertIs(x := -2, trycast(float, x))
         
         # float-like bools
         self.assertIs(None, trycast(float, False))
@@ -94,67 +96,28 @@ class TestTryCast(TestCase):
         self.assertIs(None, trycast(float, 'inf'))
         self.assertIs(None, trycast(float, 'Infinity'))
         
+        # int-like bools
+        self.assertIs(None, trycast(float, False))
+        self.assertIs(None, trycast(float, True))
+        
+        # int-like strs
+        self.assertIs(None, trycast(float, '0'))
+        self.assertIs(None, trycast(float, '1'))
+        self.assertIs(None, trycast(float, '-1'))
+        
         # non-floats
-        self.assertIs(None, trycast(float, 0))
         self.assertIs(None, trycast(float, 'foo'))
         self.assertIs(None, trycast(float, [1]))
         self.assertIs(None, trycast(float, {1: 1}))
         self.assertIs(None, trycast(float, {1}))
         self.assertIs(None, trycast(float, object()))
-    
-    def test_floatint(self) -> None:
-        x: object
-        
-        # Actual ints
-        self.assertIs(x := 0, trycast(FloatInt, x))
-        self.assertIs(x := 1, trycast(FloatInt, x))
-        self.assertIs(x := 2, trycast(FloatInt, x))
-        self.assertIs(x := -1, trycast(FloatInt, x))
-        self.assertIs(x := -2, trycast(FloatInt, x))
-        
-        # Actual floats, parsable by json.loads(...)
-        self.assertIs(x := 0.0, trycast(FloatInt, x))
-        self.assertIs(x := 0.5, trycast(FloatInt, x))
-        self.assertIs(x := 1.0, trycast(FloatInt, x))
-        self.assertIs(x := 2e+20, trycast(FloatInt, x))
-        self.assertIs(x := 2e-20, trycast(FloatInt, x))
-        
-        # Actual floats, parsable by json.loads(..., allow_nan=True)
-        self.assertIs(x := float('inf'), trycast(FloatInt, x))
-        self.assertIs(x := float('-inf'), trycast(FloatInt, x))
-        self.assertIs(x := float('nan'), trycast(FloatInt, x))
-        
-        # int-like bools
-        self.assertIs(None, trycast(FloatInt, False))
-        self.assertIs(None, trycast(FloatInt, True))
-        
-        # int-like strs
-        self.assertIs(None, trycast(FloatInt, '0'))
-        self.assertIs(None, trycast(FloatInt, '1'))
-        self.assertIs(None, trycast(FloatInt, '-1'))
-        
-        # float-like bools
-        self.assertIs(None, trycast(FloatInt, False))
-        self.assertIs(None, trycast(FloatInt, True))
-        
-        # float-like strs
-        self.assertIs(None, trycast(FloatInt, '1.0'))
-        self.assertIs(None, trycast(FloatInt, 'inf'))
-        self.assertIs(None, trycast(FloatInt, 'Infinity'))
         
         # non-ints
-        self.assertIs(None, trycast(FloatInt, 'foo'))
-        self.assertIs(None, trycast(FloatInt, [1]))
-        self.assertIs(None, trycast(FloatInt, {1: 1}))
-        self.assertIs(None, trycast(FloatInt, {1}))
-        self.assertIs(None, trycast(FloatInt, object()))
-        
-        # non-floats
-        self.assertIs(None, trycast(FloatInt, 'foo'))
-        self.assertIs(None, trycast(FloatInt, [1]))
-        self.assertIs(None, trycast(FloatInt, {1: 1}))
-        self.assertIs(None, trycast(FloatInt, {1}))
-        self.assertIs(None, trycast(FloatInt, object()))
+        self.assertIs(None, trycast(float, 'foo'))
+        self.assertIs(None, trycast(float, [1]))
+        self.assertIs(None, trycast(float, {1: 1}))
+        self.assertIs(None, trycast(float, {1}))
+        self.assertIs(None, trycast(float, object()))
     
     def test_none(self) -> None:
         self.assertRaises(TypeError, lambda: trycast(None, None))  # type: ignore
@@ -384,7 +347,7 @@ class TestTryCast(TestCase):
     
     def text_shape_endpoint_parsing_example(self) -> None:
         class Point2D(TypedDict):
-            x: float
+            x: float  # also accepts int values parsed by json.loads()
             y: float
         
         class Circle(TypedDict):

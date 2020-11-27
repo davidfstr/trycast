@@ -2,10 +2,7 @@ from typing import cast, List, Literal, Optional, overload, Type, TypeVar, Union
 from typing import _GenericAlias, _TypedDictMeta  # type: ignore  # private API not in stubs
 
 
-__all__ = ['FloatInt', 'trycast']
-
-
-FloatInt = Union[float, int]
+__all__ = ['trycast']
 
 
 _T = TypeVar('_T')
@@ -21,8 +18,9 @@ def trycast(type: Type[_T], value: object, failure: _F) -> Union[_T, _F]: ...
 
 def trycast(type: Type[_T], value: object, failure: _F=None):
     """
-    If `value` is in the shape of `type` then returns it,
-    otherwise returns `failure` (which is None by default).
+    If `value` is in the shape of `type` (as accepted by a Python typechecker
+    conforming to PEP 484 "Type Hints") then returns it, otherwise returns
+    `failure` (which is None by default).
     
     This method logically performs an operation similar to:
     
@@ -36,26 +34,27 @@ def trycast(type: Type[_T], value: object, failure: _F=None):
         * Literal[...]
         * T extends TypedDict
     
-    Note that unlike isinstance(), this method does NOT consider False or True
-    to be valid int values.
+    Note that unlike isinstance(), this method does NOT consider bool values
+    to be valid int values, as consistent with Python typecheckers:
         > trycast(int, False) -> None
         > isinstance(False, int) -> True
     
-    Note that unlike many typecheckers (such as mypy), this method does NOT
-    consider an int value to be also be a valid float value.
-        > trycast(float, 1) -> None
-        > x: float = 1  # accepted by mypy without complaint
-    If you want to accept any kind of "number" type, check against the type
-    Union[float, int] or its alias FloatInt instead:
-        > trycast(FloatInt, 1) -> 1
-        > trycast(FloatInt, 1.5) -> 1.5
-        > trycast(Union[int, float], 1) -> 1
-        > trycast(Union[int, float], 1.5) -> 1.5
+    Note that unlike isinstance(), this method considers every int value to
+    also be a valid float value, as consistent with Python typecheckers:
+        > trycast(float, 1) -> 1
+        > isinstance(1, float) -> False
     """
     if type is int:
-        # Do not accept False or True as valid int values
+        # Do not accept bools as valid int values
         if isinstance(value, int) and not isinstance(value, bool):
             return cast(_T, value)
+        else:
+            return failure
+    elif type is float:
+        # 1. Accept ints as valid float values
+        # 2. Do not accept bools as valid float values
+        if isinstance(value, float) or (isinstance(value, int) and not isinstance(value, bool)):
+            return value
         else:
             return failure
     elif isinstance(type, _GenericAlias) and type.__origin__ is list:  # List, List[T]
