@@ -406,7 +406,8 @@ class TestTryCast(TestCase):
         HTTP_400_BAD_REQUEST = ValueError('HTTP 400: Bad Request')
         
         def draw_shape_endpoint(request_json: object) -> None:
-            if trycast(Shape, shape := request_json) is not None:
+            shape = trycast(Shape, request_json)  # type: Optional[Shape]
+            if shape is not None:
                 draw_shape(shape)
             else:
                 shapes_drawn.append(HTTP_400_BAD_REQUEST)
