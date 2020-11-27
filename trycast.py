@@ -26,11 +26,11 @@ def trycast(type: Type[_T], value: object, failure: _F=None) -> Union[_T, _F]:
     
         return value if isinstance(type, value) else failure
     
-    except that it supports many more types that `isinstance`, including:
+    except that it supports many more types than `isinstance`, including:
         * List[T]
         * Dict[K, V]
         * Optional[T]
-        * Union[T1,T2,...]
+        * Union[T1, T2, ...]
         * Literal[...]
         * T extends TypedDict
     
@@ -81,7 +81,7 @@ def trycast(type: Type[_T], value: object, failure: _F=None) -> Union[_T, _F]:
             return cast(_T, value)
         else:
             return cast(_F, failure)
-    elif isinstance(type, _GenericAlias) and type.__origin__ is Union:  # Union[T1,T2,...]
+    elif isinstance(type, _GenericAlias) and type.__origin__ is Union:  # Union[T1, T2, ...]
         for T in type.__args__:
             if trycast(T, value, _FAILURE) is not _FAILURE:
                 return cast(_T, value)
