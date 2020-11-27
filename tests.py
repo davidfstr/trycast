@@ -274,12 +274,12 @@ class TestTryCast(TestCase):
         self.assertIs(None, trycast(List[int], [1, True]))
         
         # non-list[T]s
-        self.assertIs(None, trycast(type(None), 0))
-        self.assertIs(None, trycast(type(None), 'foo'))
-        self.assertIs(None, trycast(type(None), ['1']))
-        self.assertIs(None, trycast(type(None), {1: 1}))
-        self.assertIs(None, trycast(type(None), {1}))
-        self.assertIs(None, trycast(type(None), object()))
+        self.assertIs(None, trycast(List[int], 0))
+        self.assertIs(None, trycast(List[int], 'foo'))
+        self.assertIs(None, trycast(List[int], ['1']))
+        self.assertIs(None, trycast(List[int], {1: 1}))
+        self.assertIs(None, trycast(List[int], {1}))
+        self.assertIs(None, trycast(List[int], object()))
     
     @skip('requires Python 3.9+ to implement')
     def test_dict_k_v(self) -> None:
