@@ -103,6 +103,10 @@ def trycast(type: Type[_T], value: object, failure: _F=None):
             return cast(_T, value)
         else:
             return failure
+    elif isinstance(type, tuple):
+        raise TypeError(
+            'trycast does not support checking against a tuple of types. '
+            'Try checking against a Union[T1, T2, ...] instead.')
     else:
         if isinstance(value, type):
             return value

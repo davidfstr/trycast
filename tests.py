@@ -343,6 +343,11 @@ class TestTryCast(TestCase):
         self.assertIs(None, trycast(Literal['circle'], {1}))
         self.assertIs(None, trycast(Literal['circle'], object()))
     
+    # === Special ===
+    
+    def test_tuple_of_types(self) -> None:
+        self.assertRaises(TypeError, lambda: trycast((int, str), 1))  # type: ignore
+    
     # === Large Examples ===
     
     def text_shape_endpoint_parsing_example(self) -> None:
