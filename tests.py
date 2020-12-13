@@ -1,3 +1,5 @@
+import os
+import subprocess
 from trycast import trycast
 from typing import Dict, List, Literal, Optional, TypedDict, Union
 from unittest import skip, TestCase
@@ -395,3 +397,17 @@ class TestTryCast(TestCase):
             HTTP_400_BAD_REQUEST,
             HTTP_400_BAD_REQUEST,
         ], shapes_drawn)
+    
+    # === Typecheck ===
+    
+    def test_no_typechecker_errors_exist(self) -> None:
+        try:
+            subprocess.check_output(
+                ['mypy'],
+                env={
+                    'LANG': 'en_US.UTF-8',
+                    'PATH': os.environ.get('PATH', '')
+                },
+                stderr=subprocess.STDOUT)
+        except subprocess.CalledProcessError as e:
+            self.fail(f'Typechecking failed:\n\n{e.output.decode("utf-8").strip()}')
