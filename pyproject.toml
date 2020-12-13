@@ -1,9 +1,23 @@
 [tool.poetry]
 name = "trycast"
-version = "0.0.1"
+version = "0.0.2"
 description = ""
 authors = ["David Foster <david@dafoster.net>"]
 license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/davidfstr/trycast"
+repository = "https://github.com/davidfstr/trycast"
+#documentation = "TODO"
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Topic :: Software Development"
+]
 
 [tool.poetry.dependencies]
 python = "^3.8"
