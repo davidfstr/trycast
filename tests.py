@@ -1,6 +1,11 @@
 import os
 import subprocess
 from trycast import trycast
+from tests_shape_example import (
+    draw_shape_endpoint,
+    HTTP_400_BAD_REQUEST,
+    shapes_drawn,
+)
 from typing import Dict, List, Literal, Optional, TypedDict, Union
 from unittest import skip, TestCase
 
@@ -353,38 +358,6 @@ class TestTryCast(TestCase):
     # === Large Examples ===
     
     def text_shape_endpoint_parsing_example(self) -> None:
-        class Point2D(TypedDict):
-            x: float  # also accepts int values parsed by json.loads()
-            y: float
-        
-        class Circle(TypedDict):
-            type: Literal['circle']
-            center: Point2D  # has a nested TypedDict!
-            radius: float
-        
-        class Rect(TypedDict):
-            type: Literal['rect']
-            x: float
-            y: float
-            width: float
-            height: float
-        
-        Shape = Union[Circle, Rect]  # a Tagged Union
-        
-        shapes_drawn = []  # type: List[Union[Shape, ValueError]]
-        
-        HTTP_400_BAD_REQUEST = ValueError('HTTP 400: Bad Request')
-        
-        def draw_shape_endpoint(request_json: object) -> None:
-            shape = trycast(Shape, request_json)  # type: Optional[Shape]
-            if shape is not None:
-                draw_shape(shape)
-            else:
-                shapes_drawn.append(HTTP_400_BAD_REQUEST)
-        
-        def draw_shape(shape: Shape) -> None:
-            shapes_drawn.append(shape)
-        
         draw_shape_endpoint(x1 := dict(type='circle', center=dict(x=50, y=50), radius=25))
         draw_shape_endpoint(      dict(type='circle', center=dict(x=50, y=50)           ))
         draw_shape_endpoint(x2 := dict(type='rect', x=10, y=20, width=50, height=50))
