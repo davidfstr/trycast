@@ -11,12 +11,20 @@ _F = TypeVar('_F')
 _MISSING = object()
 _FAILURE = object()
 
-@overload
-def trycast(type: Type[_T], value: object) -> Optional[_T]: ...
-@overload
-def trycast(type: Type[_T], value: object, failure: _F) -> Union[_T, _F]: ...
 
-def trycast(type: Type[_T], value: object, failure: _F=None):
+# TODO: Use this signature for trycast once support for TypeForm is 
+#       implemented in mypy.
+#@overload
+#def trycast(type: TypeForm[_T], value: object) -> Optional[_T]: ...
+#@overload
+#def trycast(type: TypeForm[_T], value: object, failure: _F) -> Union[_T, _F]: ...
+
+@overload
+def trycast(type: object, value: object) -> Optional[_T]: ...
+@overload
+def trycast(type: object, value: object, failure: _F) -> Union[_T, _F]: ...
+
+def trycast(type, value, failure=None):
     """
     If `value` is in the shape of `type` (as accepted by a Python typechecker
     conforming to PEP 484 "Type Hints") then returns it, otherwise returns
@@ -108,7 +116,7 @@ def trycast(type: Type[_T], value: object, failure: _F=None):
             'trycast does not support checking against a tuple of types. '
             'Try checking against a Union[T1, T2, ...] instead.')
     else:
-        if isinstance(value, type):
+        if isinstance(value, type):  # type: ignore
             return value
         else:
             return failure
