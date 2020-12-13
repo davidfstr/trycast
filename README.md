@@ -11,12 +11,12 @@ Here is an example of parsing a `Point2D` object defined as a `TypedDict`:
 
 ```python
 from bottle import HTTPResponse, request, route
-from trycast import FloatInt, trycast
+from trycast import trycast
 from typing import TypedDict
 
 class Point2D(TypedDict):
-    x: FloatInt  # same as Union[float, int], the JavaScript number type
-    y: FloatInt
+    x: float
+    y: float
     name: str
 
 @route('/draw_point')
@@ -40,24 +40,24 @@ example, which is a tagged union that can be either a `Circle` or `Rect` value:
 
 ```python
 from bottle import HTTPResponse, request, route
-from trycast import FloatInt, trycast
+from trycast import trycast
 from typing import Literal, TypedDict, Union
 
 class Point2D(TypedDict):
-    x: FloatInt
-    y: FloatInt
+    x: float
+    y: float
 
 class Circle(TypedDict):
     type: Literal['circle']
     center: Point2D  # a nested TypedDict!
-    radius: FloatInt
+    radius: float
 
 class Rect(TypedDict):
     type: Literal['rect']
-    x: FloatInt
-    y: FloatInt
-    width: FloatInt
-    height: FloatInt
+    x: float
+    y: float
+    width: float
+    height: float
 
 Shape = Union[Circle, Rect]  # a Tagged Union!
 
