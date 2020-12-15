@@ -83,6 +83,7 @@ __all__ = ['trycast']
 
 _T = TypeVar('_T')
 _F = TypeVar('_F')
+_SimpleTypeVar = TypeVar('_SimpleTypeVar')
 
 _MISSING = object()
 _FAILURE = object()
@@ -145,7 +146,11 @@ def trycast(type, value, failure=None):
     type_origin = get_origin(type)
     if type_origin is list or type_origin is List:  # List, List[T]
         if isinstance(value, list):
-            (T,) = get_args(type)
+            T_ = get_args(type)
+            if len(T_) == 0:  # Python 3.9+
+                (T,) = (_SimpleTypeVar,)
+            else:
+                (T,) = T_
             if _is_simple_typevar(T):
                 pass
             else:
@@ -157,7 +162,11 @@ def trycast(type, value, failure=None):
             return failure
     if type_origin is dict or type_origin is Dict:  # Dict, Dict[K, V]
         if isinstance(value, dict):
-            (K, V) = get_args(type)
+            K_V = get_args(type)
+            if len(K_V) == 0:  # Python 3.9+
+                (K, V) = (_SimpleTypeVar, _SimpleTypeVar)
+            else:
+                (K, V) = K_V
             if _is_simple_typevar(K) and _is_simple_typevar(V):
                 pass
             else:

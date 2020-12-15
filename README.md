@@ -74,7 +74,7 @@ def draw_shape_endpoint() -> None:
 
 ### master
 
-* Add support for Python 3.6 and 3.7, in addition to 3.8.
+* Add support for Python 3.6, 3.7, and 3.9, in addition to 3.8.
 
 ### v0.0.2
 

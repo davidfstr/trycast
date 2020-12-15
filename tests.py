@@ -7,7 +7,7 @@ from tests_shape_example import (
     HTTP_400_BAD_REQUEST,
     shapes_drawn,
 )
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, TYPE_CHECKING, Union
 from unittest import skip, TestCase
 
 # Literal
@@ -224,9 +224,26 @@ class TestTryCast(TestCase):
     
     # === Generic Collections ===
     
-    @skip('requires Python 3.9+ to implement')
-    def test_list_t(self) -> None:
-        pass
+    if sys.version_info >= (3, 9):
+        # TODO: Upgrade mypy to a version that supports PEP 585 and `list[int]`
+        if not TYPE_CHECKING:
+            def test_list_t(self) -> None:
+                # Actual list[T]
+                self.assertTryCastSuccess(list[int], [])
+                self.assertTryCastSuccess(list[int], [1])
+                self.assertTryCastSuccess(list[int], [1, 2])
+                
+                # list[T]-like lists
+                self.assertTryCastFailure(list[int], [True])
+                self.assertTryCastFailure(list[int], [1, True])
+                
+                # non-list[T]s
+                self.assertTryCastFailure(list[int], 0)
+                self.assertTryCastFailure(list[int], 'foo')
+                self.assertTryCastFailure(list[int], ['1'])
+                self.assertTryCastFailure(list[int], {1: 1})
+                self.assertTryCastFailure(list[int], {1})
+                self.assertTryCastFailure(list[int], object())
     
     def test_big_list_t(self) -> None:
         # Actual list[T]
@@ -246,9 +263,26 @@ class TestTryCast(TestCase):
         self.assertTryCastFailure(List[int], {1})
         self.assertTryCastFailure(List[int], object())
     
-    @skip('requires Python 3.9+ to implement')
-    def test_dict_k_v(self) -> None:
-        pass
+    if sys.version_info >= (3, 9):
+        # TODO: Upgrade mypy to a version that supports PEP 585 and `dict[str, int]`
+        if not TYPE_CHECKING:
+            def test_dict_k_v(self) -> None:
+                # Actual dict[K, V]
+                self.assertTryCastSuccess(dict[str, int], {})
+                self.assertTryCastSuccess(dict[str, int], {'x': 1})
+                self.assertTryCastSuccess(dict[str, int], {'x': 1, 'y': 2})
+                
+                # dict[K, V]-like dicts
+                self.assertTryCastFailure(dict[str, int], {'x': True})
+                self.assertTryCastFailure(dict[str, int], {'x': 1, 'y': True})
+                
+                # non-dict[K, V]s
+                self.assertTryCastFailure(dict[str, int], 0)
+                self.assertTryCastFailure(dict[str, int], 'foo')
+                self.assertTryCastFailure(dict[str, int], [1])
+                self.assertTryCastFailure(dict[str, int], {1: 1})
+                self.assertTryCastFailure(dict[str, int], {1})
+                self.assertTryCastFailure(dict[str, int], object())
     
     def test_big_dict_k_v(self) -> None:
         # Actual dict[K, V]
