@@ -9,3 +9,6 @@
 
 # Poetry
 /dist
+
+# tox
+/.tox

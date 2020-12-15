@@ -26,6 +26,7 @@ python = "^3.6"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.790"
+tox = "^3.20.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
