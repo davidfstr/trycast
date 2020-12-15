@@ -69,3 +69,15 @@ def draw_shape_endpoint() -> None:
     else:
         return HTTPResponse(status=400)  # Bad Request
 ```
+
+## Release Notes
+
+### v0.0.2
+
+* Fix README to appear on PyPI.
+* Add other package metadata, such as the supported Python versions.
+
+### v0.0.1
+
+* Initial release.
+* Supports typechecking all types found in JSON.
