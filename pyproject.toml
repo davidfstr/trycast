@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "trycast"
-version = "0.0.2"
+version = "0.1.0"
 description = ""
 authors = ["David Foster <david@dafoster.net>"]
 license = "MIT"
@@ -8,8 +8,8 @@ readme = "README.md"
 homepage = "https://github.com/davidfstr/trycast"
 repository = "https://github.com/davidfstr/trycast"
 #documentation = "TODO"
-classifiers = [
-    "Development Status :: 2 - Pre-Alpha",
+classifiers = [  # https://pypi.org/classifiers/
+    "Development Status :: 3 - Alpha",
     "Environment :: Console",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
