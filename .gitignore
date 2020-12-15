@@ -1,5 +1,5 @@
 # virtualenv
-/venv
+/venv*
 
 # macOS
 .DS_Store
