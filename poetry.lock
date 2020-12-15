@@ -40,8 +40,8 @@ python-versions = "*"
 
 [metadata]
 lock-version = "1.1"
-python-versions = "^3.8"
-content-hash = "0b60399c6f3d38110d5de545bd346d0baccb740929e3ef38db4d67c098ec88d1"
+python-versions = "^3.6"
+content-hash = "86d92510a14bc61c1aaa21bad237870e77213c80146ddf48656bf7a109a4c01d"
 
 [metadata.files]
 mypy = [

@@ -1,13 +1,26 @@
 import os
 import subprocess
+import sys
 from trycast import trycast
 from tests_shape_example import (
     draw_shape_endpoint,
     HTTP_400_BAD_REQUEST,
     shapes_drawn,
 )
-from typing import Dict, List, Literal, Optional, TypedDict, Union
+from typing import Dict, List, Optional, Union
 from unittest import skip, TestCase
+
+# Literal
+if sys.version_info >= (3, 8):
+    from typing import Literal  # Python 3.8+
+else:
+    from typing_extensions import Literal  # Python 3.5+
+
+# TypedDict
+if sys.version_info >= (3, 8):
+    from typing import TypedDict  # Python 3.8+
+else:
+    from typing_extensions import TypedDict  # Python 3.5+
 
 
 _FAILURE = object()
@@ -16,214 +29,198 @@ class TestTryCast(TestCase):
     # === Scalars ===
     
     def test_bool(self) -> None:
-        x: object
-        
         # Actual bools
-        self.assertIs(x := True, trycast(bool, x))
-        self.assertIs(x := False, trycast(bool, x))
+        self.assertTryCastSuccess(bool, True)
+        self.assertTryCastSuccess(bool, False)
         
         # bool-like ints
-        self.assertIs(None, trycast(bool, 0))
-        self.assertIs(None, trycast(bool, 1))
+        self.assertTryCastFailure(bool, 0)
+        self.assertTryCastFailure(bool, 1)
         
         # Falsy values
-        self.assertIs(None, trycast(bool, 0))
-        self.assertIs(None, trycast(bool, ''))
-        self.assertIs(None, trycast(bool, []))
-        self.assertIs(None, trycast(bool, {}))
-        self.assertIs(None, trycast(bool, set()))
+        self.assertTryCastFailure(bool, 0)
+        self.assertTryCastFailure(bool, '')
+        self.assertTryCastFailure(bool, [])
+        self.assertTryCastFailure(bool, {})
+        self.assertTryCastFailure(bool, set())
         
         # Truthy values
-        self.assertIs(None, trycast(bool, 1))
-        self.assertIs(None, trycast(bool, 'foo'))
-        self.assertIs(None, trycast(bool, [1]))
-        self.assertIs(None, trycast(bool, {1: 1}))
-        self.assertIs(None, trycast(bool, {1}))
-        self.assertIs(None, trycast(bool, object()))
+        self.assertTryCastFailure(bool, 1)
+        self.assertTryCastFailure(bool, 'foo')
+        self.assertTryCastFailure(bool, [1])
+        self.assertTryCastFailure(bool, {1: 1})
+        self.assertTryCastFailure(bool, {1})
+        self.assertTryCastFailure(bool, object())
     
     def test_int(self) -> None:
-        x: object
-        
         # Actual ints
-        self.assertIs(x := 0, trycast(int, x))
-        self.assertIs(x := 1, trycast(int, x))
-        self.assertIs(x := 2, trycast(int, x))
-        self.assertIs(x := -1, trycast(int, x))
-        self.assertIs(x := -2, trycast(int, x))
+        self.assertTryCastSuccess(int, 0)
+        self.assertTryCastSuccess(int, 1)
+        self.assertTryCastSuccess(int, 2)
+        self.assertTryCastSuccess(int, -1)
+        self.assertTryCastSuccess(int, -2)
         
         # int-like bools
-        self.assertIs(None, trycast(int, False))
-        self.assertIs(None, trycast(int, True))
+        self.assertTryCastFailure(int, False)
+        self.assertTryCastFailure(int, True)
         
         # int-like floats
-        self.assertIs(None, trycast(int, 0.0))
-        self.assertIs(None, trycast(int, 1.0))
-        self.assertIs(None, trycast(int, -1.0))
+        self.assertTryCastFailure(int, 0.0)
+        self.assertTryCastFailure(int, 1.0)
+        self.assertTryCastFailure(int, -1.0)
         
         # int-like strs
-        self.assertIs(None, trycast(int, '0'))
-        self.assertIs(None, trycast(int, '1'))
-        self.assertIs(None, trycast(int, '-1'))
+        self.assertTryCastFailure(int, '0')
+        self.assertTryCastFailure(int, '1')
+        self.assertTryCastFailure(int, '-1')
         
         # non-ints
-        self.assertIs(None, trycast(int, 'foo'))
-        self.assertIs(None, trycast(int, [1]))
-        self.assertIs(None, trycast(int, {1: 1}))
-        self.assertIs(None, trycast(int, {1}))
-        self.assertIs(None, trycast(int, object()))
+        self.assertTryCastFailure(int, 'foo')
+        self.assertTryCastFailure(int, [1])
+        self.assertTryCastFailure(int, {1: 1})
+        self.assertTryCastFailure(int, {1})
+        self.assertTryCastFailure(int, object())
     
     def test_float(self) -> None:
-        x: object
-        
         # Actual floats, parsable by json.loads(...)
-        self.assertIs(x := 0.0, trycast(float, x))
-        self.assertIs(x := 0.5, trycast(float, x))
-        self.assertIs(x := 1.0, trycast(float, x))
-        self.assertIs(x := 2e+20, trycast(float, x))
-        self.assertIs(x := 2e-20, trycast(float, x))
+        self.assertTryCastSuccess(float, 0.0)
+        self.assertTryCastSuccess(float, 0.5)
+        self.assertTryCastSuccess(float, 1.0)
+        self.assertTryCastSuccess(float, 2e+20)
+        self.assertTryCastSuccess(float, 2e-20)
         
         # Actual floats, parsable by json.loads(..., allow_nan=True)
-        self.assertIs(x := float('inf'), trycast(float, x))
-        self.assertIs(x := float('-inf'), trycast(float, x))
-        self.assertIs(x := float('nan'), trycast(float, x))
+        self.assertTryCastSuccess(float, float('inf'))
+        self.assertTryCastSuccess(float, float('-inf'))
+        self.assertTryCastSuccess(float, float('nan'))
         
         # Actual ints
-        self.assertIs(x := 0, trycast(float, x))
-        self.assertIs(x := 1, trycast(float, x))
-        self.assertIs(x := 2, trycast(float, x))
-        self.assertIs(x := -1, trycast(float, x))
-        self.assertIs(x := -2, trycast(float, x))
+        self.assertTryCastSuccess(float, 0)
+        self.assertTryCastSuccess(float, 1)
+        self.assertTryCastSuccess(float, 2)
+        self.assertTryCastSuccess(float, -1)
+        self.assertTryCastSuccess(float, -2)
         
         # float-like bools
-        self.assertIs(None, trycast(float, False))
-        self.assertIs(None, trycast(float, True))
+        self.assertTryCastFailure(float, False)
+        self.assertTryCastFailure(float, True)
         
         # float-like strs
-        self.assertIs(None, trycast(float, '1.0'))
-        self.assertIs(None, trycast(float, 'inf'))
-        self.assertIs(None, trycast(float, 'Infinity'))
+        self.assertTryCastFailure(float, '1.0')
+        self.assertTryCastFailure(float, 'inf')
+        self.assertTryCastFailure(float, 'Infinity')
         
         # int-like bools
-        self.assertIs(None, trycast(float, False))
-        self.assertIs(None, trycast(float, True))
+        self.assertTryCastFailure(float, False)
+        self.assertTryCastFailure(float, True)
         
         # int-like strs
-        self.assertIs(None, trycast(float, '0'))
-        self.assertIs(None, trycast(float, '1'))
-        self.assertIs(None, trycast(float, '-1'))
+        self.assertTryCastFailure(float, '0')
+        self.assertTryCastFailure(float, '1')
+        self.assertTryCastFailure(float, '-1')
         
         # non-floats
-        self.assertIs(None, trycast(float, 'foo'))
-        self.assertIs(None, trycast(float, [1]))
-        self.assertIs(None, trycast(float, {1: 1}))
-        self.assertIs(None, trycast(float, {1}))
-        self.assertIs(None, trycast(float, object()))
+        self.assertTryCastFailure(float, 'foo')
+        self.assertTryCastFailure(float, [1])
+        self.assertTryCastFailure(float, {1: 1})
+        self.assertTryCastFailure(float, {1})
+        self.assertTryCastFailure(float, object())
         
         # non-ints
-        self.assertIs(None, trycast(float, 'foo'))
-        self.assertIs(None, trycast(float, [1]))
-        self.assertIs(None, trycast(float, {1: 1}))
-        self.assertIs(None, trycast(float, {1}))
-        self.assertIs(None, trycast(float, object()))
+        self.assertTryCastFailure(float, 'foo')
+        self.assertTryCastFailure(float, [1])
+        self.assertTryCastFailure(float, {1: 1})
+        self.assertTryCastFailure(float, {1})
+        self.assertTryCastFailure(float, object())
     
     def test_none(self) -> None:
         self.assertRaises(TypeError, lambda: trycast(None, None))  # type: ignore
     
     def test_none_type(self) -> None:
-        x: object
-        
         # Actual None
-        self.assertIs(x := None, trycast(type(None), x, _FAILURE))
+        self.assertTryCastNoneSuccess(type(None))
         
         # non-None
-        self.assertIs(None, trycast(type(None), 0))
-        self.assertIs(None, trycast(type(None), 'foo'))
-        self.assertIs(None, trycast(type(None), [1]))
-        self.assertIs(None, trycast(type(None), {1: 1}))
-        self.assertIs(None, trycast(type(None), {1}))
-        self.assertIs(None, trycast(type(None), object()))
+        self.assertTryCastFailure(type(None), 0)
+        self.assertTryCastFailure(type(None), 'foo')
+        self.assertTryCastFailure(type(None), [1])
+        self.assertTryCastFailure(type(None), {1: 1})
+        self.assertTryCastFailure(type(None), {1})
+        self.assertTryCastFailure(type(None), object())
     
     # === Raw Collections ===
     
     def test_list(self) -> None:
-        x: object
-        
         # Actual list
-        self.assertIs(x := [], trycast(list, x))
-        self.assertIs(x := [1], trycast(list, x))
-        self.assertIs(x := [1, 2], trycast(list, x))
+        self.assertTryCastSuccess(list, [])
+        self.assertTryCastSuccess(list, [1])
+        self.assertTryCastSuccess(list, [1, 2])
         
         # list-like tuples
-        self.assertIs(None, trycast(list, ()))
-        self.assertIs(None, trycast(list, (1,)))
-        self.assertIs(None, trycast(list, (1,2)))
+        self.assertTryCastFailure(list, ())
+        self.assertTryCastFailure(list, (1,))
+        self.assertTryCastFailure(list, (1,2))
         
         # list-like sets
-        self.assertIs(None, trycast(list, set()))
-        self.assertIs(None, trycast(list, {1}))
-        self.assertIs(None, trycast(list, {1,2}))
+        self.assertTryCastFailure(list, set())
+        self.assertTryCastFailure(list, {1})
+        self.assertTryCastFailure(list, {1,2})
         
         # non-lists
-        self.assertIs(None, trycast(list, 0))
-        self.assertIs(None, trycast(list, 'foo'))
-        self.assertIs(None, trycast(list, {1: 1}))
-        self.assertIs(None, trycast(list, {1}))
-        self.assertIs(None, trycast(list, object()))
+        self.assertTryCastFailure(list, 0)
+        self.assertTryCastFailure(list, 'foo')
+        self.assertTryCastFailure(list, {1: 1})
+        self.assertTryCastFailure(list, {1})
+        self.assertTryCastFailure(list, object())
     
     def test_big_list(self) -> None:
-        x: object
-        
         # Actual list
-        self.assertIs(x := [], trycast(List, x))
-        self.assertIs(x := [1], trycast(List, x))
-        self.assertIs(x := [1, 2], trycast(List, x))
+        self.assertTryCastSuccess(List, [])
+        self.assertTryCastSuccess(List, [1])
+        self.assertTryCastSuccess(List, [1, 2])
         
         # list-like tuples
-        self.assertIs(None, trycast(List, ()))
-        self.assertIs(None, trycast(List, (1,)))
-        self.assertIs(None, trycast(List, (1,2)))
+        self.assertTryCastFailure(List, ())
+        self.assertTryCastFailure(List, (1,))
+        self.assertTryCastFailure(List, (1,2))
         
         # list-like sets
-        self.assertIs(None, trycast(List, set()))
-        self.assertIs(None, trycast(List, {1}))
-        self.assertIs(None, trycast(List, {1,2}))
+        self.assertTryCastFailure(List, set())
+        self.assertTryCastFailure(List, {1})
+        self.assertTryCastFailure(List, {1,2})
         
         # non-lists
-        self.assertIs(None, trycast(List, 0))
-        self.assertIs(None, trycast(List, 'foo'))
-        self.assertIs(None, trycast(List, {1: 1}))
-        self.assertIs(None, trycast(List, {1}))
-        self.assertIs(None, trycast(List, object()))
+        self.assertTryCastFailure(List, 0)
+        self.assertTryCastFailure(List, 'foo')
+        self.assertTryCastFailure(List, {1: 1})
+        self.assertTryCastFailure(List, {1})
+        self.assertTryCastFailure(List, object())
     
     def test_dict(self) -> None:
-        x: object
-        
         # Actual dict
-        self.assertIs(x := {}, trycast(dict, x))
-        self.assertIs(x := {1: 1}, trycast(dict, x))
-        self.assertIs(x := {'x': 1, 'y': 1}, trycast(dict, x))
+        self.assertTryCastSuccess(dict, {})
+        self.assertTryCastSuccess(dict, {1: 1})
+        self.assertTryCastSuccess(dict, {'x': 1, 'y': 1})
         
         # non-dicts
-        self.assertIs(None, trycast(dict, 0))
-        self.assertIs(None, trycast(dict, 'foo'))
-        self.assertIs(None, trycast(dict, [1]))
-        self.assertIs(None, trycast(dict, {1}))
-        self.assertIs(None, trycast(dict, object()))
+        self.assertTryCastFailure(dict, 0)
+        self.assertTryCastFailure(dict, 'foo')
+        self.assertTryCastFailure(dict, [1])
+        self.assertTryCastFailure(dict, {1})
+        self.assertTryCastFailure(dict, object())
     
     def test_big_dict(self) -> None:
-        x: object
-        
         # Actual dict
-        self.assertIs(x := {}, trycast(Dict, x))
-        self.assertIs(x := {1: 1}, trycast(Dict, x))
-        self.assertIs(x := {'x': 1, 'y': 1}, trycast(Dict, x))
+        self.assertTryCastSuccess(Dict, {})
+        self.assertTryCastSuccess(Dict, {1: 1})
+        self.assertTryCastSuccess(Dict, {'x': 1, 'y': 1})
         
         # non-dicts
-        self.assertIs(None, trycast(Dict, 0))
-        self.assertIs(None, trycast(Dict, 'foo'))
-        self.assertIs(None, trycast(Dict, [1]))
-        self.assertIs(None, trycast(Dict, {1}))
-        self.assertIs(None, trycast(Dict, object()))
+        self.assertTryCastFailure(Dict, 0)
+        self.assertTryCastFailure(Dict, 'foo')
+        self.assertTryCastFailure(Dict, [1])
+        self.assertTryCastFailure(Dict, {1})
+        self.assertTryCastFailure(Dict, object())
     
     # === Generic Collections ===
     
@@ -232,54 +229,48 @@ class TestTryCast(TestCase):
         pass
     
     def test_big_list_t(self) -> None:
-        x: object
-        
         # Actual list[T]
-        self.assertIs(x := [], trycast(List[int], x))
-        self.assertIs(x := [1], trycast(List[int], x))
-        self.assertIs(x := [1, 2], trycast(List[int], x))
+        self.assertTryCastSuccess(List[int], [])
+        self.assertTryCastSuccess(List[int], [1])
+        self.assertTryCastSuccess(List[int], [1, 2])
         
         # list[T]-like lists
-        self.assertIs(None, trycast(List[int], [True]))
-        self.assertIs(None, trycast(List[int], [1, True]))
+        self.assertTryCastFailure(List[int], [True])
+        self.assertTryCastFailure(List[int], [1, True])
         
         # non-list[T]s
-        self.assertIs(None, trycast(List[int], 0))
-        self.assertIs(None, trycast(List[int], 'foo'))
-        self.assertIs(None, trycast(List[int], ['1']))
-        self.assertIs(None, trycast(List[int], {1: 1}))
-        self.assertIs(None, trycast(List[int], {1}))
-        self.assertIs(None, trycast(List[int], object()))
+        self.assertTryCastFailure(List[int], 0)
+        self.assertTryCastFailure(List[int], 'foo')
+        self.assertTryCastFailure(List[int], ['1'])
+        self.assertTryCastFailure(List[int], {1: 1})
+        self.assertTryCastFailure(List[int], {1})
+        self.assertTryCastFailure(List[int], object())
     
     @skip('requires Python 3.9+ to implement')
     def test_dict_k_v(self) -> None:
         pass
     
     def test_big_dict_k_v(self) -> None:
-        x: object
-        
         # Actual dict[K, V]
-        self.assertIs(x := {}, trycast(Dict[str, int], x))
-        self.assertIs(x := {'x': 1}, trycast(Dict[str, int], x))
-        self.assertIs(x := {'x': 1, 'y': 2}, trycast(Dict[str, int], x))
+        self.assertTryCastSuccess(Dict[str, int], {})
+        self.assertTryCastSuccess(Dict[str, int], {'x': 1})
+        self.assertTryCastSuccess(Dict[str, int], {'x': 1, 'y': 2})
         
         # dict[K, V]-like dicts
-        self.assertIs(None, trycast(Dict[str, int], {'x': True}))
-        self.assertIs(None, trycast(Dict[str, int], {'x': 1, 'y': True}))
+        self.assertTryCastFailure(Dict[str, int], {'x': True})
+        self.assertTryCastFailure(Dict[str, int], {'x': 1, 'y': True})
         
         # non-dict[K, V]s
-        self.assertIs(None, trycast(Dict[str, int], 0))
-        self.assertIs(None, trycast(Dict[str, int], 'foo'))
-        self.assertIs(None, trycast(Dict[str, int], [1]))
-        self.assertIs(None, trycast(Dict[str, int], {1: 1}))
-        self.assertIs(None, trycast(Dict[str, int], {1}))
-        self.assertIs(None, trycast(Dict[str, int], object()))
+        self.assertTryCastFailure(Dict[str, int], 0)
+        self.assertTryCastFailure(Dict[str, int], 'foo')
+        self.assertTryCastFailure(Dict[str, int], [1])
+        self.assertTryCastFailure(Dict[str, int], {1: 1})
+        self.assertTryCastFailure(Dict[str, int], {1})
+        self.assertTryCastFailure(Dict[str, int], object())
     
     # === TypedDicts ===
     
     def test_typeddict(self) -> None:
-        x: object
-        
         class Point2D(TypedDict):
             x: int
             y: int
@@ -294,61 +285,55 @@ class TestTryCast(TestCase):
             z: int
         
         # Point2D
-        self.assertIs(x := {'x': 1, 'y': 1}, trycast(Point2D, x))
-        self.assertIs(None, trycast(Point2D, {'x': 1, 'y': 1, 'z': 1}))
+        self.assertTryCastSuccess(Point2D, {'x': 1, 'y': 1})
+        self.assertTryCastFailure(Point2D, {'x': 1, 'y': 1, 'z': 1})
         
         # Point2DPlus
-        self.assertIs(x := {'x': 1, 'y': 1}, trycast(Point2DPlus, x))
-        self.assertIs(x := {'x': 1, 'y': 1, 'z': 1}, trycast(Point2DPlus, x))
+        self.assertTryCastSuccess(Point2DPlus, {'x': 1, 'y': 1})
+        self.assertTryCastSuccess(Point2DPlus, {'x': 1, 'y': 1, 'z': 1})
         
         # Point3D
-        self.assertIs(None, trycast(Point3D, {'x': 1, 'y': 1}))
-        self.assertIs(x := {'x': 1, 'y': 1, 'z': 1}, trycast(Point3D, x))
+        self.assertTryCastFailure(Point3D, {'x': 1, 'y': 1})
+        self.assertTryCastSuccess(Point3D, {'x': 1, 'y': 1, 'z': 1})
     
     # === Unions ===
     
     def test_union(self) -> None:
-        x: object
-        
         # Union[int, str]
-        self.assertIs(x := 1, trycast(Union[int, str], x))
-        self.assertIs(x := 'foo', trycast(Union[int, str], x))
+        self.assertTryCastSuccess(Union[int, str], 1)
+        self.assertTryCastSuccess(Union[int, str], 'foo')
         
         # non-Union[int, str]
-        self.assertIs(None, trycast(Union[int, str], []))
+        self.assertTryCastFailure(Union[int, str], [])
     
     def test_optional(self) -> None:
-        x: object
-        
         # Optional[str]
-        self.assertIs(x := None, trycast(Optional[str], x, _FAILURE))
-        self.assertIs(x := 'foo', trycast(Optional[str], x))
+        self.assertTryCastNoneSuccess(Optional[str])
+        self.assertTryCastSuccess(Optional[str], 'foo')
         
         # non-Optional[str]
-        self.assertIs(None, trycast(Optional[str], []))
+        self.assertTryCastFailure(Optional[str], [])
     
     # === Literals ===
     
     def test_literal(self) -> None:
-        x: object
-        
         # Literal
-        self.assertIs(x := 'circle', trycast(Literal['circle'], x))
-        self.assertIs(x := 1, trycast(Literal[1], x))
-        self.assertIs(x := True, trycast(Literal[True], x))
+        self.assertTryCastSuccess(Literal['circle'], 'circle')
+        self.assertTryCastSuccess(Literal[1], 1)
+        self.assertTryCastSuccess(Literal[True], True)
         
         # Literal-like with the wrong value
-        self.assertIs(None, trycast(Literal['circle'], 'square'))
-        self.assertIs(None, trycast(Literal[1], 2))
-        self.assertIs(None, trycast(Literal[True], False))
+        self.assertTryCastFailure(Literal['circle'], 'square')
+        self.assertTryCastFailure(Literal[1], 2)
+        self.assertTryCastFailure(Literal[True], False)
         
         # non-Literal
-        self.assertIs(None, trycast(Literal['circle'], 0))
-        self.assertIs(None, trycast(Literal['circle'], 'foo'))
-        self.assertIs(None, trycast(Literal['circle'], [1]))
-        self.assertIs(None, trycast(Literal['circle'], {1: 1}))
-        self.assertIs(None, trycast(Literal['circle'], {1}))
-        self.assertIs(None, trycast(Literal['circle'], object()))
+        self.assertTryCastFailure(Literal['circle'], 0)
+        self.assertTryCastFailure(Literal['circle'], 'foo')
+        self.assertTryCastFailure(Literal['circle'], [1])
+        self.assertTryCastFailure(Literal['circle'], {1: 1})
+        self.assertTryCastFailure(Literal['circle'], {1})
+        self.assertTryCastFailure(Literal['circle'], object())
     
     # === Special ===
     
@@ -358,11 +343,18 @@ class TestTryCast(TestCase):
     # === Large Examples ===
     
     def text_shape_endpoint_parsing_example(self) -> None:
-        draw_shape_endpoint(x1 := dict(type='circle', center=dict(x=50, y=50), radius=25))
-        draw_shape_endpoint(      dict(type='circle', center=dict(x=50, y=50)           ))
-        draw_shape_endpoint(x2 := dict(type='rect', x=10, y=20, width=50, height=50))
-        draw_shape_endpoint(      dict(type='rect',             width=50, height=50))
-        draw_shape_endpoint(      dict(type='oval', x=10, y=20, width=50, height=50))
+        x1 = dict(type='circle', center=dict(x=50, y=50), radius=25)
+        xA = dict(type='circle', center=dict(x=50, y=50)           )
+        x2 = dict(type='rect', x=10, y=20, width=50, height=50)
+        xB = dict(type='rect',             width=50, height=50)
+        xC = dict(type='oval', x=10, y=20, width=50, height=50)
+        
+        draw_shape_endpoint(x1)
+        draw_shape_endpoint(xA)
+        draw_shape_endpoint(x2)
+        draw_shape_endpoint(xB)
+        draw_shape_endpoint(xC)
+        
         self.assertEqual([
             x1,
             HTTP_400_BAD_REQUEST,
@@ -384,3 +376,14 @@ class TestTryCast(TestCase):
                 stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as e:
             self.fail(f'Typechecking failed:\n\n{e.output.decode("utf-8").strip()}')
+    
+    # === Utility ===
+    
+    def assertTryCastSuccess(self, tp: object, value: object) -> None:
+        self.assertIs(value, trycast(tp, value))
+    
+    def assertTryCastFailure(self, tp: object, value: object) -> None:
+        self.assertIs(None, trycast(tp, value))
+    
+    def assertTryCastNoneSuccess(self, tp: object) -> None:
+        self.assertIs(None, trycast(tp, None, _FAILURE))

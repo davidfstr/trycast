@@ -1,5 +1,18 @@
+import sys
 from trycast import trycast
-from typing import cast, Dict, List, Literal, Optional, TypedDict, Union
+from typing import cast, Dict, List, Optional, Union
+
+# Literal
+if sys.version_info >= (3, 8):
+    from typing import Literal  # Python 3.8+
+else:
+    from typing_extensions import Literal  # Python 3.5+
+
+# TypedDict
+if sys.version_info >= (3, 8):
+    from typing import TypedDict  # Python 3.8+
+else:
+    from typing_extensions import TypedDict  # Python 3.5+
 
 
 class Point2D(TypedDict):

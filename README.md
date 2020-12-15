@@ -72,6 +72,10 @@ def draw_shape_endpoint() -> None:
 
 ## Release Notes
 
+### master
+
+* Add support for Python 3.6 and 3.7, in addition to 3.8.
+
 ### v0.0.2
 
 * Fix README to appear on PyPI.
