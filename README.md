@@ -1,9 +1,5 @@
 # trycast
 
-> **Status:** In development. Current limitations in mypy prevent the examples
-> below from actually typechecking successfully, despite functioning correctly
-> at runtime.
-
 This module provides a single function `trycast` which can be used to parse a
 JSON-like value.
 
@@ -70,7 +66,17 @@ def draw_shape_endpoint() -> None:
         return HTTPResponse(status=400)  # Bad Request
 ```
 
+> **Important:** Current limitations in the mypy typechecker require that you
+> add an extra `cast(Optional[Shape], ...)` around the call to `trycast`
+> in the example so that it is accepted by the typechecker without complaining.
+> These limitations are in the process of being resolved by
+> [introducing TypeForm support to mypy](https://github.com/python/mypy/issues/9773).
+
 ## Release Notes
+
+### Future
+
+* See the [Roadmap](https://github.com/davidfstr/trycast/wiki/Roadmap).
 
 ### v0.1.0
 
