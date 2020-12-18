@@ -421,3 +421,33 @@ class TestTryCast(TestCase):
     
     def assertTryCastNoneSuccess(self, tp: object) -> None:
         self.assertIs(None, trycast(tp, None, _FAILURE))
+
+
+from trycast import _is_typed_dict
+
+if sys.version_info >= (3, 8):
+    from typing import TypedDict as TypingTypedDict
+    class TypingPoint(TypingTypedDict):
+        x: int
+        y: int
+
+from typing_extensions import TypedDict as TypingExtensionsTypedDict
+class TypingExtensionsPoint(TypingExtensionsTypedDict):
+    x: int
+    y: int
+
+from mypy_extensions import TypedDict as MypyExtensionsTypedDict
+class MypyExtensionsPoint(MypyExtensionsTypedDict):
+    x: int
+    y: int
+
+class TestIsTypedDict(TestCase):
+    if sys.version_info >= (3, 8):
+        def test_recognizes_typed_dict_from_typing(self) -> None:
+            self.assertTrue(_is_typed_dict(TypingPoint))
+    
+    def test_recognizes_typed_dict_from_typing_extensions(self) -> None:
+        self.assertTrue(_is_typed_dict(TypingExtensionsPoint))
+    
+    def test_recognizes_typed_dict_from_mypy_extensions(self) -> None:
+        self.assertTrue(_is_typed_dict(MypyExtensionsPoint))

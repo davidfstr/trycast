@@ -55,27 +55,27 @@ elif sys.version_info >= (3, 6):
 else:
     raise ImportError('Expected Python 3.6 or later.')
 
+
 # _is_typed_dict
+_typed_dict_meta_list = []
 try:
-    from typing import _TypedDictMeta  # type: ignore  # private API not in stubs
-    
-    def _is_typed_dict(tp: object) -> bool:
-        return isinstance(tp, _TypedDictMeta)
+    from typing import _TypedDictMeta as _TypingTypedDictMeta  # type: ignore  # private API not in stubs
+    _typed_dict_meta_list.append(_TypingTypedDictMeta)
 except ImportError:
-    try:
-        from typing_extensions import _TypedDictMeta  # type: ignore  # private API not in stubs
-        
-        def _is_typed_dict(tp: object) -> bool:
-            return isinstance(tp, _TypedDictMeta)
-    except ImportError:
-        try:
-            from mypy_extensions import _TypedDictMeta  # type: ignore  # private API not in stubs
-            
-            def _is_typed_dict(tp: object) -> bool:
-                return isinstance(tp, _TypedDictMeta)
-        except ImportError:
-            def _is_typed_dict(tp: object) -> bool:
-                return False
+    pass
+try:
+    from typing_extensions import _TypedDictMeta as _TypingExtensionsTypedDictMeta  # type: ignore  # private API not in stubs
+    _typed_dict_meta_list.append(_TypingExtensionsTypedDictMeta)
+except ImportError:
+    pass
+try:
+    from mypy_extensions import _TypedDictMeta as _MypyExtensionsTypedDictMeta  # type: ignore  # private API not in stubs
+    _typed_dict_meta_list.append(_MypyExtensionsTypedDictMeta)
+except ImportError:
+    pass
+_typed_dict_metas = tuple(_typed_dict_meta_list)
+def _is_typed_dict(tp: object) -> bool:
+    return isinstance(tp, tuple(_typed_dict_metas))
 
 
 __all__ = ['trycast']
