@@ -376,7 +376,7 @@ class TestTryCast(TestCase):
     
     # === Large Examples ===
     
-    def text_shape_endpoint_parsing_example(self) -> None:
+    def test_shape_endpoint_parsing_example(self) -> None:
         x1 = dict(type='circle', center=dict(x=50, y=50), radius=25)
         xA = dict(type='circle', center=dict(x=50, y=50)           )
         x2 = dict(type='rect', x=10, y=20, width=50, height=50)
