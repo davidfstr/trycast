@@ -2,6 +2,7 @@ import os
 import subprocess
 import sys
 from trycast import trycast
+import tests_forwardrefs_example
 from tests_shape_example import (
     draw_shape_endpoint,
     HTTP_400_BAD_REQUEST,
@@ -21,6 +22,8 @@ if sys.version_info >= (3, 8):
     from typing import TypedDict  # Python 3.8+
 else:
     from typing_extensions import TypedDict  # Python 3.5+
+
+from typing import _eval_type as eval_type  # type: ignore  # private API not in stubs
 
 
 _FAILURE = object()
@@ -368,6 +371,82 @@ class TestTryCast(TestCase):
         self.assertTryCastFailure(Literal['circle'], {1: 1})
         self.assertTryCastFailure(Literal['circle'], {1})
         self.assertTryCastFailure(Literal['circle'], object())
+    
+    # === Forward References ===
+    
+    def test_typeddict_with_forwardrefs(self) -> None:
+        self.assertTryCastSuccess(
+            tests_forwardrefs_example.Circle,
+            dict(type='circle', center=dict(x=50, y=50), radius=25))
+    
+    def test_alias_to_union_with_forwardrefs(self) -> None:
+        # Union with forward refs
+        # TODO: Find way to auto-resolve forward references
+        #       inside Union types.
+        self.assertRaises(
+            # TODO: Check the error message. Make it reasonable,
+            #       explaining the forward references could not be resolved.
+            TypeError,
+            lambda: trycast(
+                tests_forwardrefs_example.Shape,
+                dict(type='circle', center=dict(x=50, y=50), radius=25)
+            )
+        )
+        
+        # Union with forward refs that have been resolved
+        self.assertTryCastSuccess(
+            eval_type(
+                tests_forwardrefs_example.Shape,
+                tests_forwardrefs_example.__dict__,
+                None),
+            dict(type='circle', center=dict(x=50, y=50), radius=25)
+        )
+    
+    def test_alias_to_list_with_forwardrefs(self) -> None:
+        # list with forward refs
+        # TODO: Find way to auto-resolve forward references
+        #       inside collection types.
+        self.assertRaises(
+            # TODO: Check the error message. Make it reasonable,
+            #       explaining the forward references could not be resolved.
+            TypeError,
+            lambda: trycast(
+                tests_forwardrefs_example.Scatterplot,
+                [dict(x=50, y=50)]
+            )
+        )
+        
+        # list with forward refs that have been resolved
+        self.assertTryCastSuccess(
+            eval_type(
+                tests_forwardrefs_example.Scatterplot,
+                tests_forwardrefs_example.__dict__,
+                None),
+            [dict(x=50, y=50)]
+        )
+    
+    def test_alias_to_dict_with_forwardrefs(self) -> None:
+        # dict with forward refs
+        # TODO: Find way to auto-resolve forward references
+        #       inside collection types.
+        self.assertRaises(
+            # TODO: Check the error message. Make it reasonable,
+            #       explaining the forward references could not be resolved.
+            TypeError,
+            lambda: trycast(
+                tests_forwardrefs_example.PointForLabel,
+                {'Target': dict(x=50, y=50)}
+            )
+        )
+        
+        # dict with forward refs that have been resolved
+        self.assertTryCastSuccess(
+            eval_type(
+                tests_forwardrefs_example.PointForLabel,
+                tests_forwardrefs_example.__dict__,
+                None),
+            {'Target': dict(x=50, y=50)}
+        )
     
     # === Special ===
     

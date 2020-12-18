@@ -81,6 +81,12 @@ def draw_shape_endpoint() -> None:
 ### master
 
 * Fix `trycast()` to recognize TypedDicts from `mypy_extensions`.
+* Extend `trycast()` to recognize TypedDicts that contain forward-references
+  to other types.
+    - Unfortunately there appears to be no easy way to support arbitrary kinds
+      of types that contain forward-references.
+    - In particular {Union, Optional} types and collection types (List, Dict)
+      with forward-references remain unsupported by `trycast()`.
 
 ### v0.1.0
 

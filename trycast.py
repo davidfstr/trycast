@@ -1,6 +1,7 @@
 import sys
 from typing import (
-    cast, Dict, List, Optional, overload, Tuple, Type, TypeVar, Union,
+    cast, Dict, get_type_hints,
+    List, Optional, overload, Tuple, Type, TypeVar, Union,
 )
 
 # Literal
@@ -192,7 +193,8 @@ def trycast(type, value, failure=None):
         if isinstance(value, dict):
             if type.__total__ and len(value) != len(type.__annotations__):
                 return failure
-            for (k, V) in type.__annotations__.items():
+            resolved_annotations = get_type_hints(type)  # resolve ForwardRefs in type.__annotations__
+            for (k, V) in resolved_annotations.items():
                 v = value.get(k, _MISSING)
                 if v is _MISSING or trycast(V, v, _FAILURE) is _FAILURE:
                     return failure
