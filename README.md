@@ -87,6 +87,7 @@ def draw_shape_endpoint() -> None:
       of types that contain forward-references.
     - In particular {Union, Optional} types and collection types (List, Dict)
       with forward-references remain unsupported by `trycast()`.
+* Alter `typing_extensions` to be an optional dependency of `trycast`.
 
 ### v0.1.0
 

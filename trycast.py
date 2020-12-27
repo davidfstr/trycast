@@ -1,14 +1,19 @@
 import sys
 from typing import (
     cast, Dict, get_type_hints,
-    List, Optional, overload, Tuple, Type, TypeVar, Union,
+    List, Optional, overload, Tuple, TYPE_CHECKING, Type, TypeVar, Union,
 )
 
 # Literal
 if sys.version_info >= (3, 8):
     from typing import Literal  # Python 3.8+
 else:
-    from typing_extensions import Literal  # Python 3.5+
+    try:
+        from typing_extensions import Literal  # Python 3.5+
+    except ImportError:
+        if not TYPE_CHECKING:
+            class Literal:
+                pass
 
 # get_origin, get_args
 if sys.version_info >= (3, 8):
@@ -32,7 +37,12 @@ elif sys.version_info >= (3, 7):
 elif sys.version_info >= (3, 6):
     from typing import GenericMeta  # type: ignore  # private API not in stubs
     from typing import _Union  # type: ignore  # private API not in stubs
-    from typing_extensions import _Literal  # type: ignore  # private API not in stubs
+    try:
+        from typing_extensions import _Literal  # type: ignore  # private API not in stubs
+    except ImportError:
+        if not TYPE_CHECKING:
+            class _Literal:
+                pass
     
     def get_origin(tp: object) -> Optional[object]:
         if isinstance(tp, GenericMeta):

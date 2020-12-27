@@ -1,3 +1,5 @@
+from contextlib import contextmanager
+from importlib.abc import MetaPathFinder
 import os
 import subprocess
 import sys
@@ -8,7 +10,7 @@ from tests_shape_example import (
     HTTP_400_BAD_REQUEST,
     shapes_drawn,
 )
-from typing import Dict, List, Optional, TYPE_CHECKING, Union
+from typing import Dict, Iterator, List, Optional, TYPE_CHECKING, Union
 from unittest import skip, TestCase
 
 # Literal
@@ -476,6 +478,57 @@ class TestTryCast(TestCase):
             HTTP_400_BAD_REQUEST,
         ], shapes_drawn)
     
+    # === Missing Typing Extensions ===
+    
+    def test_can_import_and_use_trycast_even_if_typing_extensions_unavailable(self) -> None:
+        with self._typing_extensions_not_importable():
+            with self._trycast_reimported():
+                self.assertTryCastSuccess(int, 1)
+                self.assertTryCastSuccess(str, 'alpha')
+                
+                self.assertTryCastFailure(str, 1)
+                self.assertTryCastFailure(int, 'alpha')
+    
+    @contextmanager
+    def _typing_extensions_not_importable(self) -> Iterator[None]:
+        old_te_module = sys.modules['typing_extensions']
+        del sys.modules['typing_extensions']
+        try:
+            old_meta_path = sys.meta_path  # capture
+            te_gone_loader = _TypingExtensionsGoneLoader()  # type: MetaPathFinder
+            sys.meta_path = [te_gone_loader] + sys.meta_path
+            try:
+                try:
+                    import typing_extensions
+                except ImportError:
+                    pass  # good
+                else:
+                    raise AssertionError(
+                        'Failed to make typing_extensions unimportable')
+                
+                yield
+            finally:
+                sys.meta_path = old_meta_path
+        finally:
+            sys.modules['typing_extensions'] = old_te_module
+    
+    @contextmanager
+    def _trycast_reimported(self):
+        old_tc_module = sys.modules['trycast']
+        del sys.modules['trycast']
+        try:
+            old_tc = globals()['trycast']
+            del globals()['trycast']
+            try:
+                from trycast import trycast
+                globals()['trycast'] = trycast
+                
+                yield
+            finally:
+                globals()['trycast'] = old_tc
+        finally:
+            sys.modules['trycast'] = old_tc_module
+    
     # === Typecheck ===
     
     def test_no_typechecker_errors_exist(self) -> None:
@@ -500,6 +553,13 @@ class TestTryCast(TestCase):
     
     def assertTryCastNoneSuccess(self, tp: object) -> None:
         self.assertIs(None, trycast(tp, None, _FAILURE))
+
+
+class _TypingExtensionsGoneLoader(MetaPathFinder):
+    def find_spec(self, module_name, parent_path, old_module_object=None):
+        if module_name == 'typing_extensions' and parent_path is None:
+            raise ModuleNotFoundError
+        return None
 
 
 from trycast import _is_typed_dict
