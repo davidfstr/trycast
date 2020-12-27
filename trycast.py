@@ -201,12 +201,22 @@ def trycast(type, value, failure=None):
     
     if _is_typed_dict(type):  # T extends TypedDict
         if isinstance(value, dict):
-            if type.__total__ and len(value) != len(type.__annotations__):
-                return failure
             resolved_annotations = get_type_hints(type)  # resolve ForwardRefs in type.__annotations__
-            for (k, V) in resolved_annotations.items():
-                v = value.get(k, _MISSING)
-                if v is _MISSING or trycast(V, v, _FAILURE) is _FAILURE:
+            try:
+                # {typing in Python 3.9+, typing_extensions}.TypedDict
+                required_keys = type.__required_keys__
+            except AttributeError:
+                # {typing in Python 3.8, mypy_extensions}.TypedDict
+                if type.__total__:
+                    required_keys = resolved_annotations.keys()
+                else:
+                    required_keys = frozenset()
+            for (k, v) in value.items():
+                V = resolved_annotations.get(k, _MISSING)
+                if V is _MISSING or trycast(V, v, _FAILURE) is _FAILURE:
+                    return failure
+            for k in required_keys:
+                if k not in value:
                     return failure
             return cast(_T, value)
         else:

@@ -314,7 +314,7 @@ class TestTryCast(TestCase):
             x: int
             y: int
         
-        class Point2DPlus(TypedDict, total=False):
+        class PartialPoint2D(TypedDict, total=False):
             x: int
             y: int
         
@@ -327,13 +327,165 @@ class TestTryCast(TestCase):
         self.assertTryCastSuccess(Point2D, {'x': 1, 'y': 1})
         self.assertTryCastFailure(Point2D, {'x': 1, 'y': 1, 'z': 1})
         
-        # Point2DPlus
-        self.assertTryCastSuccess(Point2DPlus, {'x': 1, 'y': 1})
-        self.assertTryCastSuccess(Point2DPlus, {'x': 1, 'y': 1, 'z': 1})
+        # PartialPoint2D
+        self.assertTryCastSuccess(PartialPoint2D, {'x': 1, 'y': 1})
+        self.assertTryCastSuccess(PartialPoint2D, {'y': 1})
+        self.assertTryCastSuccess(PartialPoint2D, {'x': 1})
+        self.assertTryCastSuccess(PartialPoint2D, {})
+        self.assertTryCastFailure(PartialPoint2D, {'x': 1, 'y': 1, 'z': 1})
         
         # Point3D
         self.assertTryCastFailure(Point3D, {'x': 1, 'y': 1})
         self.assertTryCastSuccess(Point3D, {'x': 1, 'y': 1, 'z': 1})
+    
+    def test_typeddict_single_inheritance(self) -> None:
+        class Movie(TypedDict):
+            name: str
+            year: int
+        
+        class BookBasedMovie(Movie):
+            based_on: str
+        
+        _1: BookBasedMovie = dict(
+            name='Blade Runner',
+            year=1982,
+            based_on='Blade Runner',
+        )
+        self.assertTryCastSuccess(BookBasedMovie, dict(
+            name='Blade Runner',
+            year=1982,
+            based_on='Blade Runner',
+        ))
+        
+        self.assertTryCastFailure(BookBasedMovie, dict(
+            name='Blade Runner',
+            year=1982,
+        ))
+        self.assertTryCastFailure(BookBasedMovie, dict(
+            based_on='Blade Runner',
+        ))
+    
+    def test_typeddict_single_inheritance_with_mixed_totality(self) -> None:
+        class Movie(TypedDict):
+            name: str
+            year: int
+        
+        class MaybeBookBasedMovie(Movie, total=False):
+            based_on: str
+        
+        _1: MaybeBookBasedMovie = dict(
+            name='Blade Runner',
+            year=1982,
+            based_on='Blade Runner',
+        )
+        self.assertTryCastSuccess(MaybeBookBasedMovie, dict(
+            name='Blade Runner',
+            year=1982,
+            based_on='Blade Runner',
+        ))
+        
+        _2: MaybeBookBasedMovie = dict(
+            name='Blade Runner',
+            year=1982,
+        )
+        self.assertTryCastSuccess(MaybeBookBasedMovie, dict(
+            name='Blade Runner',
+            year=1982,
+        ))
+        
+        if sys.version_info >= (3, 8) and sys.version_info < (3, 9):
+            # Unfortunately there isn't enough type annotation information
+            # preserved at runtime for Python 3.8's typing.TypedDict
+            # (or for mypy_extensions.TypedDict in general) to correctly
+            # detect that this cast should actually be a failure.
+            # 
+            # To avoid such a problem, users should prefer
+            # typing_extensions.TypedDict over typing.TypedDict
+            # if they must use Python 3.8 (and cannot upgrade to Python 3.9+).
+            self.assertTryCastSuccess(MaybeBookBasedMovie, dict(
+                based_on='Blade Runner',
+            ))
+        else:
+            self.assertTryCastFailure(MaybeBookBasedMovie, dict(
+                based_on='Blade Runner',
+            ))
+        
+        class MaybeMovie(TypedDict, total=False):
+            name: str
+            year: int
+        
+        class BookBasedMaybeMovie(MaybeMovie):
+            based_on: str
+        
+        _3: BookBasedMaybeMovie = dict(
+            name='Blade Runner',
+            year=1982,
+            based_on='Blade Runner',
+        )
+        self.assertTryCastSuccess(BookBasedMaybeMovie, dict(
+            name='Blade Runner',
+            year=1982,
+            based_on='Blade Runner',
+        ))
+        
+        self.assertTryCastFailure(BookBasedMaybeMovie, dict(
+            name='Blade Runner',
+            year=1982,
+        ))
+        
+        if sys.version_info >= (3, 8) and sys.version_info < (3, 9):
+            # Unfortunately there isn't enough type annotation information
+            # preserved at runtime for Python 3.8's typing.TypedDict
+            # (or for mypy_extensions.TypedDict in general) to correctly
+            # detect that this cast should actually be a success.
+            # 
+            # To avoid such a problem, users should prefer
+            # typing_extensions.TypedDict over typing.TypedDict
+            # if they must use Python 3.8 (and cannot upgrade to Python 3.9+).
+            self.assertTryCastFailure(BookBasedMaybeMovie, dict(
+                based_on='Blade Runner',
+            ))
+        else:
+            _4: BookBasedMaybeMovie = dict(
+                based_on='Blade Runner',
+            )
+            self.assertTryCastSuccess(BookBasedMaybeMovie, dict(
+                based_on='Blade Runner',
+            ))
+    
+    def test_typeddict_multiple_inheritance(self) -> None:
+        class X(TypedDict):
+            x: int
+        
+        class Y(TypedDict):
+            y: str
+        
+        class XYZ(X, Y):
+            z: bool
+        
+        _1: XYZ = dict(
+            x=1,
+            y='2',
+            z=True,
+        )
+        self.assertTryCastSuccess(XYZ, dict(
+            x=1,
+            y='2',
+            z=True,
+        ))
+        
+        self.assertTryCastFailure(XYZ, dict(
+            y='2',
+            z=True,
+        ))
+        self.assertTryCastFailure(XYZ, dict(
+            x=1,
+            z=True,
+        ))
+        self.assertTryCastFailure(XYZ, dict(
+            x=1,
+            y='2',
+        ))
     
     # === Unions ===
     

@@ -72,6 +72,17 @@ def draw_shape_endpoint() -> None:
 > These limitations are in the process of being resolved by
 > [introducing TypeForm support to mypy](https://github.com/python/mypy/issues/9773).
 
+
+## Recommendations when using trycast
+
+- So that `trycast()` can recognize TypedDicts with mixed required and
+  optional keys correctly:
+    * Use Python 3.9+ if possible.
+    * Prefer using `typing.TypedDict`, unless you must use Python 3.8.
+      In Python 3.8 prefer `typing_extensions.TypedDict` instead.
+    * Avoid using `mypy_extensions.TypedDict` in general.
+
+
 ## Release Notes
 
 ### Future
@@ -80,13 +91,19 @@ def draw_shape_endpoint() -> None:
 
 ### master
 
-* Fix `trycast()` to recognize TypedDicts from `mypy_extensions`.
-* Extend `trycast()` to recognize TypedDicts that contain forward-references
-  to other types.
-    - Unfortunately there appears to be no easy way to support arbitrary kinds
-      of types that contain forward-references.
-    - In particular {Union, Optional} types and collection types (List, Dict)
-      with forward-references remain unsupported by `trycast()`.
+* TypedDict improvements & fixes:
+    * Fix `trycast()` to recognize TypedDicts from `mypy_extensions`.
+    * Extend `trycast()` to recognize TypedDicts that contain forward-references
+      to other types.
+        - Unfortunately there appears to be no easy way to support arbitrary kinds
+          of types that contain forward-references.
+        - In particular {Union, Optional} types and collection types (List, Dict)
+          with forward-references remain unsupported by `trycast()`.
+    * Recognize TypedDicts that have mixed required and optional keys correctly.
+        - Exception: Does not work for mypy_extensions.TypedDict or
+          Python 3.8's typing.TypedDict due to insufficient runtime
+          type annotation information.
+    * Fix recognition of a total=False TypedDict so that extra keys are disallowed.
 * Alter `typing_extensions` to be an optional dependency of `trycast`.
 
 ### v0.1.0
