@@ -89,7 +89,7 @@ def draw_shape_endpoint() -> None:
 
 * See the [Roadmap](https://github.com/davidfstr/trycast/wiki/Roadmap).
 
-### master
+### v0.2.0
 
 * TypedDict improvements & fixes:
     * Fix `trycast()` to recognize TypedDicts from `mypy_extensions`.
