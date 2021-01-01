@@ -1,7 +1,7 @@
 # trycast
 
-This module provides a single function `trycast` which can be used to parse a
-JSON-like value.
+trycast parses JSON-like values whose shape is defined by TypedDicts and other 
+standard Python type hints.
 
 Here is an example of parsing a `Point2D` object defined as a `TypedDict`:
 
