@@ -70,13 +70,13 @@ def draw_shape_endpoint() -> None:
 > **Important:** Current limitations in the mypy typechecker require that you
 > add an extra `cast(Optional[Shape], ...)` around the call to `trycast`
 > in the example so that it is accepted by the typechecker without complaining:
-
-```python
-    shape = cast(Optional[Shape], trycast(Shape, request_json))
-    if shape is not None:
-        ...
-```
-
+> 
+> ```python
+> shape = cast(Optional[Shape], trycast(Shape, request_json))
+> if shape is not None:
+>     ...
+> ```
+> 
 > These limitations are in the process of being resolved by
 > [introducing TypeForm support to mypy](https://github.com/python/mypy/issues/9773).
 
