@@ -1,7 +1,8 @@
 # trycast
 
-trycast parses JSON-like values whose shape is defined by TypedDicts and other 
-standard Python type hints.
+trycast parses JSON-like values whose shape is defined by
+[typed dictionaries](https://www.python.org/dev/peps/pep-0589/#abstract)
+(TypedDicts) and other standard Python type hints.
 
 Here is an example of parsing a `Point2D` object defined as a `TypedDict`:
 
@@ -24,7 +25,7 @@ def draw_point_endpoint() -> None:
         return HTTPResponse(status=400)  # Bad Request
 
 def draw_point(point: Point2D) -> None:
-    # ...
+    ...
 ```
 
 In this example the `trycast` function is asked to parse a `request_json`
@@ -68,12 +69,37 @@ def draw_shape_endpoint() -> None:
 
 > **Important:** Current limitations in the mypy typechecker require that you
 > add an extra `cast(Optional[Shape], ...)` around the call to `trycast`
-> in the example so that it is accepted by the typechecker without complaining.
+> in the example so that it is accepted by the typechecker without complaining:
+
+```python
+    shape = cast(Optional[Shape], trycast(Shape, request_json))
+    if shape is not None:
+        ...
+```
+
 > These limitations are in the process of being resolved by
 > [introducing TypeForm support to mypy](https://github.com/python/mypy/issues/9773).
 
 
-## Recommendations when using trycast
+## Motivation & Alternatives
+
+Why use typed dictionaries to represent data structures instead of classes,
+named tuples, or other formats?
+
+Typed dictionaries are the natural form that JSON data comes in over the wire.
+They can be trivially serialized and deserialized without any additional logic.
+For applications that use a lot of JSON data - such as web applications - 
+using typed dictionaries is very convenient for representing data structures.
+
+Other alternatives for representing data structures in Python include
+[dataclasses], [named tuples], [attrs], and plain classes.
+
+[dataclasses]: https://www.python.org/dev/peps/pep-0557/#abstract
+[named tuples]: https://docs.python.org/3/library/typing.html#typing.NamedTuple
+[attrs]: https://www.attrs.org/en/stable/
+
+
+## Recommendations while using trycast
 
 - So that `trycast()` can recognize TypedDicts with mixed required and
   optional keys correctly:
@@ -88,6 +114,12 @@ def draw_shape_endpoint() -> None:
 ### Future
 
 * See the [Roadmap](https://github.com/davidfstr/trycast/wiki/Roadmap).
+
+### master
+
+* Documentation improvements:
+    * Improve introduction.
+    * Outline motivation to use trycast and note alternatives.
 
 ### v0.2.0
 
