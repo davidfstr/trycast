@@ -117,6 +117,8 @@ Other alternatives for representing data structures in Python include
 
 ### master
 
+* TypedDict improvements & fixes:
+    * Fix `trycast()` to recognize custom Mapping subclasses as TypedDicts.
 * Documentation improvements:
     * Improve introduction.
     * Outline motivation to use trycast and note alternatives.

@@ -10,7 +10,7 @@ from tests_shape_example import (
     HTTP_400_BAD_REQUEST,
     shapes_drawn,
 )
-from typing import Dict, Iterator, List, Optional, TYPE_CHECKING, Union
+from typing import Dict, Iterator, List, Mapping, Optional, TYPE_CHECKING, Union
 from unittest import skip, TestCase
 
 # Literal
@@ -486,6 +486,32 @@ class TestTryCast(TestCase):
             x=1,
             y='2',
         ))
+    
+    def test_typeddict_using_mapping_value(self) -> None:
+        class NamedObject(TypedDict):
+            name: str
+        
+        class ValuedObject(TypedDict):
+            value: object
+        
+        class MyNamedMapping(Mapping):
+            def __init__(self, name: str) -> None:
+                self._name = name
+            
+            def __getitem__(self, key: str) -> object:
+                if key == 'name':
+                    return self._name
+                else:
+                    raise AttributeError
+            
+            def __len__(self) -> int:
+                return 1
+            
+            def __iter__(self):
+                return (x for x in ['name'])
+        
+        self.assertTryCastSuccess(NamedObject, MyNamedMapping('Isabelle'))
+        self.assertTryCastFailure(ValuedObject, MyNamedMapping('Isabelle'))
     
     # === Unions ===
     

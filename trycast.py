@@ -1,7 +1,8 @@
 import sys
 from typing import (
     cast, Dict, get_type_hints,
-    List, Optional, overload, Tuple, TYPE_CHECKING, Type, TypeVar, Union,
+    List, Mapping, Optional, overload,
+    Tuple, TYPE_CHECKING, Type, TypeVar, Union,
 )
 
 # Literal
@@ -200,7 +201,7 @@ def trycast(type, value, failure=None):
         return failure
     
     if _is_typed_dict(type):  # T extends TypedDict
-        if isinstance(value, dict):
+        if isinstance(value, Mapping):
             resolved_annotations = get_type_hints(type)  # resolve ForwardRefs in type.__annotations__
             try:
                 # {typing in Python 3.9+, typing_extensions}.TypedDict
