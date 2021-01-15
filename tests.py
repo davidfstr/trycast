@@ -12,7 +12,7 @@ from tests_shape_example import (
 )
 from typing import (
     Dict, Iterator, List, Mapping, MutableMapping, MutableSequence,
-    Optional, Sequence, TYPE_CHECKING, Union,
+    Optional, Sequence, Tuple, TYPE_CHECKING, Union,
 )
 from unittest import skip, TestCase
 
@@ -204,6 +204,52 @@ class TestTryCast(TestCase):
         self.assertTryCastFailure(List, {1})
         self.assertTryCastFailure(List, object())
     
+    def test_tuple(self) -> None:
+        # Actual tuple
+        self.assertTryCastSuccess(tuple, ())
+        self.assertTryCastSuccess(tuple, (1,))
+        self.assertTryCastSuccess(tuple, (1, 2))
+        
+        # tuple-like lists
+        self.assertTryCastFailure(tuple, [])
+        self.assertTryCastFailure(tuple, [1])
+        self.assertTryCastFailure(tuple, [1,2])
+        
+        # tuple-like sets
+        self.assertTryCastFailure(tuple, set())
+        self.assertTryCastFailure(tuple, {1})
+        self.assertTryCastFailure(tuple, {1,2})
+        
+        # non-tuples
+        self.assertTryCastFailure(tuple, 0)
+        self.assertTryCastFailure(tuple, 'foo')
+        self.assertTryCastFailure(tuple, {1: 1})
+        self.assertTryCastFailure(tuple, {1})
+        self.assertTryCastFailure(tuple, object())
+    
+    def test_big_tuple(self) -> None:
+        # Actual tuple
+        self.assertTryCastSuccess(Tuple, ())
+        self.assertTryCastSuccess(Tuple, (1,))
+        self.assertTryCastSuccess(Tuple, (1, 2))
+        
+        # tuple-like lists
+        self.assertTryCastFailure(Tuple, [])
+        self.assertTryCastFailure(Tuple, [1])
+        self.assertTryCastFailure(Tuple, [1,2])
+        
+        # tuple-like sets
+        self.assertTryCastFailure(Tuple, set())
+        self.assertTryCastFailure(Tuple, {1})
+        self.assertTryCastFailure(Tuple, {1,2})
+        
+        # non-tuples
+        self.assertTryCastFailure(Tuple, 0)
+        self.assertTryCastFailure(Tuple, 'foo')
+        self.assertTryCastFailure(Tuple, {1: 1})
+        self.assertTryCastFailure(Tuple, {1})
+        self.assertTryCastFailure(Tuple, object())
+    
     def test_sequence(self) -> None:
         # Actual Sequence
         self.assertTryCastSuccess(Sequence, [])
@@ -316,6 +362,45 @@ class TestTryCast(TestCase):
         self.assertTryCastFailure(List[int], {1: 1})
         self.assertTryCastFailure(List[int], {1})
         self.assertTryCastFailure(List[int], object())
+    
+    if sys.version_info >= (3, 9):
+        # TODO: Upgrade mypy to a version that supports PEP 585 and `tuple[int, ...]`
+        if not TYPE_CHECKING:
+            def test_tuple_t_ellipsis(self) -> None:
+                # Actual tuple[T, ...]
+                self.assertTryCastSuccess(tuple[int, ...], ())
+                self.assertTryCastSuccess(tuple[int, ...], (1,))
+                self.assertTryCastSuccess(tuple[int, ...], (1, 2))
+                
+                # tuple[T, ...]-like tuples
+                self.assertTryCastFailure(tuple[int, ...], (True,))
+                self.assertTryCastFailure(tuple[int, ...], (1, True))
+                
+                # non-tuple[T, ...]s
+                self.assertTryCastFailure(tuple[int, ...], 0)
+                self.assertTryCastFailure(tuple[int, ...], 'foo')
+                self.assertTryCastFailure(tuple[int, ...], ['1'])
+                self.assertTryCastFailure(tuple[int, ...], {1: 1})
+                self.assertTryCastFailure(tuple[int, ...], {1})
+                self.assertTryCastFailure(tuple[int, ...], object())
+    
+    def test_big_tuple_t_ellipsis(self) -> None:
+        # Actual tuple[T, ...]
+        self.assertTryCastSuccess(Tuple[int, ...], ())
+        self.assertTryCastSuccess(Tuple[int, ...], (1,))
+        self.assertTryCastSuccess(Tuple[int, ...], (1, 2))
+        
+        # tuple[T, ...]-like tuples
+        self.assertTryCastFailure(Tuple[int, ...], (True,))
+        self.assertTryCastFailure(Tuple[int, ...], (1, True))
+        
+        # non-tuple[T, ...]s
+        self.assertTryCastFailure(Tuple[int, ...], 0)
+        self.assertTryCastFailure(Tuple[int, ...], 'foo')
+        self.assertTryCastFailure(Tuple[int, ...], ['1'])
+        self.assertTryCastFailure(Tuple[int, ...], {1: 1})
+        self.assertTryCastFailure(Tuple[int, ...], {1})
+        self.assertTryCastFailure(Tuple[int, ...], object())
     
     def test_sequence_t(self) -> None:
         # Actual Sequence[T]

@@ -165,6 +165,8 @@ def trycast(type, value, failure=None):
     type_origin = get_origin(type)
     if type_origin is list or type_origin is List:  # List, List[T]
         return _trycast_listlike(type, value, failure, list)
+    if type_origin is tuple or type_origin is Tuple:  # Tuple, Tuple[T, ...]
+        return _trycast_listlike(type, value, failure, tuple, covariant_t=True, t_ellipsis=True)
     if type_origin is Sequence or type_origin is CSequence:  # Sequence, Sequence[T]
         return _trycast_listlike(type, value, failure, CSequence, covariant_t=True)
     if type_origin is MutableSequence or type_origin is CMutableSequence:  # MutableSequence, MutableSequence[T]
@@ -220,7 +222,7 @@ def trycast(type, value, failure=None):
         return failure
 
 
-def _trycast_listlike(type, value, failure, listlike_type, *, covariant_t=False):
+def _trycast_listlike(type, value, failure, listlike_type, *, covariant_t=False, t_ellipsis=False):
     if isinstance(value, listlike_type):
         T_ = get_args(type)
         if len(T_) == 0:  # Python 3.9+
@@ -228,7 +230,13 @@ def _trycast_listlike(type, value, failure, listlike_type, *, covariant_t=False)
                 _SimpleTypeVarCo if covariant_t else _SimpleTypeVar,
             )
         else:
-            (T,) = T_
+            if t_ellipsis:
+                if len(T_) == 2 and T_[1] is Ellipsis:
+                    (T, _) = T_
+                else:
+                    return failure
+            else:
+                (T,) = T_
         if _is_simple_typevar(T, covariant=covariant_t):
             pass
         else:
