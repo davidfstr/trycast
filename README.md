@@ -115,7 +115,7 @@ Other alternatives for representing data structures in Python include
 
 * See the [Roadmap](https://github.com/davidfstr/trycast/wiki/Roadmap).
 
-### master
+### v0.3.0
 
 * TypedDict improvements & fixes:
     * Fix `trycast()` to recognize custom Mapping subclasses as TypedDicts.
