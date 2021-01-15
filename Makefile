@@ -2,7 +2,7 @@ test:
 	python3 -m unittest
 
 testall:
-	tox
+	PYTHONPATH= tox
 
 typecheck:
 	mypy
