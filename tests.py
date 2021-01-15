@@ -10,7 +10,10 @@ from tests_shape_example import (
     HTTP_400_BAD_REQUEST,
     shapes_drawn,
 )
-from typing import Dict, Iterator, List, Mapping, Optional, TYPE_CHECKING, Union
+from typing import (
+    Dict, Iterator, List, Mapping, MutableMapping,
+    Optional, TYPE_CHECKING, Union,
+)
 from unittest import skip, TestCase
 
 # Literal
@@ -227,6 +230,31 @@ class TestTryCast(TestCase):
         self.assertTryCastFailure(Dict, {1})
         self.assertTryCastFailure(Dict, object())
     
+    def test_mapping(self) -> None:
+        # Actual Mapping
+        self.assertTryCastSuccess(Mapping, {})
+        self.assertTryCastSuccess(Mapping, {1: 1})
+        self.assertTryCastSuccess(Mapping, {'x': 1, 'y': 1})
+        
+        # non-Mapping
+        self.assertTryCastFailure(Mapping, 0)
+        self.assertTryCastFailure(Mapping, 'foo')
+        self.assertTryCastFailure(Mapping, [1])
+        self.assertTryCastFailure(Mapping, {1})
+        self.assertTryCastFailure(Mapping, object())
+        
+        # Actual MutableMapping
+        self.assertTryCastSuccess(MutableMapping, {})
+        self.assertTryCastSuccess(MutableMapping, {1: 1})
+        self.assertTryCastSuccess(MutableMapping, {'x': 1, 'y': 1})
+        
+        # non-MutableMapping
+        self.assertTryCastFailure(MutableMapping, 0)
+        self.assertTryCastFailure(MutableMapping, 'foo')
+        self.assertTryCastFailure(MutableMapping, [1])
+        self.assertTryCastFailure(MutableMapping, {1})
+        self.assertTryCastFailure(MutableMapping, object())
+    
     # === Generic Collections ===
     
     if sys.version_info >= (3, 9):
@@ -306,6 +334,41 @@ class TestTryCast(TestCase):
         self.assertTryCastFailure(Dict[str, int], {1: 1})
         self.assertTryCastFailure(Dict[str, int], {1})
         self.assertTryCastFailure(Dict[str, int], object())
+    
+    def test_mapping_k_v(self) -> None:
+        # Actual Mapping[K, V]
+        self.assertTryCastSuccess(Mapping[str, int], {})
+        self.assertTryCastSuccess(Mapping[str, int], {'x': 1})
+        self.assertTryCastSuccess(Mapping[str, int], {'x': 1, 'y': 2})
+        
+        # Mapping[K, V]-like dicts
+        self.assertTryCastFailure(Mapping[str, int], {'x': True})
+        self.assertTryCastFailure(Mapping[str, int], {'x': 1, 'y': True})
+        
+        # non-Mapping[K, V]s
+        self.assertTryCastFailure(Mapping[str, int], 0)
+        self.assertTryCastFailure(Mapping[str, int], 'foo')
+        self.assertTryCastFailure(Mapping[str, int], [1])
+        self.assertTryCastFailure(Mapping[str, int], {1: 1})
+        self.assertTryCastFailure(Mapping[str, int], {1})
+        self.assertTryCastFailure(Mapping[str, int], object())
+        
+        # Actual MutableMapping[K, V]
+        self.assertTryCastSuccess(MutableMapping[str, int], {})
+        self.assertTryCastSuccess(MutableMapping[str, int], {'x': 1})
+        self.assertTryCastSuccess(MutableMapping[str, int], {'x': 1, 'y': 2})
+        
+        # MutableMapping[K, V]-like dicts
+        self.assertTryCastFailure(MutableMapping[str, int], {'x': True})
+        self.assertTryCastFailure(MutableMapping[str, int], {'x': 1, 'y': True})
+        
+        # non-MutableMapping[K, V]s
+        self.assertTryCastFailure(MutableMapping[str, int], 0)
+        self.assertTryCastFailure(MutableMapping[str, int], 'foo')
+        self.assertTryCastFailure(MutableMapping[str, int], [1])
+        self.assertTryCastFailure(MutableMapping[str, int], {1: 1})
+        self.assertTryCastFailure(MutableMapping[str, int], {1})
+        self.assertTryCastFailure(MutableMapping[str, int], object())
     
     # === TypedDicts ===
     

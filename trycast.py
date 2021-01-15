@@ -1,7 +1,11 @@
+from collections.abc import (
+    Mapping as CMapping,
+    MutableMapping as CMutableMapping,
+)
 import sys
 from typing import (
     cast, Dict, get_type_hints,
-    List, Mapping, Optional, overload,
+    List, Mapping, MutableMapping, Optional, overload,
     Tuple, TYPE_CHECKING, Type, TypeVar, Union,
 )
 
@@ -96,6 +100,7 @@ __all__ = ['trycast']
 _T = TypeVar('_T')
 _F = TypeVar('_F')
 _SimpleTypeVar = TypeVar('_SimpleTypeVar')
+_SimpleTypeVarCo = TypeVar('_SimpleTypeVarCo', covariant=True)
 
 _MISSING = object()
 _FAILURE = object()
@@ -173,22 +178,11 @@ def trycast(type, value, failure=None):
         else:
             return failure
     if type_origin is dict or type_origin is Dict:  # Dict, Dict[K, V]
-        if isinstance(value, dict):
-            K_V = get_args(type)
-            if len(K_V) == 0:  # Python 3.9+
-                (K, V) = (_SimpleTypeVar, _SimpleTypeVar)
-            else:
-                (K, V) = K_V
-            if _is_simple_typevar(K) and _is_simple_typevar(V):
-                pass
-            else:
-                for (k, v) in value.items():
-                    if trycast(K, k, _FAILURE) is _FAILURE or \
-                            trycast(V, v, _FAILURE) is _FAILURE:
-                        return failure
-            return cast(_T, value)
-        else:
-            return failure
+        return _trycast_mappinglike(type, value, failure, dict)
+    if type_origin is Mapping or type_origin is CMapping:  # Mapping, Mapping[K, V]
+        return _trycast_mappinglike(type, value, failure, CMapping, covariant_v=True)
+    if type_origin is MutableMapping or type_origin is CMutableMapping:  # MutableMapping, MutableMapping[K, V]
+        return _trycast_mappinglike(type, value, failure, CMutableMapping)
     if type_origin is Union:  # Union[T1, T2, ...]
         for T in get_args(type):
             if trycast(T, value, _FAILURE) is not _FAILURE:
@@ -234,11 +228,33 @@ def trycast(type, value, failure=None):
         return failure
 
 
-def _is_simple_typevar(T: object) -> bool:
+def _trycast_mappinglike(type, value, failure, mapping_type, *, covariant_v=False):
+    if isinstance(value, mapping_type):
+        K_V = get_args(type)
+        if len(K_V) == 0:  # Python 3.9+
+            (K, V) = (
+                _SimpleTypeVar,
+                _SimpleTypeVarCo if covariant_v else _SimpleTypeVar
+            )
+        else:
+            (K, V) = K_V
+        if _is_simple_typevar(K) and _is_simple_typevar(V, covariant=covariant_v):
+            pass
+        else:
+            for (k, v) in value.items():
+                if trycast(K, k, _FAILURE) is _FAILURE or \
+                        trycast(V, v, _FAILURE) is _FAILURE:
+                    return failure
+        return cast(_T, value)
+    else:
+        return failure
+
+
+def _is_simple_typevar(T: object, covariant: bool=False) -> bool:
     return (
         isinstance(T, TypeVar) and
         T.__constraints__ == () and
-        T.__covariant__ == False and
+        T.__covariant__ == covariant and
         T.__contravariant__ == False and
         T.__constraints__ == ()
     )

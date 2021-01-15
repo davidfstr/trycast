@@ -119,6 +119,8 @@ Other alternatives for representing data structures in Python include
 
 * TypedDict improvements & fixes:
     * Fix `trycast()` to recognize custom Mapping subclasses as TypedDicts.
+* Extend `trycast()` to recognize more JSON-like values:
+    * Extend `trycast()` to recognize `Mapping` and `MutableMapping` values.
 * Documentation improvements:
     * Improve introduction.
     * Outline motivation to use trycast and note alternatives.
