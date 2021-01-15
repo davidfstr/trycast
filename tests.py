@@ -719,6 +719,59 @@ class TestTryCast(TestCase):
         self.assertTryCastSuccess(NamedObject, MyNamedMapping('Isabelle'))
         self.assertTryCastFailure(ValuedObject, MyNamedMapping('Isabelle'))
     
+    # === Tuples (Heterogeneous) ===
+    
+    if sys.version_info >= (3, 9):
+        # TODO: Upgrade mypy to a version that supports PEP 585 and `tuple[Ts]`
+        if not TYPE_CHECKING:
+            def test_tuple_ts(self) -> None:
+                # tuple[Ts]
+                self.assertTryCastSuccess(tuple[int], (1,))
+                self.assertTryCastSuccess(tuple[int, str], (1, 'a'))
+                self.assertTryCastSuccess(tuple[int, str, bool], (1, 'a', True))
+                
+                # tuple[Ts]-like tuples
+                self.assertTryCastFailure(tuple[int], ('A',))
+                self.assertTryCastFailure(tuple[int, str], (1, 2))
+                self.assertTryCastFailure(tuple[int, str, bool], (1, 'a', object()))
+                
+                # tuple[Ts]-like lists
+                self.assertTryCastFailure(tuple[int], [1])
+                self.assertTryCastFailure(tuple[int, str], [1, 'a'])
+                self.assertTryCastFailure(tuple[int, str, bool], [1, 'a', True])
+                
+                # non-tuple[Ts]
+                self.assertTryCastFailure(tuple[int], 0)
+                self.assertTryCastFailure(tuple[int], 'foo')
+                self.assertTryCastFailure(tuple[int], ['1'])
+                self.assertTryCastFailure(tuple[int], {1: 1})
+                self.assertTryCastFailure(tuple[int], {1})
+                self.assertTryCastFailure(tuple[int], object())
+    
+    def test_big_tuple_ts(self) -> None:
+        # Tuple[Ts]
+        self.assertTryCastSuccess(Tuple[int], (1,))
+        self.assertTryCastSuccess(Tuple[int, str], (1, 'a'))
+        self.assertTryCastSuccess(Tuple[int, str, bool], (1, 'a', True))
+        
+        # Tuple[Ts]-like tuples
+        self.assertTryCastFailure(Tuple[int], ('A',))
+        self.assertTryCastFailure(Tuple[int, str], (1, 2))
+        self.assertTryCastFailure(Tuple[int, str, bool], (1, 'a', object()))
+        
+        # Tuple[Ts]-like lists
+        self.assertTryCastFailure(Tuple[int], [1])
+        self.assertTryCastFailure(Tuple[int, str], [1, 'a'])
+        self.assertTryCastFailure(Tuple[int, str, bool], [1, 'a', True])
+        
+        # non-Tuple[Ts]
+        self.assertTryCastFailure(Tuple[int], 0)
+        self.assertTryCastFailure(Tuple[int], 'foo')
+        self.assertTryCastFailure(Tuple[int], ['1'])
+        self.assertTryCastFailure(Tuple[int], {1: 1})
+        self.assertTryCastFailure(Tuple[int], {1})
+        self.assertTryCastFailure(Tuple[int], object())
+    
     # === Unions ===
     
     def test_union(self) -> None:

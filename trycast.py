@@ -165,8 +165,21 @@ def trycast(type, value, failure=None):
     type_origin = get_origin(type)
     if type_origin is list or type_origin is List:  # List, List[T]
         return _trycast_listlike(type, value, failure, list)
-    if type_origin is tuple or type_origin is Tuple:  # Tuple, Tuple[T, ...]
-        return _trycast_listlike(type, value, failure, tuple, covariant_t=True, t_ellipsis=True)
+    if type_origin is tuple or type_origin is Tuple:
+        if isinstance(value, tuple):
+            type_args = get_args(type)
+            if len(type_args) == 0 or \
+                    (len(type_args) == 2 and type_args[1] is Ellipsis):  # Tuple, Tuple[T, ...]
+                return _trycast_listlike(type, value, failure, tuple, covariant_t=True, t_ellipsis=True)
+            else:  # Tuple[Ts]
+                if len(value) != len(type_args):
+                    return failure
+                for (T, t) in zip(type_args, value):
+                    if trycast(T, t, _FAILURE) is _FAILURE:
+                        return failure
+                return cast(_T, value)
+        else:
+            return failure
     if type_origin is Sequence or type_origin is CSequence:  # Sequence, Sequence[T]
         return _trycast_listlike(type, value, failure, CSequence, covariant_t=True)
     if type_origin is MutableSequence or type_origin is CMutableSequence:  # MutableSequence, MutableSequence[T]

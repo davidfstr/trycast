@@ -123,6 +123,7 @@ Other alternatives for representing data structures in Python include
     * Extend `trycast()` to recognize `Mapping` and `MutableMapping` values.
     * Extend `trycast()` to recognize `tuple[T, ...]` and `Tuple[T, ...]` values.
     * Extend `trycast()` to recognize `Sequence` and `MutableSequence` values.
+* Extend `trycast()` to recognize `tuple[T1, T2, etc]` and `Tuple[T1, T2, etc]` values.
 * Documentation improvements:
     * Improve introduction.
     * Outline motivation to use trycast and note alternatives.
