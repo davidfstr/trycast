@@ -1,12 +1,14 @@
 from collections.abc import (
     Mapping as CMapping,
     MutableMapping as CMutableMapping,
+    MutableSequence as CMutableSequence,
+    Sequence as CSequence,
 )
 import sys
 from typing import (
     cast, Dict, get_type_hints,
-    List, Mapping, MutableMapping, Optional, overload,
-    Tuple, TYPE_CHECKING, Type, TypeVar, Union,
+    List, Mapping, MutableMapping, MutableSequence, Optional, overload,
+    Sequence, Tuple, TYPE_CHECKING, Type, TypeVar, Union,
 )
 
 # Literal
@@ -162,27 +164,17 @@ def trycast(type, value, failure=None):
     
     type_origin = get_origin(type)
     if type_origin is list or type_origin is List:  # List, List[T]
-        if isinstance(value, list):
-            T_ = get_args(type)
-            if len(T_) == 0:  # Python 3.9+
-                (T,) = (_SimpleTypeVar,)
-            else:
-                (T,) = T_
-            if _is_simple_typevar(T):
-                pass
-            else:
-                for x in value:
-                    if trycast(T, x, _FAILURE) is _FAILURE:
-                        return failure
-            return cast(_T, value)
-        else:
-            return failure
+        return _trycast_listlike(type, value, failure, list)
+    if type_origin is Sequence or type_origin is CSequence:  # Sequence, Sequence[T]
+        return _trycast_listlike(type, value, failure, CSequence, covariant_t=True)
+    if type_origin is MutableSequence or type_origin is CMutableSequence:  # MutableSequence, MutableSequence[T]
+        return _trycast_listlike(type, value, failure, CMutableSequence)
     if type_origin is dict or type_origin is Dict:  # Dict, Dict[K, V]
-        return _trycast_mappinglike(type, value, failure, dict)
+        return _trycast_dictlike(type, value, failure, dict)
     if type_origin is Mapping or type_origin is CMapping:  # Mapping, Mapping[K, V]
-        return _trycast_mappinglike(type, value, failure, CMapping, covariant_v=True)
+        return _trycast_dictlike(type, value, failure, CMapping, covariant_v=True)
     if type_origin is MutableMapping or type_origin is CMutableMapping:  # MutableMapping, MutableMapping[K, V]
-        return _trycast_mappinglike(type, value, failure, CMutableMapping)
+        return _trycast_dictlike(type, value, failure, CMutableMapping)
     if type_origin is Union:  # Union[T1, T2, ...]
         for T in get_args(type):
             if trycast(T, value, _FAILURE) is not _FAILURE:
@@ -228,8 +220,28 @@ def trycast(type, value, failure=None):
         return failure
 
 
-def _trycast_mappinglike(type, value, failure, mapping_type, *, covariant_v=False):
-    if isinstance(value, mapping_type):
+def _trycast_listlike(type, value, failure, listlike_type, *, covariant_t=False):
+    if isinstance(value, listlike_type):
+        T_ = get_args(type)
+        if len(T_) == 0:  # Python 3.9+
+            (T,) = (
+                _SimpleTypeVarCo if covariant_t else _SimpleTypeVar,
+            )
+        else:
+            (T,) = T_
+        if _is_simple_typevar(T, covariant=covariant_t):
+            pass
+        else:
+            for x in value:
+                if trycast(T, x, _FAILURE) is _FAILURE:
+                    return failure
+        return cast(_T, value)
+    else:
+        return failure
+
+
+def _trycast_dictlike(type, value, failure, dictlike_type, *, covariant_v=False):
+    if isinstance(value, dictlike_type):
         K_V = get_args(type)
         if len(K_V) == 0:  # Python 3.9+
             (K, V) = (

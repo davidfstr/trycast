@@ -11,8 +11,8 @@ from tests_shape_example import (
     shapes_drawn,
 )
 from typing import (
-    Dict, Iterator, List, Mapping, MutableMapping,
-    Optional, TYPE_CHECKING, Union,
+    Dict, Iterator, List, Mapping, MutableMapping, MutableSequence,
+    Optional, Sequence, TYPE_CHECKING, Union,
 )
 from unittest import skip, TestCase
 
@@ -204,6 +204,27 @@ class TestTryCast(TestCase):
         self.assertTryCastFailure(List, {1})
         self.assertTryCastFailure(List, object())
     
+    def test_sequence(self) -> None:
+        # Actual Sequence
+        self.assertTryCastSuccess(Sequence, [])
+        self.assertTryCastSuccess(Sequence, [1])
+        self.assertTryCastSuccess(Sequence, [1, 2])
+        self.assertTryCastSuccess(Sequence, ())
+        self.assertTryCastSuccess(Sequence, (1,))
+        self.assertTryCastSuccess(Sequence, (1,2))
+        self.assertTryCastSuccess(Sequence, 'foo')
+        
+        # Sequence-like sets
+        self.assertTryCastFailure(Sequence, set())
+        self.assertTryCastFailure(Sequence, {1})
+        self.assertTryCastFailure(Sequence, {1,2})
+        
+        # non-Sequences
+        self.assertTryCastFailure(Sequence, 0)
+        self.assertTryCastFailure(Sequence, {1: 1})
+        self.assertTryCastFailure(Sequence, {1})
+        self.assertTryCastFailure(Sequence, object())
+    
     def test_dict(self) -> None:
         # Actual dict
         self.assertTryCastSuccess(dict, {})
@@ -295,6 +316,43 @@ class TestTryCast(TestCase):
         self.assertTryCastFailure(List[int], {1: 1})
         self.assertTryCastFailure(List[int], {1})
         self.assertTryCastFailure(List[int], object())
+    
+    def test_sequence_t(self) -> None:
+        # Actual Sequence[T]
+        self.assertTryCastSuccess(Sequence[int], [])
+        self.assertTryCastSuccess(Sequence[int], [1])
+        self.assertTryCastSuccess(Sequence[int], [1, 2])
+        self.assertTryCastSuccess(Sequence[str], 'foo')
+        
+        # Sequence[T]-like lists
+        self.assertTryCastFailure(Sequence[int], [True])
+        self.assertTryCastFailure(Sequence[int], [1, True])
+        
+        # non-Sequence[T]s
+        self.assertTryCastFailure(Sequence[int], 0)
+        self.assertTryCastFailure(Sequence[int], 'foo')
+        self.assertTryCastFailure(Sequence[int], ['1'])
+        self.assertTryCastFailure(Sequence[int], {1: 1})
+        self.assertTryCastFailure(Sequence[int], {1})
+        self.assertTryCastFailure(Sequence[int], object())
+        
+        # Actual MutableSequence[T]
+        self.assertTryCastSuccess(MutableSequence[int], [])
+        self.assertTryCastSuccess(MutableSequence[int], [1])
+        self.assertTryCastSuccess(MutableSequence[int], [1, 2])
+        
+        # MutableSequence[T]-like lists
+        self.assertTryCastFailure(MutableSequence[int], [True])
+        self.assertTryCastFailure(MutableSequence[int], [1, True])
+        
+        # non-MutableSequence[T]s
+        self.assertTryCastFailure(MutableSequence[int], 0)
+        self.assertTryCastFailure(MutableSequence[int], 'foo')
+        self.assertTryCastFailure(MutableSequence[int], ['1'])
+        self.assertTryCastFailure(MutableSequence[int], {1: 1})
+        self.assertTryCastFailure(MutableSequence[int], {1})
+        self.assertTryCastFailure(MutableSequence[int], object())
+        self.assertTryCastFailure(MutableSequence[str], 'foo')
     
     if sys.version_info >= (3, 9):
         # TODO: Upgrade mypy to a version that supports PEP 585 and `dict[str, int]`
