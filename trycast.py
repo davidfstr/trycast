@@ -111,24 +111,24 @@ _FAILURE = object()
 # TODO: Use this signature for trycast once support for TypeForm is 
 #       implemented in mypy.
 #@overload
-#def trycast(type: TypeForm[_T], value: object) -> Optional[_T]: ...
+#def trycast(tp: TypeForm[_T], value: object) -> Optional[_T]: ...
 #@overload
-#def trycast(type: TypeForm[_T], value: object, failure: _F) -> Union[_T, _F]: ...
+#def trycast(tp: TypeForm[_T], value: object, failure: _F) -> Union[_T, _F]: ...
 
 @overload
-def trycast(type: object, value: object) -> Optional[object]: ...
+def trycast(tp: object, value: object) -> Optional[object]: ...
 @overload
-def trycast(type: object, value: object, failure: _F) -> Union[object, _F]: ...
+def trycast(tp: object, value: object, failure: _F) -> Union[object, _F]: ...
 
-def trycast(type, value, failure=None):
+def trycast(tp, value, failure=None):
     """
-    If `value` is in the shape of `type` (as accepted by a Python typechecker
+    If `value` is in the shape of `tp` (as accepted by a Python typechecker
     conforming to PEP 484 "Type Hints") then returns it, otherwise returns
     `failure` (which is None by default).
     
     This method logically performs an operation similar to:
     
-        return value if isinstance(type, value) else failure
+        return value if isinstance(tp, value) else failure
     
     except that it supports many more types than `isinstance`, including:
         * List[T]
@@ -148,13 +148,13 @@ def trycast(type, value, failure=None):
         > trycast(float, 1) -> 1
         > isinstance(1, float) -> False
     """
-    if type is int:
+    if tp is int:
         # Do not accept bools as valid int values
         if isinstance(value, int) and not isinstance(value, bool):
             return cast(_T, value)
         else:
             return failure
-    if type is float:
+    if tp is float:
         # 1. Accept ints as valid float values
         # 2. Do not accept bools as valid float values
         if isinstance(value, float) or (isinstance(value, int) and not isinstance(value, bool)):
@@ -162,15 +162,15 @@ def trycast(type, value, failure=None):
         else:
             return failure
     
-    type_origin = get_origin(type)
+    type_origin = get_origin(tp)
     if type_origin is list or type_origin is List:  # List, List[T]
-        return _trycast_listlike(type, value, failure, list)
+        return _trycast_listlike(tp, value, failure, list)
     if type_origin is tuple or type_origin is Tuple:
         if isinstance(value, tuple):
-            type_args = get_args(type)
+            type_args = get_args(tp)
             if len(type_args) == 0 or \
                     (len(type_args) == 2 and type_args[1] is Ellipsis):  # Tuple, Tuple[T, ...]
-                return _trycast_listlike(type, value, failure, tuple, covariant_t=True, t_ellipsis=True)
+                return _trycast_listlike(tp, value, failure, tuple, covariant_t=True, t_ellipsis=True)
             else:  # Tuple[Ts]
                 if len(value) != len(type_args):
                     return failure
@@ -181,35 +181,35 @@ def trycast(type, value, failure=None):
         else:
             return failure
     if type_origin is Sequence or type_origin is CSequence:  # Sequence, Sequence[T]
-        return _trycast_listlike(type, value, failure, CSequence, covariant_t=True)
+        return _trycast_listlike(tp, value, failure, CSequence, covariant_t=True)
     if type_origin is MutableSequence or type_origin is CMutableSequence:  # MutableSequence, MutableSequence[T]
-        return _trycast_listlike(type, value, failure, CMutableSequence)
+        return _trycast_listlike(tp, value, failure, CMutableSequence)
     if type_origin is dict or type_origin is Dict:  # Dict, Dict[K, V]
-        return _trycast_dictlike(type, value, failure, dict)
+        return _trycast_dictlike(tp, value, failure, dict)
     if type_origin is Mapping or type_origin is CMapping:  # Mapping, Mapping[K, V]
-        return _trycast_dictlike(type, value, failure, CMapping, covariant_v=True)
+        return _trycast_dictlike(tp, value, failure, CMapping, covariant_v=True)
     if type_origin is MutableMapping or type_origin is CMutableMapping:  # MutableMapping, MutableMapping[K, V]
-        return _trycast_dictlike(type, value, failure, CMutableMapping)
+        return _trycast_dictlike(tp, value, failure, CMutableMapping)
     if type_origin is Union:  # Union[T1, T2, ...]
-        for T in get_args(type):
+        for T in get_args(tp):
             if trycast(T, value, _FAILURE) is not _FAILURE:
                 return cast(_T, value)
         return failure
     if type_origin is Literal:  # Literal[...]
-        for literal in get_args(type):
+        for literal in get_args(tp):
             if value == literal:
                 return cast(_T, value)
         return failure
     
-    if _is_typed_dict(type):  # T extends TypedDict
+    if _is_typed_dict(tp):  # T extends TypedDict
         if isinstance(value, Mapping):
-            resolved_annotations = get_type_hints(type)  # resolve ForwardRefs in type.__annotations__
+            resolved_annotations = get_type_hints(tp)  # resolve ForwardRefs in tp.__annotations__
             try:
                 # {typing in Python 3.9+, typing_extensions}.TypedDict
-                required_keys = type.__required_keys__
+                required_keys = tp.__required_keys__
             except AttributeError:
                 # {typing in Python 3.8, mypy_extensions}.TypedDict
-                if type.__total__:
+                if tp.__total__:
                     required_keys = resolved_annotations.keys()
                 else:
                     required_keys = frozenset()
@@ -224,20 +224,20 @@ def trycast(type, value, failure=None):
         else:
             return failure
     
-    if isinstance(type, tuple):
+    if isinstance(tp, tuple):
         raise TypeError(
             'trycast does not support checking against a tuple of types. '
             'Try checking against a Union[T1, T2, ...] instead.')
     
-    if isinstance(value, type):  # type: ignore
+    if isinstance(value, tp):  # type: ignore
         return value
     else:
         return failure
 
 
-def _trycast_listlike(type, value, failure, listlike_type, *, covariant_t=False, t_ellipsis=False):
+def _trycast_listlike(tp, value, failure, listlike_type, *, covariant_t=False, t_ellipsis=False):
     if isinstance(value, listlike_type):
-        T_ = get_args(type)
+        T_ = get_args(tp)
         if len(T_) == 0:  # Python 3.9+
             (T,) = (
                 _SimpleTypeVarCo if covariant_t else _SimpleTypeVar,
@@ -261,9 +261,9 @@ def _trycast_listlike(type, value, failure, listlike_type, *, covariant_t=False,
         return failure
 
 
-def _trycast_dictlike(type, value, failure, dictlike_type, *, covariant_v=False):
+def _trycast_dictlike(tp, value, failure, dictlike_type, *, covariant_v=False):
     if isinstance(value, dictlike_type):
-        K_V = get_args(type)
+        K_V = get_args(tp)
         if len(K_V) == 0:  # Python 3.9+
             (K, V) = (
                 _SimpleTypeVar,
