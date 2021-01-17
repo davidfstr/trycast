@@ -8,5 +8,8 @@ typecheck:
 	mypy
 
 publish:
-	poetry build && poetry publish
-	echo "--> Don't forget to create a \"vX.Y.Z\" tag in Git and push it"
+	poetry build && \
+	git tag v$$(cat pyproject.toml | grep version | sed 's/[^0-9.]*//g') && \
+	\
+	poetry publish && \
+	git push origin --tags
