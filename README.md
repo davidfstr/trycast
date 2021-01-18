@@ -109,7 +109,12 @@ Other alternatives for representing data structures in Python include
     * Avoid using `mypy_extensions.TypedDict` in general.
 
 
-## Release Notes
+# License
+
+[MIT](LICENSE.md)
+
+
+## Changelog
 
 ### Future
 
