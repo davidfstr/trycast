@@ -17,10 +17,11 @@ class Point2D(TypedDict):
     name: str
 
 @route('/draw_point')
-def draw_point_endpoint() -> None:
+def draw_point_endpoint() -> HTTPResponse:
     request_json = request.json  # type: object
     if (point := trycast(Point2D, request_json)) is not None:
         draw_point(point)  # type is narrowed to Point2D
+        return HTTPResponse(status=200)
     else:
         return HTTPResponse(status=400)  # Bad Request
 
@@ -59,10 +60,11 @@ class Rect(TypedDict):
 Shape = Union[Circle, Rect]  # a Tagged Union!
 
 @route('/draw_shape')
-def draw_shape_endpoint() -> None:
+def draw_shape_endpoint() -> HTTPResponse:
     request_json = request.json  # type: object
     if (shape := trycast(Shape, request_json)) is not None:
         draw_shape(shape)  # type is narrowed to Shape
+        return HTTPResponse(status=200)
     else:
         return HTTPResponse(status=400)  # Bad Request
 ```
