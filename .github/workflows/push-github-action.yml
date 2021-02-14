@@ -21,20 +21,20 @@ jobs:
       - name: Install Poetry
         uses: Gr1N/setup-poetry@v4
       
-      - name: Install dependencies with Poetry
-        run: poetry install
-      
-      - name: Cache installed dependencies
-        uses: actions/cache@v1
-        with:
-          path: ~/.cache/pypoetry/virtualenvs
-          key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-poetry-
-      
       - name: Display Poetry version
         run: poetry --version
       
+      - name: Install dependencies with Poetry
+        run: poetry install
+      
+      #- name: Cache installed dependencies
+      #  uses: actions/cache@v1
+      #  with:
+      #    path: ~/.cache/pypoetry/virtualenvs
+      #    key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
+      #    restore-keys: |
+      #      ${{ runner.os }}-poetry-
+      
       - name: Run tests
         # Run tox using the version of Python in `PATH`
-        run: tox -e py
+        run: poetry run tox -e py
