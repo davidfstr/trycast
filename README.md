@@ -120,6 +120,10 @@ Other alternatives for representing data structures in Python include
 
 * See the [Roadmap](https://github.com/davidfstr/trycast/wiki/Roadmap).
 
+### master
+
+* Setup continuous integration with GitHub Actions.
+
 ### v0.3.0
 
 * TypedDict improvements & fixes:
