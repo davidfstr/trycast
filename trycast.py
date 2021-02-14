@@ -93,7 +93,7 @@ except ImportError:
     pass
 _typed_dict_metas = tuple(_typed_dict_meta_list)
 def _is_typed_dict(tp: object) -> bool:
-    return isinstance(tp, tuple(_typed_dict_metas))
+    return isinstance(tp, _typed_dict_metas)
 
 
 __all__ = ['trycast']
