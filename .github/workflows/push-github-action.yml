@@ -27,13 +27,11 @@ jobs:
       - name: Install dependencies with Poetry
         run: poetry install
       
-      #- name: Cache installed dependencies
-      #  uses: actions/cache@v1
-      #  with:
-      #    path: ~/.cache/pypoetry/virtualenvs
-      #    key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
-      #    restore-keys: |
-      #      ${{ runner.os }}-poetry-
+      - name: Cache installed dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pypoetry/virtualenvs
+          key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
       
       - name: Run tests
         # Run tox using the version of Python in `PATH`
