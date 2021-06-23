@@ -23,7 +23,7 @@ classifiers = [  # https://pypi.org/classifiers/
 ]
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = "^3.6.2"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.910"
@@ -32,3 +32,25 @@ tox = "^3.23.1"
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+
+# Linters
+
+## Mypy
+# Config Syntax Reference: https://mypy.readthedocs.io/en/latest/config_file.
+# html#using-a-pyproject-toml-file
+
+# === Global Options ===
+[tool.mypy]
+# Default files to check.
+files = "trycast.py,tests.py"
+mypy_path = "."
+
+# Don't implicitly allow None anywhere.
+strict_optional = true
+
+# === Per-Module Options ===
+# [[tool.mypy.overrides]]
+
+#[mypy-mycode.foo.*]
+#...

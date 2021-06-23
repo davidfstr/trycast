@@ -13,3 +13,6 @@ publish:
 	\
 	poetry publish && \
 	git push origin --tags
+
+lint:
+	
