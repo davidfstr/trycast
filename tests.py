@@ -12,7 +12,7 @@ from tests_shape_example import (
 )
 from typing import (
     Dict, Iterator, List, Mapping, MutableMapping, MutableSequence,
-    Optional, Sequence, Tuple, TYPE_CHECKING, Union,
+    Optional, Sequence, Tuple, TYPE_CHECKING, Union, cast
 )
 from unittest import skip, TestCase
 
@@ -933,7 +933,9 @@ class TestTryCast(TestCase):
         try:
             old_meta_path = sys.meta_path  # capture
             te_gone_loader = _TypingExtensionsGoneLoader()  # type: MetaPathFinder
-            sys.meta_path = [te_gone_loader] + sys.meta_path
+
+            # The cast is necessary to ignore 'assignment error' invoked in mypy 0.910. 
+            sys.meta_path = cast(List, [te_gone_loader]) + sys.meta_path
             try:
                 try:
                     import typing_extensions
