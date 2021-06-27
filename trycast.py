@@ -101,6 +101,7 @@ try:
     _typed_dict_meta_list.append(_TypingTypedDictMeta)
 except ImportError:
     pass
+
 try:
     from typing_extensions import (  # type: ignore # isort: skip
         _TypedDictMeta as _TypingExtensionsTypedDictMeta,
@@ -110,6 +111,7 @@ try:
 except ImportError:
     pass
 
+
 try:
     from mypy_extensions import (  # type: ignore # isort: skip
         _TypedDictMeta as _MypyExtensionsTypedDictMeta,
@@ -118,6 +120,7 @@ try:
     _typed_dict_meta_list.append(_MypyExtensionsTypedDictMeta)
 except ImportError:
     pass
+
 _typed_dict_metas = tuple(_typed_dict_meta_list)
 
 
@@ -211,6 +214,7 @@ def trycast(tp, value, failure=None):
             if len(type_args) == 0 or (
                 len(type_args) == 2 and type_args[1] is Ellipsis
             ):  # Tuple, Tuple[T, ...]
+
                 return _trycast_listlike(
                     tp,
                     value,
@@ -230,6 +234,7 @@ def trycast(tp, value, failure=None):
                 return cast(_T, value)
         else:
             return failure
+
     if type_origin is Sequence or type_origin is CSequence:  # Sequence, Sequence[T]
         return _trycast_listlike(tp, value, failure, CSequence, covariant_t=True)
 
@@ -286,7 +291,6 @@ def trycast(tp, value, failure=None):
                 if k not in value:
                     return failure
             return cast(_T, value)
-
         else:
             return failure
 
@@ -317,7 +321,6 @@ def _trycast_listlike(
                     (T, _) = T_
                 else:
                     return failure
-
             else:
                 (T,) = T_
 
@@ -329,7 +332,6 @@ def _trycast_listlike(
                     return failure
 
         return cast(_T, value)
-
     else:
         return failure
 
