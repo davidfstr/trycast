@@ -38,4 +38,4 @@ jobs:
 
       - name: Run tests
         # Run tox using the version of Python in `PATH`
-        run: poetry run make testall
+        run: poetry run tox -e py
