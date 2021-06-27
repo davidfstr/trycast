@@ -28,29 +28,46 @@ python = "^3.6.2"
 [tool.poetry.dev-dependencies]
 mypy = "^0.910"
 tox = "^3.23.1"
+black = "^21.6b0"
+isort = "^5.9.1"
+flake8 = "^3.9.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
-
 # Linters
+# === Mypy ===
 
-## Mypy
 # Config Syntax Reference: https://mypy.readthedocs.io/en/latest/config_file.
 # html#using-a-pyproject-toml-file
 
-# === Global Options ===
 [tool.mypy]
-# Default files to check.
 files = "trycast.py,tests.py"
 mypy_path = "."
-
-# Don't implicitly allow None anywhere.
 strict_optional = true
 
-# === Per-Module Options ===
-# [[tool.mypy.overrides]]
+# === Isort ===
+[tool.isort]
+profile = "black"
+atomic = true
+line_length = 88
 
-#[mypy-mycode.foo.*]
-#...
+# === Black ===
+[tool.black]
+line_length = 88
+
+# Tests
+[tool.tox]
+legacy_tox_ini = """
+
+[tox]
+envlist = py36,py37,py38,py39
+isolated_build = True
+
+[testenv]
+deps = mypy
+commands =
+    python3 -m unittest
+
+"""

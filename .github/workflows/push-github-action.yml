@@ -9,30 +9,33 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      
+
       - name: Display Python version
         run: python -c "import sys; print(sys.version)"
-      
+
       - name: Install Poetry
         uses: Gr1N/setup-poetry@v4
-      
+
       - name: Display Poetry version
         run: poetry --version
-      
+
       - name: Install dependencies with Poetry
         run: poetry install
-      
+
       - name: Cache installed dependencies
         uses: actions/cache@v2
         with:
           path: ~/.cache/pypoetry/virtualenvs
           key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
-      
+
+      - name: Lint check
+        run: poetry run make lint-check
+
       - name: Run tests
         # Run tox using the version of Python in `PATH`
-        run: poetry run tox -e py
+        run: poetry run make testall
