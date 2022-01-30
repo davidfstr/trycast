@@ -40,28 +40,28 @@ format: black isort flake mypy  ## Reformat code. Run linters.
 
 .PHONY: lint
 lint: flake mypy  ## Check whether code satisfies all linter and formatter rules.
-	@black --check $(path)
-	@isort --check $(path)
+	black --check $(path)
+	isort --check $(path)
 
 
 .PHONY: black
 black:  ## Reformat code according to Black style.
-	@black --fast $(path)
+	black --fast $(path)
 
 
 .PHONY: isort
 isort:  ## Reformat code such that imports are sorted.
-	@isort $(path)
+	isort $(path)
 
 
 .PHONY: flake
 flake:  ## Run flake8 linter.
-	@flake8 $(path)
+	flake8 $(path)
 
 
 .PHONY: mypy
 mypy:  ## Run mypy typechecker.
-	@mypy $(path)
+	mypy $(path)
 
 
 .PHONY: coverage
