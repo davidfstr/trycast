@@ -133,6 +133,7 @@ Other alternatives for representing data structures in Python include
 * Migrate to the Black code style.
 * Introduce Black and isort code formatters.
 * Introduce flake8 linter.
+* Introduce coverage.py code coverage reports.
 
 [at least one company]: https://dafoster.net/projects/techsmart-platform/
 
