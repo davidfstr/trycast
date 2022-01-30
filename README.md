@@ -122,9 +122,19 @@ Other alternatives for representing data structures in Python include
 
 * See the [Roadmap](https://github.com/davidfstr/trycast/wiki/Roadmap).
 
-### master
+### master (v0.4.0b)
 
-* Setup continuous integration with GitHub Actions.
+* Upgrade development status from Alpha to Beta:
+    * trycast is thoroughly tested.
+    * trycast has high code coverage (92% on Python 3.9).
+    * trycast has been in production use for over a year
+      at [at least one company] without issues
+* Setup continuous integration with GitHub Actions, against Python 3.6 - 3.9.
+* Migrate to the Black code style.
+* Introduce Black and isort code formatters.
+* Introduce flake8 linter.
+
+[at least one company]: https://dafoster.net/projects/techsmart-platform/
 
 ### v0.3.0
 
@@ -165,7 +175,7 @@ Other alternatives for representing data structures in Python include
 * Fix README to appear on PyPI.
 * Add other package metadata, such as the supported Python versions.
 
-### v0.0.1
+### v0.0.1a
 
 * Initial release.
 * Supports typechecking all types found in JSON.
