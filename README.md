@@ -129,7 +129,8 @@ Other alternatives for representing data structures in Python include
     * trycast has high code coverage (92% on Python 3.9).
     * trycast has been in production use for over a year
       at [at least one company] without issues
-* Setup continuous integration with GitHub Actions, against Python 3.6 - 3.9.
+* Add support for Python 3.10.
+* Setup continuous integration with GitHub Actions, against Python 3.6 - 3.10.
 * Migrate to the Black code style.
 * Introduce Black and isort code formatters.
 * Introduce flake8 linter.
