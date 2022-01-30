@@ -52,7 +52,6 @@ elif sys.version_info >= (3, 7):
         else:
             return ()
 
-
 elif sys.version_info >= (3, 6):
     from typing import GenericMeta  # type: ignore  # private API not in stubs
     from typing import _Union  # type: ignore  # private API not in stubs
@@ -86,7 +85,6 @@ elif sys.version_info >= (3, 6):
             return tp.__values__
         else:
             return ()
-
 
 else:
     raise ImportError("Expected Python 3.6 or later.")
