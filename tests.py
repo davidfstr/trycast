@@ -20,7 +20,7 @@ from typing import (
 )
 from unittest import TestCase
 
-import tests_forwardrefs_example
+import test_data.forwardrefs_example
 from tests_shape_example import HTTP_400_BAD_REQUEST, draw_shape_endpoint, shapes_drawn
 from trycast import trycast
 
@@ -872,7 +872,7 @@ class TestTryCast(TestCase):
 
     def test_typeddict_with_forwardrefs(self) -> None:
         self.assertTryCastSuccess(
-            tests_forwardrefs_example.Circle,
+            test_data.forwardrefs_example.Circle,
             dict(type="circle", center=dict(x=50, y=50), radius=25),
         )
 
@@ -885,7 +885,7 @@ class TestTryCast(TestCase):
             #       explaining the forward references could not be resolved.
             TypeError,
             lambda: trycast(
-                tests_forwardrefs_example.Shape,
+                test_data.forwardrefs_example.Shape,
                 dict(type="circle", center=dict(x=50, y=50), radius=25),
             ),
         )
@@ -893,8 +893,8 @@ class TestTryCast(TestCase):
         # Union with forward refs that have been resolved
         self.assertTryCastSuccess(
             eval_type(
-                tests_forwardrefs_example.Shape,
-                tests_forwardrefs_example.__dict__,
+                test_data.forwardrefs_example.Shape,
+                test_data.forwardrefs_example.__dict__,
                 None,
             ),
             dict(type="circle", center=dict(x=50, y=50), radius=25),
@@ -908,14 +908,16 @@ class TestTryCast(TestCase):
             # TODO: Check the error message. Make it reasonable,
             #       explaining the forward references could not be resolved.
             TypeError,
-            lambda: trycast(tests_forwardrefs_example.Scatterplot, [dict(x=50, y=50)]),
+            lambda: trycast(
+                test_data.forwardrefs_example.Scatterplot, [dict(x=50, y=50)]
+            ),
         )
 
         # list with forward refs that have been resolved
         self.assertTryCastSuccess(
             eval_type(
-                tests_forwardrefs_example.Scatterplot,
-                tests_forwardrefs_example.__dict__,
+                test_data.forwardrefs_example.Scatterplot,
+                test_data.forwardrefs_example.__dict__,
                 None,
             ),
             [dict(x=50, y=50)],
@@ -930,15 +932,16 @@ class TestTryCast(TestCase):
             #       explaining the forward references could not be resolved.
             TypeError,
             lambda: trycast(
-                tests_forwardrefs_example.PointForLabel, {"Target": dict(x=50, y=50)}
+                test_data.forwardrefs_example.PointForLabel,
+                {"Target": dict(x=50, y=50)},
             ),
         )
 
         # dict with forward refs that have been resolved
         self.assertTryCastSuccess(
             eval_type(
-                tests_forwardrefs_example.PointForLabel,
-                tests_forwardrefs_example.__dict__,
+                test_data.forwardrefs_example.PointForLabel,
+                test_data.forwardrefs_example.__dict__,
                 None,
             ),
             {"Target": dict(x=50, y=50)},
