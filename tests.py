@@ -333,26 +333,24 @@ class TestTryCast(TestCase):
     # === Generic Collections ===
 
     if sys.version_info >= (3, 9):
-        # TODO: Upgrade mypy to a version that supports PEP 585 and `list[int]`
-        if not TYPE_CHECKING:
 
-            def test_list_t(self) -> None:
-                # Actual list[T]
-                self.assertTryCastSuccess(list[int], [])
-                self.assertTryCastSuccess(list[int], [1])
-                self.assertTryCastSuccess(list[int], [1, 2])
+        def test_list_t(self) -> None:
+            # Actual list[T]
+            self.assertTryCastSuccess(list[int], [])
+            self.assertTryCastSuccess(list[int], [1])
+            self.assertTryCastSuccess(list[int], [1, 2])
 
-                # list[T]-like lists
-                self.assertTryCastFailure(list[int], [True])
-                self.assertTryCastFailure(list[int], [1, True])
+            # list[T]-like lists
+            self.assertTryCastFailure(list[int], [True])
+            self.assertTryCastFailure(list[int], [1, True])
 
-                # non-list[T]s
-                self.assertTryCastFailure(list[int], 0)
-                self.assertTryCastFailure(list[int], "foo")
-                self.assertTryCastFailure(list[int], ["1"])
-                self.assertTryCastFailure(list[int], {1: 1})
-                self.assertTryCastFailure(list[int], {1})
-                self.assertTryCastFailure(list[int], object())
+            # non-list[T]s
+            self.assertTryCastFailure(list[int], 0)
+            self.assertTryCastFailure(list[int], "foo")
+            self.assertTryCastFailure(list[int], ["1"])
+            self.assertTryCastFailure(list[int], {1: 1})
+            self.assertTryCastFailure(list[int], {1})
+            self.assertTryCastFailure(list[int], object())
 
     def test_big_list_t(self) -> None:
         # Actual list[T]
@@ -373,26 +371,24 @@ class TestTryCast(TestCase):
         self.assertTryCastFailure(List[int], object())
 
     if sys.version_info >= (3, 9):
-        # TODO: Upgrade mypy to a version that supports PEP 585 and `tuple[int, ...]`
-        if not TYPE_CHECKING:
 
-            def test_tuple_t_ellipsis(self) -> None:
-                # Actual tuple[T, ...]
-                self.assertTryCastSuccess(tuple[int, ...], ())
-                self.assertTryCastSuccess(tuple[int, ...], (1,))
-                self.assertTryCastSuccess(tuple[int, ...], (1, 2))
+        def test_tuple_t_ellipsis(self) -> None:
+            # Actual tuple[T, ...]
+            self.assertTryCastSuccess(tuple[int, ...], ())
+            self.assertTryCastSuccess(tuple[int, ...], (1,))
+            self.assertTryCastSuccess(tuple[int, ...], (1, 2))
 
-                # tuple[T, ...]-like tuples
-                self.assertTryCastFailure(tuple[int, ...], (True,))
-                self.assertTryCastFailure(tuple[int, ...], (1, True))
+            # tuple[T, ...]-like tuples
+            self.assertTryCastFailure(tuple[int, ...], (True,))
+            self.assertTryCastFailure(tuple[int, ...], (1, True))
 
-                # non-tuple[T, ...]s
-                self.assertTryCastFailure(tuple[int, ...], 0)
-                self.assertTryCastFailure(tuple[int, ...], "foo")
-                self.assertTryCastFailure(tuple[int, ...], ["1"])
-                self.assertTryCastFailure(tuple[int, ...], {1: 1})
-                self.assertTryCastFailure(tuple[int, ...], {1})
-                self.assertTryCastFailure(tuple[int, ...], object())
+            # non-tuple[T, ...]s
+            self.assertTryCastFailure(tuple[int, ...], 0)
+            self.assertTryCastFailure(tuple[int, ...], "foo")
+            self.assertTryCastFailure(tuple[int, ...], ["1"])
+            self.assertTryCastFailure(tuple[int, ...], {1: 1})
+            self.assertTryCastFailure(tuple[int, ...], {1})
+            self.assertTryCastFailure(tuple[int, ...], object())
 
     def test_big_tuple_t_ellipsis(self) -> None:
         # Actual tuple[T, ...]
@@ -450,26 +446,24 @@ class TestTryCast(TestCase):
         self.assertTryCastFailure(MutableSequence[str], "foo")
 
     if sys.version_info >= (3, 9):
-        # TODO: Upgrade mypy to a version that supports PEP 585 and `dict[str, int]`
-        if not TYPE_CHECKING:
 
-            def test_dict_k_v(self) -> None:
-                # Actual dict[K, V]
-                self.assertTryCastSuccess(dict[str, int], {})
-                self.assertTryCastSuccess(dict[str, int], {"x": 1})
-                self.assertTryCastSuccess(dict[str, int], {"x": 1, "y": 2})
+        def test_dict_k_v(self) -> None:
+            # Actual dict[K, V]
+            self.assertTryCastSuccess(dict[str, int], {})
+            self.assertTryCastSuccess(dict[str, int], {"x": 1})
+            self.assertTryCastSuccess(dict[str, int], {"x": 1, "y": 2})
 
-                # dict[K, V]-like dicts
-                self.assertTryCastFailure(dict[str, int], {"x": True})
-                self.assertTryCastFailure(dict[str, int], {"x": 1, "y": True})
+            # dict[K, V]-like dicts
+            self.assertTryCastFailure(dict[str, int], {"x": True})
+            self.assertTryCastFailure(dict[str, int], {"x": 1, "y": True})
 
-                # non-dict[K, V]s
-                self.assertTryCastFailure(dict[str, int], 0)
-                self.assertTryCastFailure(dict[str, int], "foo")
-                self.assertTryCastFailure(dict[str, int], [1])
-                self.assertTryCastFailure(dict[str, int], {1: 1})
-                self.assertTryCastFailure(dict[str, int], {1})
-                self.assertTryCastFailure(dict[str, int], object())
+            # non-dict[K, V]s
+            self.assertTryCastFailure(dict[str, int], 0)
+            self.assertTryCastFailure(dict[str, int], "foo")
+            self.assertTryCastFailure(dict[str, int], [1])
+            self.assertTryCastFailure(dict[str, int], {1: 1})
+            self.assertTryCastFailure(dict[str, int], {1})
+            self.assertTryCastFailure(dict[str, int], object())
 
     def test_big_dict_k_v(self) -> None:
         # Actual dict[K, V]
@@ -778,32 +772,30 @@ class TestTryCast(TestCase):
     # === Tuples (Heterogeneous) ===
 
     if sys.version_info >= (3, 9):
-        # TODO: Upgrade mypy to a version that supports PEP 585 and `tuple[Ts]`
-        if not TYPE_CHECKING:
 
-            def test_tuple_ts(self) -> None:
-                # tuple[Ts]
-                self.assertTryCastSuccess(tuple[int], (1,))
-                self.assertTryCastSuccess(tuple[int, str], (1, "a"))
-                self.assertTryCastSuccess(tuple[int, str, bool], (1, "a", True))
+        def test_tuple_ts(self) -> None:
+            # tuple[Ts]
+            self.assertTryCastSuccess(tuple[int], (1,))
+            self.assertTryCastSuccess(tuple[int, str], (1, "a"))
+            self.assertTryCastSuccess(tuple[int, str, bool], (1, "a", True))
 
-                # tuple[Ts]-like tuples
-                self.assertTryCastFailure(tuple[int], ("A",))
-                self.assertTryCastFailure(tuple[int, str], (1, 2))
-                self.assertTryCastFailure(tuple[int, str, bool], (1, "a", object()))
+            # tuple[Ts]-like tuples
+            self.assertTryCastFailure(tuple[int], ("A",))
+            self.assertTryCastFailure(tuple[int, str], (1, 2))
+            self.assertTryCastFailure(tuple[int, str, bool], (1, "a", object()))
 
-                # tuple[Ts]-like lists
-                self.assertTryCastFailure(tuple[int], [1])
-                self.assertTryCastFailure(tuple[int, str], [1, "a"])
-                self.assertTryCastFailure(tuple[int, str, bool], [1, "a", True])
+            # tuple[Ts]-like lists
+            self.assertTryCastFailure(tuple[int], [1])
+            self.assertTryCastFailure(tuple[int, str], [1, "a"])
+            self.assertTryCastFailure(tuple[int, str, bool], [1, "a", True])
 
-                # non-tuple[Ts]
-                self.assertTryCastFailure(tuple[int], 0)
-                self.assertTryCastFailure(tuple[int], "foo")
-                self.assertTryCastFailure(tuple[int], ["1"])
-                self.assertTryCastFailure(tuple[int], {1: 1})
-                self.assertTryCastFailure(tuple[int], {1})
-                self.assertTryCastFailure(tuple[int], object())
+            # non-tuple[Ts]
+            self.assertTryCastFailure(tuple[int], 0)
+            self.assertTryCastFailure(tuple[int], "foo")
+            self.assertTryCastFailure(tuple[int], ["1"])
+            self.assertTryCastFailure(tuple[int], {1: 1})
+            self.assertTryCastFailure(tuple[int], {1})
+            self.assertTryCastFailure(tuple[int], object())
 
     def test_big_tuple_ts(self) -> None:
         # Tuple[Ts]
