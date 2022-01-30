@@ -33,8 +33,8 @@ jobs:
           path: ~/.cache/pypoetry/virtualenvs
           key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
 
-      - name: Lint check
-        run: poetry run make lint-check
+      - name: Lint
+        run: poetry run make lint
 
       - name: Run tests
         # Run tox using the version of Python in `PATH`

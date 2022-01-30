@@ -1,8 +1,8 @@
 define Comment
 	- Run `make help` to see all the available options.
 	- Run `make testall` to run all the tests.
-	- Run `make lint` to run the linter.
-	- Run `make lint-check` to check linter conformity.
+	- Run `make format` to format code.
+	- Run `make lint` to check linter conformity.
 	- Run `make publish` to publish to PYPI.
 endef
 
@@ -34,18 +34,14 @@ publish:  ## Publish the package to PyPI.
 	git push origin --tags
 
 
-# TODO: Rename target to "format". The name "lint" implies a report only.
+.PHONY: format
+format: black isort flake mypy  ## Reformat code. Run linters.
+
+
 .PHONY: lint
-lint: black isort flake mypy  ## Reformat code. Run linters.
-
-
-# TODO: Rename target to "lint".
-.PHONY: lint-check
-lint-check:  ## Check whether the codebase satisfies all lint and reformatter rules.
+lint: flake mypy  ## Check whether code satisfies all linter and formatter rules.
 	@black --check $(path)
 	@isort --check $(path)
-	@flake8 $(path)
-	@mypy $(path)
 
 
 .PHONY: black
