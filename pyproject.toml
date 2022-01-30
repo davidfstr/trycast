@@ -24,6 +24,8 @@ classifiers = [  # https://pypi.org/classifiers/
 
 [tool.poetry.dependencies]
 python = "^3.6.2"
+# NOTE: coverage 6.3 requires Python 3.7+
+coverage = "<6.3"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.910"

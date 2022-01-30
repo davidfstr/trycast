@@ -12,3 +12,7 @@
 
 # tox
 /.tox
+
+# coverage
+.coverage
+htmlcov

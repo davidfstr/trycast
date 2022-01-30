@@ -83,3 +83,14 @@ mypy: ## Apply mypy.
 	@echo "================="
 	@echo
 	@mypy $(path)
+
+
+.PHONY: coverage
+coverage: ## Apply coverage.
+	@echo
+	@echo "Applying coverage..."
+	@echo "================="
+	@echo
+	coverage run -m unittest
+	coverage html
+	open htmlcov/index.html
