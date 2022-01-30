@@ -54,6 +54,7 @@ strict_optional = true
 profile = "black"
 atomic = true
 line_length = 88
+skip_glob = ["venv*"]
 
 # === Black ===
 [tool.black]
