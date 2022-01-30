@@ -155,7 +155,7 @@ python-versions = "*"
 
 [[package]]
 name = "mypy"
-version = "0.910"
+version = "0.931"
 description = "Optional static typing for Python"
 category = "dev"
 optional = false
