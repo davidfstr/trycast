@@ -39,25 +39,23 @@ flake8 = "^3.9.2"
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
-# Linters
-# === Mypy ===
-
-# Config Syntax Reference: https://mypy.readthedocs.io/en/latest/config_file.
-# html#using-a-pyproject-toml-file
-
+# Type Checker: Mypy
+# 
+# Config Syntax Reference:
+# https://mypy.readthedocs.io/en/latest/config_file.html#using-a-pyproject-toml-file
 [tool.mypy]
 files = "trycast.py,tests.py"
 mypy_path = "."
 strict_optional = true
 
-# === Isort ===
+# Formatter: Isort
 [tool.isort]
 profile = "black"
 atomic = true
 line_length = 88
 skip_glob = ["venv*"]
 
-# === Black ===
+# Formatter: Black
 [tool.black]
 line_length = 88
 
