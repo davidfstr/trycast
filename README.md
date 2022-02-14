@@ -122,7 +122,11 @@ Other alternatives for representing data structures in Python include
 
 * See the [Roadmap](https://github.com/davidfstr/trycast/wiki/Roadmap).
 
-### master (v0.4.0b)
+### master
+
+* (nothing new yet!)
+
+### v0.4.0b
 
 * Upgrade development status from Alpha to Beta:
     * trycast is thoroughly tested.
