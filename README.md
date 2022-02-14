@@ -122,9 +122,9 @@ Other alternatives for representing data structures in Python include
 
 * See the [Roadmap](https://github.com/davidfstr/trycast/wiki/Roadmap).
 
-### master
+### main
 
-* (nothing new yet!)
+* Rename primary development branch from `master` to `main`
 
 ### v0.4.0b
 
