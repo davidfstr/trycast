@@ -16,9 +16,13 @@ from typing import (
     TypeVar,
     Union,
     cast,
-    get_type_hints,
     overload,
 )
+
+try:
+    from typing_extensions import get_type_hints
+except ImportError:
+    from typing import get_type_hints
 
 # Literal
 if sys.version_info >= (3, 8):

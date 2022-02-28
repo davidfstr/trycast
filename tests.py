@@ -747,6 +747,33 @@ class TestTryCast(TestCase):
             ),
         )
 
+    def test_typeddict_required_notrequired(self) -> None:
+        import typing_extensions
+
+        class TotalMovie(typing_extensions.TypedDict):
+            title: str
+            year: typing_extensions.NotRequired[int]
+
+        class NontotalMovie(typing_extensions.TypedDict, total=False):
+            title: typing_extensions.Required[str]
+            year: int
+
+        # TotalMovie
+        self.assertTryCastSuccess(TotalMovie, {"title": "Blade Runner", "year": 1982})
+        self.assertTryCastSuccess(TotalMovie, {"title": "Blade Runner"})
+        self.assertTryCastFailure(
+            TotalMovie, {"title": "Blade Runner", "year": "Blade Runner"}
+        )
+        self.assertTryCastFailure(TotalMovie, {"year": 1982})
+
+        # NontotalMovie
+        self.assertTryCastSuccess(
+            NontotalMovie, {"title": "Blade Runner", "year": 1982}
+        )
+        self.assertTryCastSuccess(NontotalMovie, {"title": "Blade Runner"})
+        self.assertTryCastFailure(NontotalMovie, {"title": 1982, "year": 1982})
+        self.assertTryCastFailure(NontotalMovie, {"year": 1982})
+
     def test_typeddict_using_mapping_value(self) -> None:
         class NamedObject(TypedDict):
             name: str
