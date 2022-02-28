@@ -53,7 +53,7 @@ strict_optional = true
 profile = "black"
 atomic = true
 line_length = 88
-skip_glob = ["venv*"]
+skip_glob = ["venv*", "test_data/forwardrefs_example_with_import_annotations.py"]
 
 # Formatter: Black
 [tool.black]

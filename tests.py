@@ -21,6 +21,10 @@ from typing import (
 from unittest import TestCase
 
 import test_data.forwardrefs_example
+
+if sys.version_info >= (3, 7):
+    import test_data.forwardrefs_example_with_import_annotations
+
 from tests_shape_example import HTTP_400_BAD_REQUEST, draw_shape_endpoint, shapes_drawn
 from trycast import trycast
 
@@ -940,6 +944,82 @@ class TestTryCast(TestCase):
             ),
             {"Target": dict(x=50, y=50)},
         )
+
+    # === from __future__ import annotations ===
+
+    if sys.version_info >= (3, 7):
+
+        def test_types_defined_in_module_with_import_annotations(self) -> None:
+            self.assertTryCastSuccess(
+                test_data.forwardrefs_example_with_import_annotations.Circle,
+                dict(type="circle", center=dict(x=50, y=50), radius=25),
+            )
+
+            # Top-level stringified Union
+            # TODO: Find way to auto-resolve top-level stringified types.
+            self.assertRaises(
+                # TODO: Check the error message. Make it reasonable,
+                #       explaining stringified references could not be resolved.
+                TypeError,
+                lambda: trycast(
+                    test_data.forwardrefs_example_with_import_annotations.Shape,
+                    dict(type="circle", center=dict(x=50, y=50), radius=25),
+                ),
+            )
+
+            # Top-level stringified Union that has been resolved
+            self.assertTryCastSuccess(
+                eval(
+                    test_data.forwardrefs_example_with_import_annotations.Shape,
+                    test_data.forwardrefs_example_with_import_annotations.__dict__,
+                    None,
+                ),
+                dict(type="circle", center=dict(x=50, y=50), radius=25),
+            )
+
+            # Top-level stringified List
+            # TODO: Find way to auto-resolve top-level stringified types.
+            self.assertRaises(
+                # TODO: Check the error message. Make it reasonable,
+                #       explaining stringified references could not be resolved.
+                TypeError,
+                lambda: trycast(
+                    test_data.forwardrefs_example_with_import_annotations.Scatterplot,
+                    [dict(x=50, y=50)],
+                ),
+            )
+
+            # Top-level stringified List that has been resolved
+            self.assertTryCastSuccess(
+                eval(
+                    test_data.forwardrefs_example_with_import_annotations.Scatterplot,
+                    test_data.forwardrefs_example_with_import_annotations.__dict__,
+                    None,
+                ),
+                [dict(x=50, y=50)],
+            )
+
+            # Top-level stringified Dict
+            # TODO: Find way to auto-resolve top-level stringified types.
+            self.assertRaises(
+                # TODO: Check the error message. Make it reasonable,
+                #       explaining stringified references could not be resolved.
+                TypeError,
+                lambda: trycast(
+                    test_data.forwardrefs_example_with_import_annotations.PointForLabel,
+                    {"Target": dict(x=50, y=50)},
+                ),
+            )
+
+            # Top-level stringified Dict that has been resolved
+            self.assertTryCastSuccess(
+                eval(
+                    test_data.forwardrefs_example_with_import_annotations.PointForLabel,
+                    test_data.forwardrefs_example_with_import_annotations.__dict__,
+                    None,
+                ),
+                {"Target": dict(x=50, y=50)},
+            )
 
     # === Special ===
 
