@@ -125,6 +125,10 @@ Other alternatives for representing data structures in Python include
 ### main
 
 * Rename primary development branch from `master` to `main`
+* Recognize `Required[]` and `NotRequired[]` from [PEP 655],
+  as imported from `typing_extensions`.
+
+[PEP 655]: https://www.python.org/dev/peps/pep-0655/
 
 ### v0.4.0b
 
