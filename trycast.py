@@ -16,9 +16,15 @@ from typing import (
     TypeVar,
     Union,
     cast,
-    get_type_hints,
     overload,
 )
+
+try:
+    # Python 3.7+
+    from typing_extensions import get_type_hints  # type: ignore[attr-defined]
+except ImportError:
+    # Python 3.6
+    from typing import get_type_hints  # type: ignore[misc]  # incompatible import
 
 # Literal
 if sys.version_info >= (3, 8):
