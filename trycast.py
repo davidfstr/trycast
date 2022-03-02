@@ -20,10 +20,10 @@ from typing import (
 )
 
 try:
-    # Requires Python 3.7+
-    from typing_extensions import get_type_hints  # type: ignore [attr-defined]
+    # Python 3.7+
+    from typing_extensions import get_type_hints  # type: ignore[attr-defined]
 except ImportError:
-    from typing import get_type_hints  # type: ignore [misc]  # incompatible import
+    from typing import get_type_hints  # type: ignore[misc]  # Python 3.6
 
 # Literal
 if sys.version_info >= (3, 8):
