@@ -751,7 +751,7 @@ class TestTryCast(TestCase):
         import typing_extensions
 
         if not hasattr(typing_extensions, "get_type_hints"):
-            self.skipTest("Checking for Required and NotRequired requires python 3.7+")
+            self.skipTest("Checking for Required and NotRequired requires Python 3.7+")
 
         class TotalMovie(typing_extensions.TypedDict):
             title: str
