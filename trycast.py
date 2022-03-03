@@ -13,6 +13,7 @@ from typing import (
     Optional,
     Sequence,
     Tuple,
+    Type,
     TypeVar,
     Union,
     cast,
@@ -142,6 +143,13 @@ _SimpleTypeVarCo = TypeVar("_SimpleTypeVarCo", covariant=True)
 
 _MISSING = object()
 _FAILURE = object()
+
+if TYPE_CHECKING:
+    from typing_extensions import TypeAlias, TypeGuard
+
+    TypeGuard_T: TypeAlias = TypeGuard[_T]
+else:
+    TypeGuard_T = bool
 
 
 # TODO: Use this signature for trycast once support for TypeForm is
@@ -403,3 +411,55 @@ def _is_simple_typevar(T: object, covariant: bool = False) -> bool:
         and T.__contravariant__ is False
         and T.__constraints__ == ()
     )
+
+
+# TODO: Use this signature for isassignable once support for TypeForm is
+#       implemented in mypy. See: https://github.com/python/mypy/issues/9773
+# @overload
+# def isassignable(value: object, tp: TypeForm[_T]) -> TypeGuard_T: ...
+
+
+@overload
+def isassignable(value: object, tp: Type[_T]) -> TypeGuard_T:
+    ...
+
+
+@overload
+def isassignable(value: object, tp: object) -> bool:
+    ...
+
+
+def isassignable(value, tp):
+    """
+    Returns whether `value` is in the shape of `tp`
+    (as accepted by a Python typechecker conforming to PEP 484 "Type Hints").
+
+    This method logically performs an operation similar to:
+
+        return isinstance(tp, value)
+
+    except that it supports many more types than `isinstance`, including:
+        * List[T]
+        * Dict[K, V]
+        * Optional[T]
+        * Union[T1, T2, ...]
+        * Literal[...]
+        * T extends TypedDict
+
+    Note that unlike isinstance(), this method does NOT consider bool values
+    to be valid int values, as consistent with Python typecheckers:
+        > isassignable(False, int) -> False
+        > isinstance(False, int) -> True
+
+    Note that unlike isinstance(), this method considers every int value to
+    also be a valid float value, as consistent with Python typecheckers:
+        > isassignable(1, float) -> True
+        > isinstance(1, float) -> False
+    """
+    if trycast(tp, value, _isassignable_failure, strict=True) is _isassignable_failure:
+        return False
+    else:
+        return True
+
+
+_isassignable_failure = object()

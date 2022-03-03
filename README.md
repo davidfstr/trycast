@@ -1,6 +1,11 @@
 # trycast
 
-trycast parses JSON-like values whose shape is defined by
+The trycast module defines 2 functions, `trycast()` and `isassignable()`:
+
+
+### trycast()
+
+trycast() parses JSON-like values whose shape is defined by
 [typed dictionaries](https://www.python.org/dev/peps/pep-0589/#abstract)
 (TypedDicts) and other standard Python type hints.
 
@@ -64,7 +69,7 @@ def draw_shape_endpoint() -> HTTPResponse:
     request_json = request.json  # type: object
     if (shape := trycast(Shape, request_json)) is not None:
         draw_shape(shape)  # type is narrowed to Shape
-        return HTTPResponse(status=200)
+        return HTTPResponse(status=200)  # OK
     else:
         return HTTPResponse(status=400)  # Bad Request
 ```
@@ -77,6 +82,53 @@ def draw_shape_endpoint() -> HTTPResponse:
 > shape = cast(Optional[Shape], trycast(Shape, request_json))
 > if shape is not None:
 >     ...
+> ```
+> 
+> These limitations are in the process of being resolved by
+> [introducing TypeForm support to mypy](https://github.com/python/mypy/issues/9773).
+
+
+### isassignable()
+
+`isassignable(value, T)` checks whether `value` is assignable to a variable
+of type `T` (using PEP 484 static typechecking rules), but at *runtime*.
+
+It is similar to Python's builtin `isinstance()` method but
+additionally supports checking against TypedDict types, Union types,
+Literal types, and many others.
+
+Here is an example of checking assignability to a `Shape` object defined as a
+Union of TypedDicts:
+
+```python
+class Circle(TypedDict):
+    type: Literal['circle']
+    ...
+
+class Rect(TypedDict):
+    type: Literal['rect']
+    ...
+
+Shape = Union[Circle, Rect]  # a Tagged Union!
+
+@route('/draw_shape')
+def draw_shape_endpoint() -> HTTPResponse:
+    request_json = request.json  # type: object
+    if isassignable(request_json, Shape):
+        draw_shape(request_json)  # type is narrowed to Shape
+        return HTTPResponse(status=200)  # OK
+    else:
+        return HTTPResponse(status=400)  # Bad Request
+```
+
+> **Important:** Current limitations in the mypy typechecker prevent the
+> automatic narrowing of the type of `request_json` in the above example to
+> `Shape`, so you must add an additional `cast()` to narrow the type manually:
+> 
+> ```python
+> if isassignable(request_json, Shape):
+>     shape = cast(Shape, request_json)  # type is manually narrowed to Shape
+>     draw_shape(shape)
 > ```
 > 
 > These limitations are in the process of being resolved by
@@ -104,14 +156,14 @@ Other alternatives for representing data structures in Python include
 ## Recommendations while using trycast
 
 - So that `trycast()` can recognize TypedDicts with mixed required and
-  optional keys correctly:
+  not-required keys correctly:
     * Use Python 3.9+ if possible.
     * Prefer using `typing.TypedDict`, unless you must use Python 3.8.
       In Python 3.8 prefer `typing_extensions.TypedDict` instead.
     * Avoid using `mypy_extensions.TypedDict` in general.
 
 
-# License
+## License
 
 [MIT](LICENSE.md)
 
@@ -124,6 +176,11 @@ Other alternatives for representing data structures in Python include
 
 ### main
 
+* `isassignable()` is introduced to the API:
+    * `isassignable()` leverages `trycast()` to enable type-checking
+      of values against type objects (i.e. type forms) provided at
+      runtime, using the same PEP 484 typechecking rules used by
+      typecheckers such as mypy.
 * `trycast()` now supports a `strict` parameter that controls whether it
   accepts `mypy_extensions.TypedDict` or Python 3.8 `typing.TypedDict`
   instances (which lack certain runtime type information necessary for
@@ -176,7 +233,7 @@ Other alternatives for representing data structures in Python include
           of types that contain forward-references.
         - In particular {Union, Optional} types and collection types (List, Dict)
           with forward-references remain unsupported by `trycast()`.
-    * Recognize TypedDicts that have mixed required and optional keys correctly.
+    * Recognize TypedDicts that have mixed required and not-required keys correctly.
         - Exception: Does not work for mypy_extensions.TypedDict or
           Python 3.8's typing.TypedDict due to insufficient runtime
           type annotation information.

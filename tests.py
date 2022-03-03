@@ -13,6 +13,7 @@ from typing import (
     Mapping,
     MutableMapping,
     MutableSequence,
+    NoReturn,
     Optional,
     Sequence,
     Tuple,
@@ -29,7 +30,7 @@ if sys.version_info >= (3, 7):
     import test_data.forwardrefs_example_with_import_annotations
 
 from tests_shape_example import HTTP_400_BAD_REQUEST, draw_shape_endpoint, shapes_drawn
-from trycast import TypeNotSupportedError, trycast
+from trycast import TypeNotSupportedError, isassignable, trycast
 
 # Literal
 if sys.version_info >= (3, 8):
@@ -1244,3 +1245,53 @@ class TestIsTypedDict(TestCase):
 
     def test_recognizes_typed_dict_from_mypy_extensions(self) -> None:
         self.assertTrue(_is_typed_dict(MypyExtensionsPoint))
+
+
+class _Cell(TypedDict):
+    value: object
+
+
+class TestIsAssignable(TestCase):
+    def test_is_similar_to_isinstance(self) -> None:
+        self.assertTrue(isassignable("words", str))
+        self.assertTrue(isassignable(1, int))
+        self.assertTrue(isassignable(True, bool))
+
+        self.assertFalse(isassignable("words", int))
+        self.assertFalse(isassignable(1, str))
+        self.assertFalse(isassignable(True, str))
+
+    def test_is_different_from_isinstance_where_pep_484_differs(self) -> None:
+        self.assertFalse(isassignable(True, int))
+
+    def test_return_type_is_typeguarded_positively_for_types(self) -> None:
+        value = "words"
+        if isassignable(value, str):
+            self._demands_a_str(value)  # ensure typechecks
+
+    @staticmethod
+    def _demands_a_str(value: str) -> str:
+        return value
+
+    # TODO: Add support for this case when TypeForm is implemented
+    #       (and it interacts with TypeGuard correctly). See:
+    #       https://github.com/python/mypy/issues/9773
+    # def test_return_type_is_typeguarded_positively_for_typeforms(self) -> None:
+    #    value = {"value": "contents"}
+    #    if isassignable(value, _Cell):
+    #        self._demands_a_typeddict(value)  # ensure typechecks
+
+    @staticmethod
+    def _demands_a_typeddict(cell: _Cell) -> object:
+        return cell["value"]
+
+    # TODO: Add support for this case if/when support for a "strict" TypeGuard
+    #       of some kind is introduced that narrows in the negative case.
+    # def test_return_type_is_typeguarded_negatively(self) -> None:
+    #    value = 'words'
+    #    if not isassignable(value, str):
+    #        self._demands_a_never(value)  # ensure typechecks
+
+    @staticmethod
+    def _demands_a_never(value: NoReturn) -> NoReturn:
+        raise ValueError("expected this code to be unreachable")
