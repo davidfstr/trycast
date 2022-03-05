@@ -153,16 +153,18 @@ _FAILURE = object()
 
 
 @overload
-def trycast(tp: object, value: object) -> Optional[object]:
+def trycast(tp: object, value: object, *, strict: bool = False) -> Optional[object]:
     ...
 
 
 @overload
-def trycast(tp: object, value: object, failure: _F) -> Union[object, _F]:
+def trycast(
+    tp: object, value: object, failure: _F, *, strict: bool = False
+) -> Union[object, _F]:
     ...
 
 
-def trycast(tp, value, failure=None):
+def trycast(tp, value, failure=None, *, strict=False):
     """
     If `value` is in the shape of `tp` (as accepted by a Python typechecker
     conforming to PEP 484 "Type Hints") then returns it, otherwise returns
@@ -189,6 +191,18 @@ def trycast(tp, value, failure=None):
     also be a valid float value, as consistent with Python typecheckers:
         > trycast(float, 1) -> 1
         > isinstance(1, float) -> False
+
+    If strict=False then trycast will additionally accept
+    mypy_extensions.TypedDict instances and Python 3.8 typing.TypedDict
+    instances for the `tp` parameter. Normally these kinds of types are
+    rejected by trycast with a TypeNotSupportedError because these
+    types do not preserve enough information at runtime to reliably
+    determine which keys are required and which are potentially-missing.
+
+    Raises:
+    * TypeNotSupportedError --
+        If strict=True and either mypy_extensions.TypedDict or a
+        Python 3.8 typing.TypedDict is found within the `tp` argument.
     """
     if tp is int:
         # Do not accept bools as valid int values
@@ -281,10 +295,21 @@ def trycast(tp, value, failure=None):
                 required_keys = tp.__required_keys__
             except AttributeError:
                 # {typing in Python 3.8, mypy_extensions}.TypedDict
-                if tp.__total__:
-                    required_keys = resolved_annotations.keys()
+                if strict:
+                    if sys.version_info[:2] >= (3, 9):
+                        advise = "Suggest use a typing.TypedDict instead."
+                    else:
+                        advise = "Suggest use a typing_extensions.TypedDict instead."
+                    raise TypeNotSupportedError(
+                        "trycast cannot determine which keys are required "
+                        "and which are potentially-missing for the "
+                        "specified kind of TypedDict. " + advise
+                    )
                 else:
-                    required_keys = frozenset()
+                    if tp.__total__:
+                        required_keys = resolved_annotations.keys()
+                    else:
+                        required_keys = frozenset()
 
             for (k, v) in value.items():
                 V = resolved_annotations.get(k, _MISSING)
@@ -308,6 +333,10 @@ def trycast(tp, value, failure=None):
         return value
     else:
         return failure
+
+
+class TypeNotSupportedError(ValueError):
+    pass
 
 
 def _trycast_listlike(

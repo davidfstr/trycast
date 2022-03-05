@@ -124,6 +124,13 @@ Other alternatives for representing data structures in Python include
 
 ### main
 
+* `trycast()` now supports a `strict` parameter that controls whether it
+  accepts `mypy_extensions.TypedDict` or Python 3.8 `typing.TypedDict`
+  instances (which lack certain runtime type information necessary for
+  accurate runtime typechecking).
+    * For now `strict=False` by default for backward compatibility
+      with earlier versions of `trycast()`, but this default is expected
+      to be altered to `strict=True` when/before trycast v1.0.0 is released.
 * Rename primary development branch from `master` to `main`
 * Recognize `Required[]` and `NotRequired[]` from [PEP 655],
   as imported from `typing_extensions`.

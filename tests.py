@@ -2,6 +2,7 @@
 import os
 import subprocess
 import sys
+import typing
 from contextlib import contextmanager
 from importlib.abc import MetaPathFinder
 from typing import (
@@ -20,13 +21,15 @@ from typing import (
 )
 from unittest import TestCase
 
+import mypy_extensions
+
 import test_data.forwardrefs_example
 
 if sys.version_info >= (3, 7):
     import test_data.forwardrefs_example_with_import_annotations
 
 from tests_shape_example import HTTP_400_BAD_REQUEST, draw_shape_endpoint, shapes_drawn
-from trycast import trycast
+from trycast import TypeNotSupportedError, trycast
 
 # Literal
 if sys.version_info >= (3, 8):
@@ -1050,6 +1053,40 @@ class TestTryCast(TestCase):
                 ),
                 {"Target": dict(x=50, y=50)},
             )
+
+    # === strict=True mode ===
+
+    def test_rejects_mypy_typeddict_when_strict_is_true(self) -> None:
+        class Point2D(mypy_extensions.TypedDict):
+            x: int
+            y: int
+
+        class Point3D(Point2D, total=False):
+            z: int
+
+        try:
+            trycast(Point3D, {"x": 1, "y": 2}, strict=True)
+        except TypeNotSupportedError:
+            pass
+        else:
+            self.fail("Expected TypeNotSupportedError to be raised")
+
+    if sys.version_info >= (3, 8) and sys.version_info < (3, 9):
+
+        def test_rejects_python_3_8_typeddict_when_strict_is_true(self) -> None:
+            class Point2D(typing.TypedDict):
+                x: int
+                y: int
+
+            class Point3D(Point2D, total=False):
+                z: int
+
+            try:
+                trycast(Point3D, {"x": 1, "y": 2}, strict=True)
+            except TypeNotSupportedError:
+                pass
+            else:
+                self.fail("Expected TypeNotSupportedError to be raised")
 
     # === Special ===
 
