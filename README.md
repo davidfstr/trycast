@@ -183,25 +183,29 @@ A presentation about trycast was given at the 2021 PyCon Typing Summit:
 
 ### main
 
-* `isassignable()` is introduced to the API:
-    * `isassignable()` leverages `trycast()` to enable type-checking
-      of values against type objects (i.e. type forms) provided at
-      runtime, using the same PEP 484 typechecking rules used by
-      typecheckers such as mypy.
-* `trycast()` now supports a `strict` parameter that controls whether it
+* (nothing new yet!)
+
+### v0.5.0
+
+* Extend `trycast()` to recognize `Required[]` and `NotRequired[]` from
+  [PEP 655], as imported from `typing_extensions`.
+* Extend `trycast()` to support a `strict` parameter that controls whether it
   accepts `mypy_extensions.TypedDict` or Python 3.8 `typing.TypedDict`
   instances (which lack certain runtime type information necessary for
   accurate runtime typechecking).
     * For now `strict=False` by default for backward compatibility
       with earlier versions of `trycast()`, but this default is expected
       to be altered to `strict=True` when/before trycast v1.0.0 is released.
-* Rename primary development branch from `master` to `main`
-* Recognize `Required[]` and `NotRequired[]` from [PEP 655],
-  as imported from `typing_extensions`.
+* `isassignable()` is introduced to the API:
+    * `isassignable()` leverages `trycast()` to enable type-checking
+      of values against type objects (i.e. type forms) provided at
+      runtime, using the same PEP 484 typechecking rules used by
+      typecheckers such as mypy.
+* Rename primary development branch from `master` to `main`.
 
 [PEP 655]: https://www.python.org/dev/peps/pep-0655/
 
-### v0.4.0b
+### v0.4.0
 
 * Upgrade development status from Alpha to Beta:
     * trycast is thoroughly tested.
