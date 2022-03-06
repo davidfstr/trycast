@@ -163,6 +163,13 @@ Other alternatives for representing data structures in Python include
     * Avoid using `mypy_extensions.TypedDict` in general.
 
 
+## More Information
+
+A presentation about trycast was given at the 2021 PyCon Typing Summit:
+
+[![2021 PyCon Typing Summit Presentation](https://raw.githubusercontent.com/davidfstr/trycast/main/README/TypingSummit2021_Presentation_FirstSlide.png)](https://youtu.be/ld9rwCvGdhc?t=1782)
+
+
 ## License
 
 [MIT](LICENSE.md)
