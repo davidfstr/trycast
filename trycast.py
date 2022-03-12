@@ -458,7 +458,7 @@ def _trycast_inner(tp, value, failure, strict):
         return failure
 
 
-class TypeNotSupportedError(ValueError):
+class TypeNotSupportedError(TypeError):
     pass
 
 
