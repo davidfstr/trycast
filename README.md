@@ -183,6 +183,15 @@ A presentation about trycast was given at the 2021 PyCon Typing Summit:
 
 ### main
 
+* Extend `trycast()` to recognize a stringified type argument.
+* Extend `trycast()` to report a better error message when given
+  a type argument with an unresolved forward reference (`ForwardRef`).
+* Fix `strict` argument to `trycast` to be passed to inner calls of `trycast`
+  correctly.
+    * This also fixes `isassignable()`'s use of strict matching to be correct.
+* Alter `trycast()` to interpret a type argument of `None` or `"None"` as an
+  alias for `type(None)`, as consistent with
+  [PEP 484](https://peps.python.org/pep-0484/#using-none).
 * Drop support for Python 3.6. **(Breaking change)**
     * Python 3.6 is end-of-life.
 

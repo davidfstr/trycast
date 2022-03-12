@@ -1,24 +1,32 @@
+import builtins
+import functools
+import importlib
+import re
 import sys
 from collections.abc import Mapping as CMapping
 from collections.abc import MutableMapping as CMutableMapping
 from collections.abc import MutableSequence as CMutableSequence
 from collections.abc import Sequence as CSequence
+from types import ModuleType
 from typing import (
     TYPE_CHECKING,
     Dict,
+    ForwardRef,
     List,
     Mapping,
     MutableMapping,
     MutableSequence,
+    NoReturn,
     Optional,
     Sequence,
     Tuple,
     Type,
     TypeVar,
     Union,
-    cast,
-    overload,
 )
+from typing import _eval_type as eval_type  # type: ignore  # private API not in stubs
+from typing import _type_check as type_check  # type: ignore  # private API not in stubs
+from typing import cast, overload
 
 try:
     # Python 3.7+
@@ -37,7 +45,8 @@ else:
         if not TYPE_CHECKING:
 
             class Literal:
-                pass
+                def __class_getitem__(cls, key):
+                    pass
 
 
 # get_origin, get_args
@@ -151,9 +160,11 @@ if TYPE_CHECKING:
 else:
     TypeGuard_T = bool
 
+# ------------------------------------------------------------------------------
+# trycast
 
 # TODO: Use this signature for trycast once support for TypeForm is
-#       implemented in mypy.
+#       implemented in mypy. See: https://github.com/python/mypy/issues/9773
 # @overload
 # def trycast(tp: TypeForm[_T], value: object) -> Optional[_T]: ...
 # @overload
@@ -161,18 +172,57 @@ else:
 
 
 @overload
-def trycast(tp: object, value: object, *, strict: bool = False) -> Optional[object]:
+def trycast(
+    tp: Type[_T], value: object, *, strict: bool = False, eval: bool = True
+) -> Optional[_T]:
+    ...
+
+
+# TODO: Replace `tp: str` with `tp: LiteralString` once support for
+#       LiteralString is generally available.
+@overload
+def trycast(
+    tp: str, value: object, *, strict: bool = False, eval: Literal[False]
+) -> NoReturn:
     ...
 
 
 @overload
 def trycast(
-    tp: object, value: object, failure: _F, *, strict: bool = False
+    tp: object, value: object, *, strict: bool = False, eval: bool = True
+) -> Optional[object]:
+    ...
+
+
+# TODO: Replace `tp: str` with `tp: LiteralString` once support for
+#       LiteralString is generally available.
+@overload
+def trycast(
+    tp: str,
+    value: object,
+    failure: _F,
+    *,
+    strict: bool = False,
+    eval: Literal[False],
+) -> NoReturn:
+    ...
+
+
+@overload
+def trycast(
+    tp: Type[_T], value: object, failure: _F, *, strict: bool = False, eval: bool = True
+) -> Union[_T, _F]:
+    ...
+
+
+@overload
+def trycast(
+    tp: object, value: object, failure: _F, *, strict: bool = False, eval: bool = True
 ) -> Union[object, _F]:
     ...
 
 
-def trycast(tp, value, failure=None, *, strict=False):
+def trycast(tp, value, failure=None, *, strict=False, eval=True):
     """
     If `value` is in the shape of `tp` (as accepted by a Python typechecker
     conforming to PEP 484 "Type Hints") then returns it, otherwise returns
@@ -200,17 +250,76 @@ def trycast(tp, value, failure=None, *, strict=False):
         > trycast(float, 1) -> 1
         > isinstance(1, float) -> False
 
-    If strict=False then trycast will additionally accept
-    mypy_extensions.TypedDict instances and Python 3.8 typing.TypedDict
-    instances for the `tp` parameter. Normally these kinds of types are
-    rejected by trycast with a TypeNotSupportedError because these
-    types do not preserve enough information at runtime to reliably
-    determine which keys are required and which are potentially-missing.
+    Parameters:
+    * strict --
+        If strict=False then trycast will additionally accept
+        mypy_extensions.TypedDict instances and Python 3.8 typing.TypedDict
+        instances for the `tp` parameter. Normally these kinds of types are
+        rejected by trycast with a TypeNotSupportedError because these
+        types do not preserve enough information at runtime to reliably
+        determine which keys are required and which are potentially-missing.
+    * eval --
+        If eval=False then trycast will not attempt to resolve string
+        type references, which requires the use of the eval() function.
+        Otherwise string type references will be accepted.
 
     Raises:
     * TypeNotSupportedError --
         If strict=True and either mypy_extensions.TypedDict or a
         Python 3.8 typing.TypedDict is found within the `tp` argument.
+    * UnresolvedForwardRefError --
+        If `tp` is a type form which contains a ForwardRef.
+    * UnresolvableTypeError --
+        If `tp` is a string that could not be resolved to a type.
+    """
+    if isinstance(tp, str):
+        if eval:
+            tp = eval_type_str(tp)
+        else:
+            raise UnresolvableTypeError(
+                f"Could not resolve type {tp!r}: "
+                f"Type appears to be a string reference "
+                f"and trycast() was called with eval=False, "
+                f"disabling eval of string type references."
+            )
+    else:
+        tp = type_check(tp, "trycast() requires a type as its first argument.")
+    try:
+        return _trycast_inner(tp, value, failure, strict)
+    except UnresolvedForwardRefError:
+        raise UnresolvedForwardRefError(
+            f"trycast does not support checking against type form {tp!r} "
+            "which contains a string-based forward reference. "
+            "Try altering the first type argument to be a string "
+            "reference (surrounded with quotes) instead."
+        )
+
+
+# TODO: Use this signature for _trycast_inner once support for TypeForm is
+#       implemented in mypy. See: https://github.com/python/mypy/issues/9773
+# @overload
+# def _trycast_inner(tp: TypeForm[_T], value: object, failure: _F) -> Union[_T, _F]: ...
+
+
+@overload
+def _trycast_inner(
+    tp: Type[_T], value: object, failure: _F, strict: bool
+) -> Union[_T, _F]:
+    ...
+
+
+@overload
+def _trycast_inner(
+    tp: object, value: object, failure: _F, strict: bool
+) -> Union[object, _F]:
+    ...
+
+
+def _trycast_inner(tp, value, failure, strict):
+    """
+    Raises:
+    * TypeNotSupportedError
+    * UnresolvedForwardRefError
     """
     if tp is int:
         # Do not accept bools as valid int values
@@ -231,7 +340,7 @@ def trycast(tp, value, failure=None, *, strict=False):
 
     type_origin = get_origin(tp)
     if type_origin is list or type_origin is List:  # List, List[T]
-        return _trycast_listlike(tp, value, failure, list)
+        return _trycast_listlike(tp, value, failure, list, strict)
 
     if type_origin is tuple or type_origin is Tuple:
         if isinstance(value, tuple):
@@ -246,6 +355,7 @@ def trycast(tp, value, failure=None, *, strict=False):
                     value,
                     failure,
                     tuple,
+                    strict,
                     covariant_t=True,
                     t_ellipsis=True,
                 )
@@ -254,7 +364,7 @@ def trycast(tp, value, failure=None, *, strict=False):
                     return failure
 
                 for (T, t) in zip(type_args, value):
-                    if trycast(T, t, _FAILURE) is _FAILURE:
+                    if _trycast_inner(T, t, _FAILURE, strict) is _FAILURE:
                         return failure
 
                 return cast(_T, value)
@@ -262,27 +372,29 @@ def trycast(tp, value, failure=None, *, strict=False):
             return failure
 
     if type_origin is Sequence or type_origin is CSequence:  # Sequence, Sequence[T]
-        return _trycast_listlike(tp, value, failure, CSequence, covariant_t=True)
+        return _trycast_listlike(
+            tp, value, failure, CSequence, strict, covariant_t=True
+        )
 
     if (
         type_origin is MutableSequence or type_origin is CMutableSequence
     ):  # MutableSequence, MutableSequence[T]
-        return _trycast_listlike(tp, value, failure, CMutableSequence)
+        return _trycast_listlike(tp, value, failure, CMutableSequence, strict)
 
     if type_origin is dict or type_origin is Dict:  # Dict, Dict[K, V]
-        return _trycast_dictlike(tp, value, failure, dict)
+        return _trycast_dictlike(tp, value, failure, dict, strict)
 
     if type_origin is Mapping or type_origin is CMapping:  # Mapping, Mapping[K, V]
-        return _trycast_dictlike(tp, value, failure, CMapping, covariant_v=True)
+        return _trycast_dictlike(tp, value, failure, CMapping, strict, covariant_v=True)
 
     if (
         type_origin is MutableMapping or type_origin is CMutableMapping
     ):  # MutableMapping, MutableMapping[K, V]
-        return _trycast_dictlike(tp, value, failure, CMutableMapping)
+        return _trycast_dictlike(tp, value, failure, CMutableMapping, strict)
 
     if type_origin is Union:  # Union[T1, T2, ...]
         for T in get_args(tp):
-            if trycast(T, value, _FAILURE) is not _FAILURE:
+            if _trycast_inner(T, value, _FAILURE, strict) is not _FAILURE:
                 return cast(_T, value)
         return failure
 
@@ -321,7 +433,7 @@ def trycast(tp, value, failure=None, *, strict=False):
 
             for (k, v) in value.items():
                 V = resolved_annotations.get(k, _MISSING)
-                if V is _MISSING or trycast(V, v, _FAILURE) is _FAILURE:
+                if V is _MISSING or _trycast_inner(V, v, _FAILURE, strict) is _FAILURE:
                     return failure
 
             for k in required_keys:
@@ -330,6 +442,9 @@ def trycast(tp, value, failure=None, *, strict=False):
             return cast(_T, value)
         else:
             return failure
+
+    if isinstance(tp, ForwardRef):
+        raise UnresolvedForwardRefError()
 
     if isinstance(tp, tuple):
         raise TypeError(
@@ -347,8 +462,40 @@ class TypeNotSupportedError(ValueError):
     pass
 
 
+class UnresolvedForwardRefError(TypeError):
+    pass
+
+
+@overload
 def _trycast_listlike(
-    tp, value, failure, listlike_type, *, covariant_t=False, t_ellipsis=False
+    tp: Type[_T],
+    value: object,
+    failure: _F,
+    listlike_type: Type,
+    strict: bool,
+    *,
+    covariant_t: bool,
+    t_ellipsis: bool,
+) -> Union[_T, _F]:
+    ...
+
+
+@overload
+def _trycast_listlike(
+    tp: object,
+    value: object,
+    failure: _F,
+    listlike_type: Type,
+    strict: bool,
+    *,
+    covariant_t: bool,
+    t_ellipsis: bool,
+) -> Union[object, _F]:
+    ...
+
+
+def _trycast_listlike(
+    tp, value, failure, listlike_type, strict, *, covariant_t=False, t_ellipsis=False
 ):
     if isinstance(value, listlike_type):
         T_ = get_args(tp)
@@ -369,7 +516,7 @@ def _trycast_listlike(
             pass
         else:
             for x in value:
-                if trycast(T, x, _FAILURE) is _FAILURE:
+                if _trycast_inner(T, x, _FAILURE, strict) is _FAILURE:
                     return failure
 
         return cast(_T, value)
@@ -377,7 +524,33 @@ def _trycast_listlike(
         return failure
 
 
-def _trycast_dictlike(tp, value, failure, dictlike_type, *, covariant_v=False):
+@overload
+def _trycast_dictlike(
+    tp: Type[_T],
+    value: object,
+    failure: _F,
+    dictlike_type: Type,
+    strict: bool,
+    *,
+    covariant_t: bool,
+) -> Union[_T, _F]:
+    ...
+
+
+@overload
+def _trycast_dictlike(
+    tp: object,
+    value: object,
+    failure: _F,
+    dictlike_type: Type,
+    strict: bool,
+    *,
+    covariant_t: bool,
+) -> Union[object, _F]:
+    ...
+
+
+def _trycast_dictlike(tp, value, failure, dictlike_type, strict, *, covariant_v=False):
     if isinstance(value, dictlike_type):
         K_V = get_args(tp)
 
@@ -394,8 +567,8 @@ def _trycast_dictlike(tp, value, failure, dictlike_type, *, covariant_v=False):
         else:
             for (k, v) in value.items():
                 if (
-                    trycast(K, k, _FAILURE) is _FAILURE
-                    or trycast(V, v, _FAILURE) is _FAILURE
+                    _trycast_inner(K, k, _FAILURE, strict) is _FAILURE
+                    or _trycast_inner(V, v, _FAILURE, strict) is _FAILURE
                 ):
                     return failure
         return cast(_T, value)
@@ -413,23 +586,33 @@ def _is_simple_typevar(T: object, covariant: bool = False) -> bool:
     )
 
 
+# ------------------------------------------------------------------------------
+# isassignable
+
 # TODO: Use this signature for isassignable once support for TypeForm is
 #       implemented in mypy. See: https://github.com/python/mypy/issues/9773
 # @overload
 # def isassignable(value: object, tp: TypeForm[_T]) -> TypeGuard_T: ...
 
 
+# TODO: Replace `tp: str` with `tp: LiteralString` once support for
+#       LiteralString is generally available.
 @overload
-def isassignable(value: object, tp: Type[_T]) -> TypeGuard_T:
+def isassignable(value: object, tp: str, *, eval: Literal[False]) -> NoReturn:
     ...
 
 
 @overload
-def isassignable(value: object, tp: object) -> bool:
+def isassignable(value: object, tp: Type[_T], *, eval: bool = True) -> TypeGuard_T:
     ...
 
 
-def isassignable(value, tp):
+@overload
+def isassignable(value: object, tp: object, *, eval: bool = True) -> bool:
+    ...
+
+
+def isassignable(value, tp, *, eval: bool = True):
     """
     Returns whether `value` is in the shape of `tp`
     (as accepted by a Python typechecker conforming to PEP 484 "Type Hints").
@@ -455,11 +638,131 @@ def isassignable(value, tp):
     also be a valid float value, as consistent with Python typecheckers:
         > isassignable(1, float) -> True
         > isinstance(1, float) -> False
+
+    Parameters:
+    * eval --
+        If eval=False then isassignable will not attempt to resolve string
+        type references, which requires the use of the eval() function.
+        Otherwise string type references will be accepted.
+
+    Raises:
+    * TypeNotSupportedError --
+        If mypy_extensions.TypedDict or a
+        Python 3.8 typing.TypedDict is found within the `tp` argument.
+    * UnresolvedForwardRefError --
+        If `tp` is a type form which contains a ForwardRef.
+    * UnresolvableTypeError --
+        If `tp` is a string that could not be resolved to a type.
     """
-    if trycast(tp, value, _isassignable_failure, strict=True) is _isassignable_failure:
-        return False
-    else:
-        return True
+    return (
+        trycast(tp, value, _isassignable_failure, strict=True, eval=eval)
+        is not _isassignable_failure
+    )
 
 
 _isassignable_failure = object()
+
+
+# ------------------------------------------------------------------------------
+# eval_type_str
+
+_IMPORTABLE_TYPE_EXPRESSION_RE = re.compile(r"^((?:[a-zA-Z0-9_]+\.)+)(.*)$")
+_UNIMPORTABLE_TYPE_EXPRESSION_RE = re.compile(r"^[a-zA-Z0-9_]+(\[.*\])?$")
+_BUILTINS_MODULE = builtins
+_EXTRA_ADVISE_IF_MOD_IS_BUILTINS = (
+    " Try altering the type argument to be a string "
+    "reference (surrounded with quotes) instead, "
+    "if not already done."
+)
+
+
+# TODO: Use this signature for _eval_type once support for TypeForm is
+#       implemented in mypy. See: https://github.com/python/mypy/issues/9773
+# def _eval_type(tp: str) -> TypeForm: ...
+
+
+@functools.lru_cache()
+def eval_type_str(tp: str) -> object:
+    """
+    Resolves a string-reference to a type that can be imported,
+    such as `'typing.List'`.
+
+    This function does internally cache lookups that have been made in
+    the past to improve performance. If you need to clear this cache
+    you can call:
+
+        eval_type_str.cache_clear()
+
+    Note that this function's implementation uses eval() internally.
+
+    Raises:
+    * UnresolvableTypeError --
+        If the specified string-reference could not be resolved to a type.
+    """
+    if not isinstance(tp, str):
+        raise ValueError()
+
+    # Determine which module to lookup the type from
+    mod: ModuleType
+    module_name: str
+    member_expr: str
+    m = _IMPORTABLE_TYPE_EXPRESSION_RE.fullmatch(tp)
+    if m is not None:
+        (module_name_dot, member_expr) = m.groups()
+        module_name = module_name_dot[:-1]
+        try:
+            mod = importlib.import_module(module_name)
+        except:  # noqa: E722
+            raise UnresolvableTypeError(
+                f"Could not resolve type {tp!r}: " f"Could not import {module_name!r}."
+            )
+    else:
+        m = _UNIMPORTABLE_TYPE_EXPRESSION_RE.fullmatch(tp)
+        if m is not None:
+            mod = _BUILTINS_MODULE
+            module_name = _BUILTINS_MODULE.__name__
+            member_expr = tp
+        else:
+            raise UnresolvableTypeError(
+                f"Could not resolve type {tp!r}: "
+                f"{tp!r} does not appear to be a valid type."
+            )
+
+    # Lookup the type from a module
+    try:
+        member = eval(member_expr, mod.__dict__, None)
+    except:  # noqa: E722
+        raise UnresolvableTypeError(
+            f"Could not resolve type {tp!r}: "
+            f"Could not eval {member_expr!r} inside module {module_name!r}."
+            f"{_EXTRA_ADVISE_IF_MOD_IS_BUILTINS if mod is _BUILTINS_MODULE else ''}"
+        )
+
+    # Interpret an imported str as a TypeAlias
+    if isinstance(member, str):
+        member = ForwardRef(member, is_argument=False)
+
+    # Resolve any ForwardRef instances inside the type
+    try:
+        member = eval_type(member, mod.__dict__, None)
+    except:  # noqa: E722
+        raise UnresolvableTypeError(
+            f"Could not resolve type {tp!r}: "
+            f"Could not eval type {member!r} inside module {module_name!r}."
+            f"{_EXTRA_ADVISE_IF_MOD_IS_BUILTINS if mod is _BUILTINS_MODULE else ''}"
+        )
+
+    # 1. Ensure the object is actually a type
+    # 2. As a special case, interpret None as type(None)
+    try:
+        member = type_check(member, f"Could not resolve type {tp!r}: ")
+    except TypeError as e:
+        raise UnresolvableTypeError(str(e))
+    return member
+
+
+class UnresolvableTypeError(TypeError):
+    pass
+
+
+# ------------------------------------------------------------------------------

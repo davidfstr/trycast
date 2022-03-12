@@ -30,7 +30,13 @@ if sys.version_info >= (3, 7):
     import test_data.forwardrefs_example_with_import_annotations
 
 from tests_shape_example import HTTP_400_BAD_REQUEST, draw_shape_endpoint, shapes_drawn
-from trycast import TypeNotSupportedError, isassignable, trycast
+from trycast import (
+    TypeNotSupportedError,
+    UnresolvableTypeError,
+    UnresolvedForwardRefError,
+    isassignable,
+    trycast,
+)
 
 # Literal
 if sys.version_info >= (3, 8):
@@ -158,7 +164,11 @@ class TestTryCast(TestCase):
         self.assertTryCastFailure(float, object())
 
     def test_none(self) -> None:
-        self.assertRaises(TypeError, lambda: trycast(None, None))  # type: ignore
+        # None object, which is specially treated as type(None)
+        self.assertTryCastNoneSuccess(None)
+
+        # Stringified None object, which is specially treated as type(None)
+        self.assertTryCastNoneSuccess("None")
 
     def test_none_type(self) -> None:
         # Actual None
@@ -909,19 +919,6 @@ class TestTryCast(TestCase):
         )
 
     def test_alias_to_union_with_forwardrefs(self) -> None:
-        # Union with forward refs
-        # TODO: Find way to auto-resolve forward references
-        #       inside Union types.
-        self.assertRaises(
-            # TODO: Check the error message. Make it reasonable,
-            #       explaining the forward references could not be resolved.
-            TypeError,
-            lambda: trycast(
-                test_data.forwardrefs_example.Shape,
-                dict(type="circle", center=dict(x=50, y=50), radius=25),
-            ),
-        )
-
         # Union with forward refs that have been resolved
         self.assertTryCastSuccess(
             eval_type(
@@ -932,19 +929,22 @@ class TestTryCast(TestCase):
             dict(type="circle", center=dict(x=50, y=50), radius=25),
         )
 
-    def test_alias_to_list_with_forwardrefs(self) -> None:
-        # list with forward refs
-        # TODO: Find way to auto-resolve forward references
-        #       inside collection types.
+        # Union with forward refs that have NOT been resolved
         self.assertRaises(
-            # TODO: Check the error message. Make it reasonable,
-            #       explaining the forward references could not be resolved.
-            TypeError,
+            UnresolvedForwardRefError,
             lambda: trycast(
-                test_data.forwardrefs_example.Scatterplot, [dict(x=50, y=50)]
+                test_data.forwardrefs_example.Shape,
+                dict(type="circle", center=dict(x=50, y=50), radius=25),
             ),
         )
 
+        # Stringified reference to: Union with forward refs
+        self.assertTryCastSuccess(
+            "test_data.forwardrefs_example.Shape",
+            dict(type="circle", center=dict(x=50, y=50), radius=25),
+        )
+
+    def test_alias_to_list_with_forwardrefs(self) -> None:
         # list with forward refs that have been resolved
         self.assertTryCastSuccess(
             eval_type(
@@ -955,20 +955,20 @@ class TestTryCast(TestCase):
             [dict(x=50, y=50)],
         )
 
-    def test_alias_to_dict_with_forwardrefs(self) -> None:
-        # dict with forward refs
-        # TODO: Find way to auto-resolve forward references
-        #       inside collection types.
+        # list with forward refs that have NOT been resolved
         self.assertRaises(
-            # TODO: Check the error message. Make it reasonable,
-            #       explaining the forward references could not be resolved.
-            TypeError,
+            UnresolvedForwardRefError,
             lambda: trycast(
-                test_data.forwardrefs_example.PointForLabel,
-                {"Target": dict(x=50, y=50)},
+                test_data.forwardrefs_example.Scatterplot, [dict(x=50, y=50)]
             ),
         )
 
+        # Stringified reference to: list with forward refs
+        self.assertTryCastSuccess(
+            "test_data.forwardrefs_example.Scatterplot", [dict(x=50, y=50)]
+        )
+
+    def test_alias_to_dict_with_forwardrefs(self) -> None:
         # dict with forward refs that have been resolved
         self.assertTryCastSuccess(
             eval_type(
@@ -977,6 +977,96 @@ class TestTryCast(TestCase):
                 None,
             ),
             {"Target": dict(x=50, y=50)},
+        )
+
+        # dict with forward refs that have NOT been resolved
+        self.assertRaises(
+            UnresolvedForwardRefError,
+            lambda: trycast(
+                test_data.forwardrefs_example.PointForLabel,
+                {"Target": dict(x=50, y=50)},
+            ),
+        )
+
+        # Stringified reference to: dict with forward refs
+        self.assertTryCastSuccess(
+            "test_data.forwardrefs_example.PointForLabel",
+            {"Target": dict(x=50, y=50)},
+        )
+
+    # === Stringified References ===
+
+    def test_stringified_reference(self) -> None:
+        # builtin
+        self.assertTryCastSuccess(
+            "str",
+            "hello",
+        )
+
+        if sys.version_info >= (3, 9):
+            # builtin with builtin index expression
+            self.assertTryCastSuccess(
+                "list[int]",
+                [1, 2],
+            )
+
+            # builtin with non-builtin index expression
+            self.assertRaisesRegex(
+                UnresolvableTypeError,
+                "inside module 'builtins'.*?Try altering the type argument to be a string reference",
+                lambda: trycast(
+                    "list[List]",
+                    [[1, 2], [3, 4]],
+                ),
+            )
+
+        # List[]
+        self.assertRaisesRegex(
+            UnresolvableTypeError,
+            "inside module 'builtins'.*?Try altering the type argument to be a string reference",
+            lambda: trycast(
+                "List",
+                [1, 2],
+            ),
+        )
+
+        # List[] with index expression
+        self.assertRaisesRegex(
+            UnresolvableTypeError,
+            "inside module 'builtins'.*?Try altering the type argument to be a string reference",
+            lambda: trycast(
+                "List[int]",
+                [1, 2],
+            ),
+        )
+
+        # Reference to importable type with no forward references
+        self.assertTryCastSuccess(
+            "test_data.no_forwardrefs_example.Shape",
+            dict(type="circle", center=dict(x=50, y=50), radius=25),
+        )
+
+        # Reference to importable type with forward references
+        self.assertTryCastSuccess(
+            "test_data.forwardrefs_example.Shape",
+            dict(type="circle", center=dict(x=50, y=50), radius=25),
+        )
+
+        # Reference to importable type that is a stringified TypeAlias
+        self.assertTryCastSuccess(
+            "test_data.forwardrefs_example_with_import_annotations.Shape",
+            dict(type="circle", center=dict(x=50, y=50), radius=25),
+        )
+
+        # eval=False
+        self.assertRaisesRegex(
+            UnresolvableTypeError,
+            "appears to be a string reference.*?called with eval=False",
+            lambda: trycast(
+                "test_data.forwardrefs_example_with_import_annotations.Shape",
+                dict(type="circle", center=dict(x=50, y=50), radius=25),
+                eval=False,
+            ),
         )
 
     # === from __future__ import annotations ===
@@ -989,18 +1079,6 @@ class TestTryCast(TestCase):
                 dict(type="circle", center=dict(x=50, y=50), radius=25),
             )
 
-            # Top-level stringified Union
-            # TODO: Find way to auto-resolve top-level stringified types.
-            self.assertRaises(
-                # TODO: Check the error message. Make it reasonable,
-                #       explaining stringified references could not be resolved.
-                TypeError,
-                lambda: trycast(
-                    test_data.forwardrefs_example_with_import_annotations.Shape,
-                    dict(type="circle", center=dict(x=50, y=50), radius=25),
-                ),
-            )
-
             # Top-level stringified Union that has been resolved
             self.assertTryCastSuccess(
                 eval(
@@ -1011,16 +1089,20 @@ class TestTryCast(TestCase):
                 dict(type="circle", center=dict(x=50, y=50), radius=25),
             )
 
-            # Top-level stringified List
-            # TODO: Find way to auto-resolve top-level stringified types.
-            self.assertRaises(
-                # TODO: Check the error message. Make it reasonable,
-                #       explaining stringified references could not be resolved.
-                TypeError,
+            # Top-level stringified Union that has NOT been resolved
+            self.assertRaisesRegex(
+                UnresolvableTypeError,
+                "inside module 'builtins'.*?Try altering the type argument to be a string reference",
                 lambda: trycast(
-                    test_data.forwardrefs_example_with_import_annotations.Scatterplot,
-                    [dict(x=50, y=50)],
+                    test_data.forwardrefs_example_with_import_annotations.Shape,
+                    dict(type="circle", center=dict(x=50, y=50), radius=25),
                 ),
+            )
+
+            # Stringified reference to: Top-level stringified Union
+            self.assertTryCastSuccess(
+                "test_data.forwardrefs_example_with_import_annotations.Shape",
+                dict(type="circle", center=dict(x=50, y=50), radius=25),
             )
 
             # Top-level stringified List that has been resolved
@@ -1033,16 +1115,20 @@ class TestTryCast(TestCase):
                 [dict(x=50, y=50)],
             )
 
-            # Top-level stringified Dict
-            # TODO: Find way to auto-resolve top-level stringified types.
-            self.assertRaises(
-                # TODO: Check the error message. Make it reasonable,
-                #       explaining stringified references could not be resolved.
-                TypeError,
+            # Top-level stringified List that has NOT been resolved
+            self.assertRaisesRegex(
+                UnresolvableTypeError,
+                "inside module 'builtins'.*?Try altering the type argument to be a string reference",
                 lambda: trycast(
-                    test_data.forwardrefs_example_with_import_annotations.PointForLabel,
-                    {"Target": dict(x=50, y=50)},
+                    test_data.forwardrefs_example_with_import_annotations.Scatterplot,
+                    [dict(x=50, y=50)],
                 ),
+            )
+
+            # Stringified reference to: Top-level stringified List
+            self.assertTryCastSuccess(
+                "test_data.forwardrefs_example_with_import_annotations.Scatterplot",
+                [dict(x=50, y=50)],
             )
 
             # Top-level stringified Dict that has been resolved
@@ -1052,6 +1138,22 @@ class TestTryCast(TestCase):
                     test_data.forwardrefs_example_with_import_annotations.__dict__,
                     None,
                 ),
+                {"Target": dict(x=50, y=50)},
+            )
+
+            # Top-level stringified Dict that has NOT been resolved
+            self.assertRaisesRegex(
+                UnresolvableTypeError,
+                "inside module 'builtins'.*?Try altering the type argument to be a string reference",
+                lambda: trycast(
+                    test_data.forwardrefs_example_with_import_annotations.PointForLabel,
+                    {"Target": dict(x=50, y=50)},
+                ),
+            )
+
+            # Stringified reference to: Top-level stringified Dict
+            self.assertTryCastSuccess(
+                "test_data.forwardrefs_example_with_import_annotations.PointForLabel",
                 {"Target": dict(x=50, y=50)},
             )
 
