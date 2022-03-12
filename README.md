@@ -187,6 +187,11 @@ A presentation about trycast was given at the 2021 PyCon Typing Summit:
 
 ### v0.5.0
 
+* `isassignable()` is introduced to the API:
+    * `isassignable()` leverages `trycast()` to enable type-checking
+      of values against type objects (i.e. type forms) provided at
+      runtime, using the same PEP 484 typechecking rules used by
+      typecheckers such as mypy.
 * Extend `trycast()` to recognize `Required[]` and `NotRequired[]` from
   [PEP 655], as imported from `typing_extensions`.
 * Extend `trycast()` to support a `strict` parameter that controls whether it
@@ -196,11 +201,6 @@ A presentation about trycast was given at the 2021 PyCon Typing Summit:
     * For now `strict=False` by default for backward compatibility
       with earlier versions of `trycast()`, but this default is expected
       to be altered to `strict=True` when/before trycast v1.0.0 is released.
-* `isassignable()` is introduced to the API:
-    * `isassignable()` leverages `trycast()` to enable type-checking
-      of values against type objects (i.e. type forms) provided at
-      runtime, using the same PEP 484 typechecking rules used by
-      typecheckers such as mypy.
 * Rename primary development branch from `master` to `main`.
 
 [PEP 655]: https://www.python.org/dev/peps/pep-0655/
