@@ -181,7 +181,7 @@ A presentation about trycast was given at the 2021 PyCon Typing Summit:
 
 * See the [Roadmap](https://github.com/davidfstr/trycast/wiki/Roadmap).
 
-### main
+### v0.6.0
 
 * Extend `trycast()` to recognize a stringified type argument.
 * Extend `trycast()` to report a better error message when given
