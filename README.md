@@ -183,7 +183,8 @@ A presentation about trycast was given at the 2021 PyCon Typing Summit:
 
 ### main
 
-* (nothing new yet!)
+* Drop support for Python 3.6. **(Breaking change)**
+    * Python 3.6 is end-of-life.
 
 ### v0.5.0
 

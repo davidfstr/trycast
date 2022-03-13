@@ -15,7 +15,6 @@ classifiers = [  # https://pypi.org/classifiers/
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.6",
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
@@ -25,8 +24,7 @@ classifiers = [  # https://pypi.org/classifiers/
 
 [tool.poetry.dependencies]
 python = "^3.6.2"
-# NOTE: coverage 6.3 requires Python 3.7+
-coverage = "<6.3"
+coverage = "*"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.931"
@@ -65,7 +63,7 @@ line_length = 88
 legacy_tox_ini = """
 
 [tox]
-envlist = py36,py37,py38,py39,py310
+envlist = py37,py38,py39,py310
 isolated_build = True
 
 [testenv]
