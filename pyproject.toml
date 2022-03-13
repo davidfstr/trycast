@@ -23,7 +23,7 @@ classifiers = [  # https://pypi.org/classifiers/
 ]
 
 [tool.poetry.dependencies]
-# Python 3.7.4 is the minimum Python version with typing.ForwardRef
+# Python 3.7.4 is the minimum Python with typing.ForwardRef
 python = "^3.7.4"
 coverage = "*"
 
