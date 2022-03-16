@@ -126,7 +126,6 @@ try:
 except ImportError:
     pass
 
-
 try:
     from mypy_extensions import (  # type: ignore # isort: skip
         _TypedDictMeta as _MypyExtensionsTypedDictMeta,
