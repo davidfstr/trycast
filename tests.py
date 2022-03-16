@@ -1207,6 +1207,17 @@ class TestTryCast(TestCase):
     def test_tuple_of_types(self) -> None:
         self.assertRaises(TypeError, lambda: trycast((int, str), 1))  # type: ignore
 
+    def test_reversing_order_of_first_two_arguments_gives_nice_error_message(
+        self,
+    ) -> None:
+        self.assertEqual(1, trycast(int, 1))
+
+        self.assertRaisesRegex(
+            TypeError,
+            "requires a type as its first argument",
+            lambda: trycast(1, int),
+        )
+
     # === Large Examples ===
 
     def test_shape_endpoint_parsing_example(self) -> None:
