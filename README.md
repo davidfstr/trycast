@@ -181,6 +181,11 @@ A presentation about trycast was given at the 2021 PyCon Typing Summit:
 
 * See the [Roadmap](https://github.com/davidfstr/trycast/wiki/Roadmap).
 
+### v0.6.1
+
+* Fix `trycast(..., eval=False)` to not use `typing.get_type_hints()`,
+  which internally calls `eval()`.
+
 ### v0.6.0
 
 * Extend `trycast()` to recognize a stringified type argument.

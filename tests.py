@@ -1058,12 +1058,23 @@ class TestTryCast(TestCase):
             dict(type="circle", center=dict(x=50, y=50), radius=25),
         )
 
-        # eval=False
+        # eval=False; stringified type as input
         self.assertRaisesRegex(
             UnresolvableTypeError,
             "appears to be a string reference.*?called with eval=False",
             lambda: trycast(
                 "test_data.forwardrefs_example_with_import_annotations.Shape",
+                dict(type="circle", center=dict(x=50, y=50), radius=25),
+                eval=False,
+            ),
+        )
+
+        # eval=False; ForwardRef() inside a TypedDict
+        self.assertRaisesRegex(
+            UnresolvedForwardRefError,
+            "contains a string-based forward reference.*?called with eval=False",
+            lambda: trycast(
+                test_data.forwardrefs_example_with_import_annotations.Circle,
                 dict(type="circle", center=dict(x=50, y=50), radius=25),
                 eval=False,
             ),

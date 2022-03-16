@@ -16,6 +16,7 @@ from typing import (
     Mapping,
     MutableMapping,
     MutableSequence,
+    NamedTuple,
     NoReturn,
     Optional,
     Sequence,
@@ -178,8 +179,6 @@ def trycast(
     ...
 
 
-# TODO: Replace `tp: str` with `tp: LiteralString` once support for
-#       LiteralString is generally available.
 @overload
 def trycast(
     tp: str, value: object, *, strict: bool = False, eval: Literal[False]
@@ -194,8 +193,6 @@ def trycast(
     ...
 
 
-# TODO: Replace `tp: str` with `tp: LiteralString` once support for
-#       LiteralString is generally available.
 @overload
 def trycast(
     tp: str,
@@ -272,9 +269,10 @@ def trycast(tp, value, failure=None, *, strict=False, eval=True):
     * UnresolvableTypeError --
         If `tp` is a string that could not be resolved to a type.
     """
+    options = _TrycastOptions(strict, eval)
     if isinstance(tp, str):
-        if eval:
-            tp = eval_type_str(tp)
+        if options.eval:
+            tp = eval_type_str(tp)  # does use eval()
         else:
             raise UnresolvableTypeError(
                 f"Could not resolve type {tp!r}: "
@@ -285,14 +283,28 @@ def trycast(tp, value, failure=None, *, strict=False, eval=True):
     else:
         tp = type_check(tp, "trycast() requires a type as its first argument.")
     try:
-        return _trycast_inner(tp, value, failure, strict)
+        return _trycast_inner(tp, value, failure, options)
     except UnresolvedForwardRefError:
+        if options.eval:
+            advise = (
+                "Try altering the first type argument to be a string "
+                "reference (surrounded with quotes) instead."
+            )
+        else:
+            advise = (
+                "trycast() cannot resolve string type references "
+                "because it was called with eval=False."
+            )
         raise UnresolvedForwardRefError(
             f"trycast does not support checking against type form {tp!r} "
             "which contains a string-based forward reference. "
-            "Try altering the first type argument to be a string "
-            "reference (surrounded with quotes) instead."
+            f"{advise}"
         )
+
+
+class _TrycastOptions(NamedTuple):
+    strict: bool
+    eval: bool
 
 
 # TODO: Use this signature for _trycast_inner once support for TypeForm is
@@ -303,19 +315,19 @@ def trycast(tp, value, failure=None, *, strict=False, eval=True):
 
 @overload
 def _trycast_inner(
-    tp: Type[_T], value: object, failure: _F, strict: bool
+    tp: Type[_T], value: object, failure: _F, options: _TrycastOptions
 ) -> Union[_T, _F]:
     ...
 
 
 @overload
 def _trycast_inner(
-    tp: object, value: object, failure: _F, strict: bool
+    tp: object, value: object, failure: _F, options: _TrycastOptions
 ) -> Union[object, _F]:
     ...
 
 
-def _trycast_inner(tp, value, failure, strict):
+def _trycast_inner(tp, value, failure, options):
     """
     Raises:
     * TypeNotSupportedError
@@ -340,7 +352,7 @@ def _trycast_inner(tp, value, failure, strict):
 
     type_origin = get_origin(tp)
     if type_origin is list or type_origin is List:  # List, List[T]
-        return _trycast_listlike(tp, value, failure, list, strict)
+        return _trycast_listlike(tp, value, failure, list, options)
 
     if type_origin is tuple or type_origin is Tuple:
         if isinstance(value, tuple):
@@ -355,7 +367,7 @@ def _trycast_inner(tp, value, failure, strict):
                     value,
                     failure,
                     tuple,
-                    strict,
+                    options,
                     covariant_t=True,
                     t_ellipsis=True,
                 )
@@ -364,7 +376,7 @@ def _trycast_inner(tp, value, failure, strict):
                     return failure
 
                 for (T, t) in zip(type_args, value):
-                    if _trycast_inner(T, t, _FAILURE, strict) is _FAILURE:
+                    if _trycast_inner(T, t, _FAILURE, options) is _FAILURE:
                         return failure
 
                 return cast(_T, value)
@@ -373,28 +385,30 @@ def _trycast_inner(tp, value, failure, strict):
 
     if type_origin is Sequence or type_origin is CSequence:  # Sequence, Sequence[T]
         return _trycast_listlike(
-            tp, value, failure, CSequence, strict, covariant_t=True
+            tp, value, failure, CSequence, options, covariant_t=True
         )
 
     if (
         type_origin is MutableSequence or type_origin is CMutableSequence
     ):  # MutableSequence, MutableSequence[T]
-        return _trycast_listlike(tp, value, failure, CMutableSequence, strict)
+        return _trycast_listlike(tp, value, failure, CMutableSequence, options)
 
     if type_origin is dict or type_origin is Dict:  # Dict, Dict[K, V]
-        return _trycast_dictlike(tp, value, failure, dict, strict)
+        return _trycast_dictlike(tp, value, failure, dict, options)
 
     if type_origin is Mapping or type_origin is CMapping:  # Mapping, Mapping[K, V]
-        return _trycast_dictlike(tp, value, failure, CMapping, strict, covariant_v=True)
+        return _trycast_dictlike(
+            tp, value, failure, CMapping, options, covariant_v=True
+        )
 
     if (
         type_origin is MutableMapping or type_origin is CMutableMapping
     ):  # MutableMapping, MutableMapping[K, V]
-        return _trycast_dictlike(tp, value, failure, CMutableMapping, strict)
+        return _trycast_dictlike(tp, value, failure, CMutableMapping, options)
 
     if type_origin is Union:  # Union[T1, T2, ...]
         for T in get_args(tp):
-            if _trycast_inner(T, value, _FAILURE, strict) is not _FAILURE:
+            if _trycast_inner(T, value, _FAILURE, options) is not _FAILURE:
                 return cast(_T, value)
         return failure
 
@@ -406,16 +420,19 @@ def _trycast_inner(tp, value, failure, strict):
 
     if _is_typed_dict(tp):  # T extends TypedDict
         if isinstance(value, Mapping):
-            resolved_annotations = get_type_hints(
-                tp
-            )  # resolve ForwardRefs in tp.__annotations__
+            if options.eval:
+                resolved_annotations = get_type_hints(  # does use eval()
+                    tp
+                )  # resolve ForwardRefs in tp.__annotations__
+            else:
+                resolved_annotations = tp.__annotations__
 
             try:
                 # {typing in Python 3.9+, typing_extensions}.TypedDict
                 required_keys = tp.__required_keys__
             except AttributeError:
                 # {typing in Python 3.8, mypy_extensions}.TypedDict
-                if strict:
+                if options.strict:
                     if sys.version_info[:2] >= (3, 9):
                         advise = "Suggest use a typing.TypedDict instead."
                     else:
@@ -433,7 +450,7 @@ def _trycast_inner(tp, value, failure, strict):
 
             for (k, v) in value.items():
                 V = resolved_annotations.get(k, _MISSING)
-                if V is _MISSING or _trycast_inner(V, v, _FAILURE, strict) is _FAILURE:
+                if V is _MISSING or _trycast_inner(V, v, _FAILURE, options) is _FAILURE:
                     return failure
 
             for k in required_keys:
@@ -472,7 +489,7 @@ def _trycast_listlike(
     value: object,
     failure: _F,
     listlike_type: Type,
-    strict: bool,
+    options: _TrycastOptions,
     *,
     covariant_t: bool,
     t_ellipsis: bool,
@@ -486,7 +503,7 @@ def _trycast_listlike(
     value: object,
     failure: _F,
     listlike_type: Type,
-    strict: bool,
+    options: _TrycastOptions,
     *,
     covariant_t: bool,
     t_ellipsis: bool,
@@ -495,7 +512,7 @@ def _trycast_listlike(
 
 
 def _trycast_listlike(
-    tp, value, failure, listlike_type, strict, *, covariant_t=False, t_ellipsis=False
+    tp, value, failure, listlike_type, options, *, covariant_t=False, t_ellipsis=False
 ):
     if isinstance(value, listlike_type):
         T_ = get_args(tp)
@@ -516,7 +533,7 @@ def _trycast_listlike(
             pass
         else:
             for x in value:
-                if _trycast_inner(T, x, _FAILURE, strict) is _FAILURE:
+                if _trycast_inner(T, x, _FAILURE, options) is _FAILURE:
                     return failure
 
         return cast(_T, value)
@@ -530,7 +547,7 @@ def _trycast_dictlike(
     value: object,
     failure: _F,
     dictlike_type: Type,
-    strict: bool,
+    options: _TrycastOptions,
     *,
     covariant_t: bool,
 ) -> Union[_T, _F]:
@@ -543,14 +560,14 @@ def _trycast_dictlike(
     value: object,
     failure: _F,
     dictlike_type: Type,
-    strict: bool,
+    options: _TrycastOptions,
     *,
     covariant_t: bool,
 ) -> Union[object, _F]:
     ...
 
 
-def _trycast_dictlike(tp, value, failure, dictlike_type, strict, *, covariant_v=False):
+def _trycast_dictlike(tp, value, failure, dictlike_type, options, *, covariant_v=False):
     if isinstance(value, dictlike_type):
         K_V = get_args(tp)
 
@@ -567,8 +584,8 @@ def _trycast_dictlike(tp, value, failure, dictlike_type, strict, *, covariant_v=
         else:
             for (k, v) in value.items():
                 if (
-                    _trycast_inner(K, k, _FAILURE, strict) is _FAILURE
-                    or _trycast_inner(V, v, _FAILURE, strict) is _FAILURE
+                    _trycast_inner(K, k, _FAILURE, options) is _FAILURE
+                    or _trycast_inner(V, v, _FAILURE, options) is _FAILURE
                 ):
                     return failure
         return cast(_T, value)
@@ -595,8 +612,6 @@ def _is_simple_typevar(T: object, covariant: bool = False) -> bool:
 # def isassignable(value: object, tp: TypeForm[_T]) -> TypeGuard_T: ...
 
 
-# TODO: Replace `tp: str` with `tp: LiteralString` once support for
-#       LiteralString is generally available.
 @overload
 def isassignable(value: object, tp: str, *, eval: Literal[False]) -> NoReturn:
     ...

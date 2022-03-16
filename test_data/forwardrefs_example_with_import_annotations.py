@@ -38,11 +38,6 @@ class Rect(TypedDict):
 
 class Circle(TypedDict):
     type: Literal["circle"]
-    # TODO: If `Point2D` here is changed to `"Point2D"` then
-    #       test_types_defined_in_module_with_import_annotations does fail
-    #       because trycast() cannot deal with a ForwardRef("Point2D") value,
-    #       which is what appears here at runtime. Find a way to support
-    #       that case as well.
     center: Point2D
     radius: float
 
