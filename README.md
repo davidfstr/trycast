@@ -185,6 +185,8 @@ A presentation about trycast was given at the 2021 PyCon Typing Summit:
 
 * Fix `trycast(..., eval=False)` to not use `typing.get_type_hints()`,
   which internally calls `eval()`.
+* Fix `trycast()` and `isassignable()` to avoid swallowing KeyboardInterrupt
+  and other non-Exception BaseExceptions.
 
 ### v0.6.0
 

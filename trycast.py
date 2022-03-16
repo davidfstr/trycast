@@ -727,7 +727,7 @@ def eval_type_str(tp: str) -> object:
         module_name = module_name_dot[:-1]
         try:
             mod = importlib.import_module(module_name)
-        except:  # noqa: E722
+        except Exception:
             raise UnresolvableTypeError(
                 f"Could not resolve type {tp!r}: " f"Could not import {module_name!r}."
             )
@@ -746,7 +746,7 @@ def eval_type_str(tp: str) -> object:
     # Lookup the type from a module
     try:
         member = eval(member_expr, mod.__dict__, None)
-    except:  # noqa: E722
+    except Exception:
         raise UnresolvableTypeError(
             f"Could not resolve type {tp!r}: "
             f"Could not eval {member_expr!r} inside module {module_name!r}."
@@ -760,7 +760,7 @@ def eval_type_str(tp: str) -> object:
     # Resolve any ForwardRef instances inside the type
     try:
         member = eval_type(member, mod.__dict__, None)
-    except:  # noqa: E722
+    except Exception:
         raise UnresolvableTypeError(
             f"Could not resolve type {tp!r}: "
             f"Could not eval type {member!r} inside module {module_name!r}."
