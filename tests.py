@@ -1233,10 +1233,14 @@ class TestTryCast(TestCase):
             else:
                 self.fail("Expected TypeNotSupportedError to be raised")
 
-    # === Special ===
+    # === Misuse: Nice Error Messages ===
 
     def test_tuple_of_types(self) -> None:
-        self.assertRaises(TypeError, lambda: trycast((int, str), 1))  # type: ignore
+        self.assertRaisesRegex(
+            TypeError,
+            "does not support checking against a tuple of types",
+            lambda: trycast((int, str), 1),  # type: ignore
+        )
 
     def test_reversing_order_of_first_two_arguments_gives_nice_error_message(
         self,

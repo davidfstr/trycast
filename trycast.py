@@ -281,7 +281,16 @@ def trycast(tp, value, failure=None, *, strict=False, eval=True):
                 f"disabling eval of string type references."
             )
     else:
-        tp = type_check(tp, "trycast() requires a type as its first argument.")
+        try:
+            tp = type_check(tp, "trycast() requires a type as its first argument.")
+        except TypeError:
+            if isinstance(tp, tuple) and len(tp) >= 1 and isinstance(tp[0], type):
+                raise TypeError(
+                    "trycast does not support checking against a tuple of types. "
+                    "Try checking against a Union[T1, T2, ...] instead."
+                )
+            else:
+                raise
     try:
         return _trycast_inner(tp, value, failure, options)
     except UnresolvedForwardRefError:
@@ -468,12 +477,6 @@ def _trycast_inner(tp, value, failure, options):
 
     if isinstance(tp, ForwardRef):
         raise UnresolvedForwardRefError()
-
-    if isinstance(tp, tuple):
-        raise TypeError(
-            "trycast does not support checking against a tuple of types. "
-            "Try checking against a Union[T1, T2, ...] instead."
-        )
 
     if isinstance(value, tp):  # type: ignore
         return value
