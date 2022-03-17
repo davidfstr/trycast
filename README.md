@@ -181,6 +181,10 @@ A presentation about trycast was given at the 2021 PyCon Typing Summit:
 
 * See the [Roadmap](https://github.com/davidfstr/trycast/wiki/Roadmap).
 
+### main
+
+* Extend `trycast()` to recognize special `Any` and `NoReturn` values.
+
 ### v0.6.1
 
 * Fix `trycast(..., eval=False)` to not use `typing.get_type_hints()`,

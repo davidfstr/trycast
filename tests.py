@@ -919,6 +919,15 @@ class TestTryCast(TestCase):
         self.assertTryCastSuccess(Any, None)
         self.assertTryCastSuccess(Any, str)
 
+    def test_noreturn(self) -> None:
+        self.assertTryCastFailure(NoReturn, "words")
+        self.assertTryCastFailure(NoReturn, 1)
+        self.assertTryCastFailure(NoReturn, None)
+        self.assertTryCastFailure(NoReturn, str)
+
+        self.assertTryCastFailure(NoReturn, ValueError)
+        self.assertTryCastFailure(NoReturn, ValueError())
+
     # === Forward References ===
 
     def test_typeddict_with_forwardrefs(self) -> None:

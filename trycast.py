@@ -463,6 +463,9 @@ def _trycast_inner(tp, value, failure, options):
     if tp is Any:
         return cast(_T, value)
 
+    if tp is NoReturn:
+        return failure
+
     if isinstance(tp, ForwardRef):
         raise UnresolvedForwardRefError()
 
