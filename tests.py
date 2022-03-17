@@ -1076,6 +1076,19 @@ class TestTryCast(TestCase):
             dict(type="circle", center=dict(x=50, y=50), radius=25),
         )
 
+        # Reference to importable type with builtin index expression
+        self.assertTryCastSuccess(
+            "typing.List[int]",
+            [1, 2],
+        )
+
+        # Reference to importable type with non-builtin index expression
+        # residing in the same module
+        self.assertTryCastSuccess(
+            "typing.List[Any]",
+            [1, 2],
+        )
+
         # eval=False; stringified type as input
         self.assertRaisesRegex(
             UnresolvableTypeError,
