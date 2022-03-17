@@ -7,6 +7,7 @@ from contextlib import contextmanager
 from importlib.abc import MetaPathFinder
 from typing import (
     TYPE_CHECKING,
+    Any,
     Dict,
     Iterator,
     List,
@@ -909,6 +910,14 @@ class TestTryCast(TestCase):
         self.assertTryCastFailure(Literal["circle"], {1: 1})
         self.assertTryCastFailure(Literal["circle"], {1})
         self.assertTryCastFailure(Literal["circle"], object())
+
+    # === Special Types: Any, NoReturn ===
+
+    def test_any(self) -> None:
+        self.assertTryCastSuccess(Any, "words")
+        self.assertTryCastSuccess(Any, 1)
+        self.assertTryCastSuccess(Any, None)
+        self.assertTryCastSuccess(Any, str)
 
     # === Forward References ===
 

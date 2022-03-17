@@ -10,6 +10,7 @@ from collections.abc import Sequence as CSequence
 from types import ModuleType
 from typing import (
     TYPE_CHECKING,
+    Any,
     Dict,
     ForwardRef,
     List,
@@ -458,6 +459,9 @@ def _trycast_inner(tp, value, failure, options):
             return cast(_T, value)
         else:
             return failure
+
+    if tp is Any:
+        return cast(_T, value)
 
     if isinstance(tp, ForwardRef):
         raise UnresolvedForwardRefError()
