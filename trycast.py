@@ -120,7 +120,7 @@ except ImportError:
 
 try:
     from typing_extensions import (  # type: ignore # isort: skip
-        _TypedDictMeta as _TypingExtensionsTypedDictMeta,
+        _TypedDictMeta as _TypingExtensionsTypedDictMeta,  # type: ignore[reportGeneralTypeIssues]  # pyright
     )
 
     _typed_dict_meta_list.append(_TypingExtensionsTypedDictMeta)
@@ -129,7 +129,7 @@ except ImportError:
 
 try:
     from mypy_extensions import (  # type: ignore # isort: skip
-        _TypedDictMeta as _MypyExtensionsTypedDictMeta,
+        _TypedDictMeta as _MypyExtensionsTypedDictMeta,  # type: ignore[reportGeneralTypeIssues]  # pyright
     )
 
     _typed_dict_meta_list.append(_MypyExtensionsTypedDictMeta)
@@ -197,7 +197,7 @@ def trycast(
 def trycast(
     tp: str,
     value: object,
-    failure: _F,
+    failure: object,
     *,
     strict: bool = False,
     eval: Literal[False],
@@ -500,8 +500,8 @@ def _trycast_listlike(
     listlike_type: Type,
     options: _TrycastOptions,
     *,
-    covariant_t: bool,
-    t_ellipsis: bool,
+    covariant_t: bool = False,
+    t_ellipsis: bool = False,
 ) -> Union[_T, _F]:
     ...
 
@@ -514,8 +514,8 @@ def _trycast_listlike(
     listlike_type: Type,
     options: _TrycastOptions,
     *,
-    covariant_t: bool,
-    t_ellipsis: bool,
+    covariant_t: bool = False,
+    t_ellipsis: bool = False,
 ) -> Union[object, _F]:
     ...
 
@@ -558,7 +558,7 @@ def _trycast_dictlike(
     dictlike_type: Type,
     options: _TrycastOptions,
     *,
-    covariant_t: bool,
+    covariant_v: bool = False,
 ) -> Union[_T, _F]:
     ...
 
@@ -571,7 +571,7 @@ def _trycast_dictlike(
     dictlike_type: Type,
     options: _TrycastOptions,
     *,
-    covariant_t: bool,
+    covariant_v: bool = False,
 ) -> Union[object, _F]:
     ...
 
