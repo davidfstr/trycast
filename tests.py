@@ -948,8 +948,9 @@ class TestTryCast(TestCase):
         )
 
         # Union with forward refs that have NOT been resolved
-        self.assertRaises(
+        self.assertRaisesRegex(
             UnresolvedForwardRefError,
+            "contains a string-based forward reference",
             lambda: trycast(
                 test_data.forwardrefs_example.Shape,
                 dict(type="circle", center=dict(x=50, y=50), radius=25),
@@ -974,8 +975,9 @@ class TestTryCast(TestCase):
         )
 
         # list with forward refs that have NOT been resolved
-        self.assertRaises(
+        self.assertRaisesRegex(
             UnresolvedForwardRefError,
+            "contains a string-based forward reference",
             lambda: trycast(
                 test_data.forwardrefs_example.Scatterplot, [dict(x=50, y=50)]
             ),
@@ -998,8 +1000,9 @@ class TestTryCast(TestCase):
         )
 
         # dict with forward refs that have NOT been resolved
-        self.assertRaises(
+        self.assertRaisesRegex(
             UnresolvedForwardRefError,
+            "contains a string-based forward reference",
             lambda: trycast(
                 test_data.forwardrefs_example.PointForLabel,
                 {"Target": dict(x=50, y=50)},
