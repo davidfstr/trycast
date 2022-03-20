@@ -74,13 +74,13 @@ elif sys.version_info >= (3, 7):
     from typing import _GenericAlias  # type: ignore  # private API not in stubs
 
     def get_origin(tp: object) -> Optional[object]:
-        if isinstance(tp, _GenericAlias):
+        if isinstance(tp, _GenericAlias):  # type: ignore[16]  # pyre
             return tp.__origin__  # type: ignore  # private API not in stubs
         else:
             return None
 
     def get_args(tp: object) -> Tuple[object, ...]:
-        if isinstance(tp, _GenericAlias):
+        if isinstance(tp, _GenericAlias):  # type: ignore[16]  # pyre
             return tp.__args__  # type: ignore  # private API not in stubs
         else:
             return ()
