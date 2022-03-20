@@ -30,6 +30,7 @@ from typing import _eval_type as eval_type  # type: ignore  # private API not in
 from typing import _type_check as type_check  # type: ignore  # private API not in stubs
 from typing import cast, overload
 
+# get_type_hints
 try:
     # Python 3.7+
     from typing_extensions import get_type_hints  # type: ignore[attr-defined]
@@ -49,6 +50,20 @@ else:
             class Literal:
                 def __class_getitem__(cls, key):
                     pass
+
+
+# TypeGuard
+if sys.version_info >= (3, 10):
+    from typing import TypeGuard  # Python 3.10+
+else:
+    try:
+        from typing_extensions import TypeGuard
+    except ImportError:
+        if not TYPE_CHECKING:
+
+            class TypeGuard:
+                def __class_getitem__(cls, key):
+                    return bool
 
 
 # get_origin, get_args
@@ -154,35 +169,35 @@ _SimpleTypeVarCo = TypeVar("_SimpleTypeVarCo", covariant=True)
 _MISSING = object()
 _FAILURE = object()
 
-if TYPE_CHECKING:
-    from typing_extensions import TypeAlias, TypeGuard
-
-    TypeGuard_T: TypeAlias = TypeGuard[_T]
-else:
-    TypeGuard_T = bool
-
 # ------------------------------------------------------------------------------
 # trycast
 
-# TODO: Use this signature for trycast once support for TypeForm is
-#       implemented in mypy. See: https://github.com/python/mypy/issues/9773
+# TODO: Once support for TypeForm is implemented in mypy,
+#       replace the   `(Type[T]) -> Optional[T]` overload
+#       and the       `(object) -> Optional[object]` overload with
+#       the following `(TypeForm[T]) -> Optional[T]` overload:
+#
+#       See: https://github.com/python/mypy/issues/9773
 # @overload
 # def trycast(tp: TypeForm[_T], value: object) -> Optional[_T]: ...
-# @overload
-# def trycast(tp: TypeForm[_T], value: object, failure: _F) -> Union[_T, _F]: ...
-
-
-@overload
-def trycast(
-    tp: Type[_T], value: object, *, strict: bool = False, eval: bool = True
-) -> Optional[_T]:
-    ...
 
 
 @overload
 def trycast(
     tp: str, value: object, *, strict: bool = False, eval: Literal[False]
 ) -> NoReturn:
+    ...
+
+
+@overload
+def trycast(tp: str, value: object, *, strict: bool = False, eval: bool = True) -> bool:
+    ...
+
+
+@overload
+def trycast(
+    tp: Type[_T], value: object, *, strict: bool = False, eval: bool = True
+) -> Optional[_T]:
     ...
 
 
@@ -615,10 +630,14 @@ def _is_simple_typevar(T: object, covariant: bool = False) -> bool:
 # ------------------------------------------------------------------------------
 # isassignable
 
-# TODO: Use this signature for isassignable once support for TypeForm is
-#       implemented in mypy. See: https://github.com/python/mypy/issues/9773
+# TODO: Once support for TypeForm is implemented in mypy,
+#       replace the   `(Type[T]) -> TypeGuard[T]` overload
+#       and the       `(object) -> bool` overload with
+#       the following `(TypeForm[T]) -> TypeGuard[T]` overload:
+#
+#       See: https://github.com/python/mypy/issues/9773
 # @overload
-# def isassignable(value: object, tp: TypeForm[_T]) -> TypeGuard_T: ...
+# def isassignable(value: object, tp: TypeForm[_T]) -> TypeGuard[_T]: ...
 
 
 @overload
@@ -627,7 +646,12 @@ def isassignable(value: object, tp: str, *, eval: Literal[False]) -> NoReturn:
 
 
 @overload
-def isassignable(value: object, tp: Type[_T], *, eval: bool = True) -> TypeGuard_T:
+def isassignable(value: object, tp: str, *, eval: bool = True) -> bool:
+    ...
+
+
+@overload
+def isassignable(value: object, tp: Type[_T], *, eval: bool = True) -> TypeGuard[_T]:
     ...
 
 
@@ -636,7 +660,7 @@ def isassignable(value: object, tp: object, *, eval: bool = True) -> bool:
     ...
 
 
-def isassignable(value, tp, *, eval: bool = True):
+def isassignable(value, tp, *, eval=True):
     """
     Returns whether `value` is in the shape of `tp`
     (as accepted by a Python typechecker conforming to PEP 484 "Type Hints").
@@ -678,10 +702,19 @@ def isassignable(value, tp, *, eval: bool = True):
     * UnresolvableTypeError --
         If `tp` is a string that could not be resolved to a type.
     """
-    return (
-        trycast(tp, value, _isassignable_failure, strict=True, eval=eval)
-        is not _isassignable_failure
-    )
+    if isinstance(tp, type):
+        return cast(
+            TypeGuard[_T],
+            (
+                trycast(tp, value, _isassignable_failure, strict=True, eval=eval)
+                is not _isassignable_failure
+            ),
+        )
+    else:
+        return (
+            trycast(tp, value, _isassignable_failure, strict=True, eval=eval)
+            is not _isassignable_failure
+        )
 
 
 _isassignable_failure = object()
