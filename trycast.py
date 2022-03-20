@@ -129,7 +129,7 @@ try:
     # private API not in stubs.
     from typing import _TypedDictMeta as _TypingTypedDictMeta  # type: ignore
 
-    _typed_dict_meta_list.append(_TypingTypedDictMeta)
+    _typed_dict_meta_list.append(_TypingTypedDictMeta)  # type: ignore[16]  # pyre
 except ImportError:
     pass
 
@@ -138,7 +138,7 @@ try:
         _TypedDictMeta as _TypingExtensionsTypedDictMeta,  # type: ignore[reportGeneralTypeIssues]  # pyright
     )
 
-    _typed_dict_meta_list.append(_TypingExtensionsTypedDictMeta)
+    _typed_dict_meta_list.append(_TypingExtensionsTypedDictMeta)  # type: ignore[16]  # pyre
 except ImportError:
     pass
 
@@ -147,7 +147,7 @@ try:
         _TypedDictMeta as _MypyExtensionsTypedDictMeta,  # type: ignore[reportGeneralTypeIssues]  # pyright
     )
 
-    _typed_dict_meta_list.append(_MypyExtensionsTypedDictMeta)
+    _typed_dict_meta_list.append(_MypyExtensionsTypedDictMeta)  # type: ignore[16]  # pyre
 except ImportError:
     pass
 
@@ -801,7 +801,7 @@ def eval_type_str(tp: str) -> object:
 
     # Resolve any ForwardRef instances inside the type
     try:
-        member = eval_type(member, mod.__dict__, None)
+        member = eval_type(member, mod.__dict__, None)  # type: ignore[16]  # pyre
     except Exception:
         raise UnresolvableTypeError(
             f"Could not resolve type {tp!r}: "
@@ -812,7 +812,7 @@ def eval_type_str(tp: str) -> object:
     # 1. Ensure the object is actually a type
     # 2. As a special case, interpret None as type(None)
     try:
-        member = type_check(member, f"Could not resolve type {tp!r}: ")
+        member = type_check(member, f"Could not resolve type {tp!r}: ")  # type: ignore[16]  # pyre
     except TypeError as e:
         raise UnresolvableTypeError(str(e))
     return member

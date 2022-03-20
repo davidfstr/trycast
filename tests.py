@@ -939,7 +939,7 @@ class TestTryCast(TestCase):
     def test_alias_to_union_with_forwardrefs(self) -> None:
         # Union with forward refs that have been resolved
         self.assertTryCastSuccess(
-            eval_type(
+            eval_type(  # type: ignore[16]  # pyre
                 test_data.forwardrefs_example.Shape,
                 test_data.forwardrefs_example.__dict__,
                 None,
@@ -966,7 +966,7 @@ class TestTryCast(TestCase):
     def test_alias_to_list_with_forwardrefs(self) -> None:
         # list with forward refs that have been resolved
         self.assertTryCastSuccess(
-            eval_type(
+            eval_type(  # type: ignore[16]  # pyre
                 test_data.forwardrefs_example.Scatterplot,
                 test_data.forwardrefs_example.__dict__,
                 None,
@@ -991,7 +991,7 @@ class TestTryCast(TestCase):
     def test_alias_to_dict_with_forwardrefs(self) -> None:
         # dict with forward refs that have been resolved
         self.assertTryCastSuccess(
-            eval_type(
+            eval_type(  # type: ignore[16]  # pyre
                 test_data.forwardrefs_example.PointForLabel,
                 test_data.forwardrefs_example.__dict__,
                 None,
