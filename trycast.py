@@ -725,7 +725,7 @@ _isassignable_failure = object()
 
 _IMPORTABLE_TYPE_EXPRESSION_RE = re.compile(r"^((?:[a-zA-Z0-9_]+\.)+)(.*)$")
 _UNIMPORTABLE_TYPE_EXPRESSION_RE = re.compile(r"^[a-zA-Z0-9_]+(\[.*\])?$")
-_BUILTINS_MODULE = builtins
+_BUILTINS_MODULE: ModuleType = builtins
 _EXTRA_ADVISE_IF_MOD_IS_BUILTINS = (
     " Try altering the type argument to be a string "
     "reference (surrounded with quotes) instead, "
