@@ -52,7 +52,7 @@ if sys.version_info >= (3, 8):
 else:
     from typing_extensions import TypedDict  # Python 3.5+
 
-from typing import _eval_type as eval_type  # type: ignore  # private API not in stubs
+from typing import _eval_type as eval_type  # type: ignore[attr-defined]
 
 _FAILURE = object()
 
@@ -1253,7 +1253,7 @@ class TestTryCast(TestCase):
         self.assertRaisesRegex(
             TypeError,
             "does not support checking against a tuple of types",
-            lambda: trycast((int, str), 1),  # type: ignore
+            lambda: trycast((int, str), 1),
         )
 
     def test_reversing_order_of_first_two_arguments_gives_nice_error_message(

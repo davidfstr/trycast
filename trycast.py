@@ -26,8 +26,8 @@ from typing import (
     TypeVar,
     Union,
 )
-from typing import _eval_type as eval_type  # type: ignore  # private API not in stubs
-from typing import _type_check as type_check  # type: ignore  # private API not in stubs
+from typing import _eval_type as eval_type  # type: ignore[attr-defined]
+from typing import _type_check as type_check  # type: ignore[attr-defined]
 from typing import cast, overload
 
 # get_type_hints
@@ -71,28 +71,25 @@ if sys.version_info >= (3, 8):
     from typing import get_args, get_origin  # Python 3.8+
 
 elif sys.version_info >= (3, 7):
-    from typing import _GenericAlias  # type: ignore  # private API not in stubs
+    from typing import _GenericAlias  # type: ignore[attr-defined]
 
     def get_origin(tp: object) -> Optional[object]:
         if isinstance(tp, _GenericAlias):  # type: ignore[16]  # pyre
-            return tp.__origin__  # type: ignore  # private API not in stubs
+            return tp.__origin__  # type: ignore[reportGeneralTypeIssues]  # pyright
         else:
             return None
 
     def get_args(tp: object) -> Tuple[object, ...]:
         if isinstance(tp, _GenericAlias):  # type: ignore[16]  # pyre
-            return tp.__args__  # type: ignore  # private API not in stubs
+            return tp.__args__  # type: ignore[reportGeneralTypeIssues]  # pyright
         else:
             return ()
 
 elif sys.version_info >= (3, 6):
-    from typing import GenericMeta  # type: ignore  # private API not in stubs
-    from typing import _Union  # type: ignore  # private API not in stubs
+    from typing import GenericMeta, _Union
 
     try:
-        from typing_extensions import (  # type: ignore  # private API not in stubs
-            _Literal,
-        )
+        from typing_extensions import _Literal
     except ImportError:
         if not TYPE_CHECKING:
 
@@ -101,7 +98,7 @@ elif sys.version_info >= (3, 6):
 
     def get_origin(tp: object) -> Optional[object]:
         if isinstance(tp, GenericMeta):
-            return tp.__origin__  # type: ignore  # private API not in stubs
+            return tp.__origin__
         elif isinstance(tp, _Union):
             return Union
         elif isinstance(tp, _Literal):
@@ -111,7 +108,7 @@ elif sys.version_info >= (3, 6):
 
     def get_args(tp: object) -> Tuple[object, ...]:
         if isinstance(tp, GenericMeta):
-            return tp.__args__  # type: ignore  # private API not in stubs
+            return tp.__args__
         elif isinstance(tp, _Union):
             return tp.__args__
         elif isinstance(tp, _Literal):
@@ -126,15 +123,16 @@ else:
 # _is_typed_dict
 _typed_dict_meta_list = []
 try:
-    # private API not in stubs.
-    from typing import _TypedDictMeta as _TypingTypedDictMeta  # type: ignore
+    from typing import (  # type: ignore[attr-defined]  # isort: skip
+        _TypedDictMeta as _TypingTypedDictMeta,  # type: ignore[reportGeneralTypeIssues]  # pyright
+    )
 
     _typed_dict_meta_list.append(_TypingTypedDictMeta)  # type: ignore[16]  # pyre
 except ImportError:
     pass
 
 try:
-    from typing_extensions import (  # type: ignore # isort: skip
+    from typing_extensions import (  # type: ignore[attr-defined]  # isort: skip
         _TypedDictMeta as _TypingExtensionsTypedDictMeta,  # type: ignore[reportGeneralTypeIssues]  # pyright
     )
 
@@ -143,7 +141,7 @@ except ImportError:
     pass
 
 try:
-    from mypy_extensions import (  # type: ignore # isort: skip
+    from mypy_extensions import (  # type: ignore[attr-defined]  # isort: skip
         _TypedDictMeta as _MypyExtensionsTypedDictMeta,  # type: ignore[reportGeneralTypeIssues]  # pyright
     )
 
@@ -493,7 +491,7 @@ def _trycast_inner(tp, value, failure, options):
     if isinstance(tp, ForwardRef):
         raise UnresolvedForwardRefError()
 
-    if isinstance(value, tp):  # type: ignore
+    if isinstance(value, tp):
         return value
     else:
         return failure
