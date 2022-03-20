@@ -186,6 +186,8 @@ A presentation about trycast was given at the 2021 PyCon Typing Summit:
 * Extend `trycast()` to recognize special `Any` and `NoReturn` values.
 * Fix `trycast()` to provide better diagnostic error when given a tuple
   of types as its `tp` argument. Was broken in v0.6.0.
+* Add support for the pyright (and pylance) type checker,
+  in addition to the mypy type checker.
 
 ### v0.6.1
 

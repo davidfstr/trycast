@@ -1341,7 +1341,7 @@ class TestTryCast(TestCase):
 
     # === Typecheck ===
 
-    def test_no_typechecker_errors_exist(self) -> None:
+    def test_no_mypy_typechecker_errors_exist(self) -> None:
         try:
             subprocess.check_output(
                 ["mypy"],
@@ -1349,7 +1349,23 @@ class TestTryCast(TestCase):
                 stderr=subprocess.STDOUT,
             )
         except subprocess.CalledProcessError as e:
-            self.fail(f'Typechecking failed:\n\n{e.output.decode("utf-8").strip()}')
+            self.fail(
+                f'mypy typechecking failed:\n\n{e.output.decode("utf-8").strip()}'
+            )
+
+    # TODO: This test runs very slowly (4.8 seconds on @davidfstr's laptop).
+    #       Investigate way to configure pyright to have a faster startup time.
+    def test_no_pyright_typechecker_errors_exist(self) -> None:
+        try:
+            subprocess.check_output(
+                ["pyright"],
+                env={"LANG": "en_US.UTF-8", "PATH": os.environ.get("PATH", "")},
+                stderr=subprocess.STDOUT,
+            )
+        except subprocess.CalledProcessError as e:
+            self.fail(
+                f'pyright typechecking failed:\n\n{e.output.decode("utf-8").strip()}'
+            )
 
     # === Utility ===
 
