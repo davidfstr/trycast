@@ -35,11 +35,11 @@ publish: testall  ## Publish the package to PyPI.
 
 
 .PHONY: format
-format: black isort flake mypy  ## Reformat code. Run linters.
+format: black isort flake typecheck  ## Reformat code. Run linters.
 
 
 .PHONY: lint
-lint: flake mypy  ## Check whether code satisfies all linter and formatter rules.
+lint: flake typecheck  ## Check whether code satisfies all linter and formatter rules.
 	black --check $(path)
 	isort --check $(path)
 
@@ -59,9 +59,18 @@ flake:  ## Run flake8 linter.
 	flake8 $(path)
 
 
+.PHONY: typecheck
+typecheck: mypy pyright  ## Run all typecheckers.
+
+
 .PHONY: mypy
 mypy:  ## Run mypy typechecker.
-	mypy $(path)
+	mypy
+
+
+.PHONY: pyright
+pyright:  ## Run pyright typechecker.
+	pyright
 
 
 .PHONY: coverage
