@@ -1219,22 +1219,28 @@ class TestTryCast(TestCase):
         else:
             self.fail("Expected TypeNotSupportedError to be raised")
 
-    if sys.version_info >= (3, 8) and sys.version_info < (3, 9):
+    # NOTE: Cannot combine the following two if-checks with an `and`
+    #       because that is too complicated for Pyre to understand.
+    #
+    #       For more info about the forms that Pyre supports, see its tests:
+    #       https://github.com/facebook/pyre-check/blob/ee6d16129c112fb1feb1435a245d5e6a114e58d9/analysis/test/preprocessingTest.ml#L626
+    if sys.version_info >= (3, 8):
+        if sys.version_info < (3, 9):
 
-        def test_rejects_python_3_8_typeddict_when_strict_is_true(self) -> None:
-            class Point2D(typing.TypedDict):
-                x: int
-                y: int
+            def test_rejects_python_3_8_typeddict_when_strict_is_true(self) -> None:
+                class Point2D(typing.TypedDict):
+                    x: int
+                    y: int
 
-            class Point3D(Point2D, total=False):
-                z: int
+                class Point3D(Point2D, total=False):
+                    z: int
 
-            try:
-                trycast(Point3D, {"x": 1, "y": 2}, strict=True)
-            except TypeNotSupportedError:
-                pass
-            else:
-                self.fail("Expected TypeNotSupportedError to be raised")
+                try:
+                    trycast(Point3D, {"x": 1, "y": 2}, strict=True)
+                except TypeNotSupportedError:
+                    pass
+                else:
+                    self.fail("Expected TypeNotSupportedError to be raised")
 
     # === Misuse: Nice Error Messages ===
 
