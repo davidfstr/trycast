@@ -16,3 +16,6 @@
 # coverage
 .coverage
 htmlcov
+
+# pyre
+.pyre

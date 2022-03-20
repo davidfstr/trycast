@@ -1,5 +1,6 @@
 # flake8: noqa
 import os
+import platform
 import subprocess
 import sys
 import typing
@@ -54,6 +55,40 @@ else:
 from typing import _eval_type as eval_type  # type: ignore  # private API not in stubs
 
 _FAILURE = object()
+
+
+class _Movie(TypedDict):
+    name: str
+    year: int
+
+
+class _BookBasedMovie(_Movie):
+    based_on: str
+
+
+class _MaybeBookBasedMovie(_Movie, total=False):
+    based_on: str
+
+
+class _MaybeMovie(TypedDict, total=False):
+    name: str
+    year: int
+
+
+class _BookBasedMaybeMovie(_MaybeMovie):
+    based_on: str
+
+
+class X(TypedDict):
+    x: int
+
+
+class Y(TypedDict):
+    y: str
+
+
+class XYZ(X, Y):
+    z: bool
 
 
 class TestTryCast(TestCase):
@@ -393,21 +428,21 @@ class TestTryCast(TestCase):
 
         def test_tuple_t_ellipsis(self) -> None:
             # Actual tuple[T, ...]
-            self.assertTryCastSuccess(tuple[int, ...], ())
-            self.assertTryCastSuccess(tuple[int, ...], (1,))
-            self.assertTryCastSuccess(tuple[int, ...], (1, 2))
+            self.assertTryCastSuccess(tuple[int, ...], ())  # type: ignore[6]  # pyre
+            self.assertTryCastSuccess(tuple[int, ...], (1,))  # type: ignore[6]  # pyre
+            self.assertTryCastSuccess(tuple[int, ...], (1, 2))  # type: ignore[6]  # pyre
 
             # tuple[T, ...]-like tuples
-            self.assertTryCastFailure(tuple[int, ...], (True,))
-            self.assertTryCastFailure(tuple[int, ...], (1, True))
+            self.assertTryCastFailure(tuple[int, ...], (True,))  # type: ignore[6]  # pyre
+            self.assertTryCastFailure(tuple[int, ...], (1, True))  # type: ignore[6]  # pyre
 
             # non-tuple[T, ...]s
-            self.assertTryCastFailure(tuple[int, ...], 0)
-            self.assertTryCastFailure(tuple[int, ...], "foo")
-            self.assertTryCastFailure(tuple[int, ...], ["1"])
-            self.assertTryCastFailure(tuple[int, ...], {1: 1})
-            self.assertTryCastFailure(tuple[int, ...], {1})
-            self.assertTryCastFailure(tuple[int, ...], object())
+            self.assertTryCastFailure(tuple[int, ...], 0)  # type: ignore[6]  # pyre
+            self.assertTryCastFailure(tuple[int, ...], "foo")  # type: ignore[6]  # pyre
+            self.assertTryCastFailure(tuple[int, ...], ["1"])  # type: ignore[6]  # pyre
+            self.assertTryCastFailure(tuple[int, ...], {1: 1})  # type: ignore[6]  # pyre
+            self.assertTryCastFailure(tuple[int, ...], {1})  # type: ignore[6]  # pyre
+            self.assertTryCastFailure(tuple[int, ...], object())  # type: ignore[6]  # pyre
 
     def test_big_tuple_t_ellipsis(self) -> None:
         # Actual tuple[T, ...]
@@ -569,20 +604,13 @@ class TestTryCast(TestCase):
         self.assertTryCastSuccess(Point3D, {"x": 1, "y": 1, "z": 1})
 
     def test_typeddict_single_inheritance(self) -> None:
-        class Movie(TypedDict):
-            name: str
-            year: int
-
-        class BookBasedMovie(Movie):
-            based_on: str
-
-        _1 = BookBasedMovie(
+        _1 = _BookBasedMovie(
             name="Blade Runner",
             year=1982,
             based_on="Blade Runner",
         )
         self.assertTryCastSuccess(
-            BookBasedMovie,
+            _BookBasedMovie,
             dict(
                 name="Blade Runner",
                 year=1982,
@@ -591,34 +619,27 @@ class TestTryCast(TestCase):
         )
 
         self.assertTryCastFailure(
-            BookBasedMovie,
+            _BookBasedMovie,
             dict(
                 name="Blade Runner",
                 year=1982,
             ),
         )
         self.assertTryCastFailure(
-            BookBasedMovie,
+            _BookBasedMovie,
             dict(
                 based_on="Blade Runner",
             ),
         )
 
     def test_typeddict_single_inheritance_with_mixed_totality(self) -> None:
-        class Movie(TypedDict):
-            name: str
-            year: int
-
-        class MaybeBookBasedMovie(Movie, total=False):
-            based_on: str
-
-        _1 = MaybeBookBasedMovie(
+        _1 = _MaybeBookBasedMovie(
             name="Blade Runner",
             year=1982,
             based_on="Blade Runner",
         )
         self.assertTryCastSuccess(
-            MaybeBookBasedMovie,
+            _MaybeBookBasedMovie,
             dict(
                 name="Blade Runner",
                 year=1982,
@@ -626,12 +647,12 @@ class TestTryCast(TestCase):
             ),
         )
 
-        _2 = MaybeBookBasedMovie(
+        _2 = _MaybeBookBasedMovie(
             name="Blade Runner",
             year=1982,
         )
         self.assertTryCastSuccess(
-            MaybeBookBasedMovie,
+            _MaybeBookBasedMovie,
             dict(
                 name="Blade Runner",
                 year=1982,
@@ -648,33 +669,26 @@ class TestTryCast(TestCase):
             # typing_extensions.TypedDict over typing.TypedDict
             # if they must use Python 3.8 (and cannot upgrade to Python 3.9+).
             self.assertTryCastSuccess(
-                MaybeBookBasedMovie,
+                _MaybeBookBasedMovie,
                 dict(
                     based_on="Blade Runner",
                 ),
             )
         else:
             self.assertTryCastFailure(
-                MaybeBookBasedMovie,
+                _MaybeBookBasedMovie,
                 dict(
                     based_on="Blade Runner",
                 ),
             )
 
-        class MaybeMovie(TypedDict, total=False):
-            name: str
-            year: int
-
-        class BookBasedMaybeMovie(MaybeMovie):
-            based_on: str
-
-        _3 = BookBasedMaybeMovie(
+        _3 = _BookBasedMaybeMovie(
             name="Blade Runner",
             year=1982,
             based_on="Blade Runner",
         )
         self.assertTryCastSuccess(
-            BookBasedMaybeMovie,
+            _BookBasedMaybeMovie,
             dict(
                 name="Blade Runner",
                 year=1982,
@@ -683,7 +697,7 @@ class TestTryCast(TestCase):
         )
 
         self.assertTryCastFailure(
-            BookBasedMaybeMovie,
+            _BookBasedMaybeMovie,
             dict(
                 name="Blade Runner",
                 year=1982,
@@ -700,32 +714,23 @@ class TestTryCast(TestCase):
             # typing_extensions.TypedDict over typing.TypedDict
             # if they must use Python 3.8 (and cannot upgrade to Python 3.9+).
             self.assertTryCastFailure(
-                BookBasedMaybeMovie,
+                _BookBasedMaybeMovie,
                 dict(
                     based_on="Blade Runner",
                 ),
             )
         else:
-            _4 = BookBasedMaybeMovie(
+            _4 = _BookBasedMaybeMovie(
                 based_on="Blade Runner",
             )
             self.assertTryCastSuccess(
-                BookBasedMaybeMovie,
+                _BookBasedMaybeMovie,
                 dict(
                     based_on="Blade Runner",
                 ),
             )
 
     def test_typeddict_multiple_inheritance(self) -> None:
-        class X(TypedDict):
-            x: int
-
-        class Y(TypedDict):
-            y: str
-
-        class XYZ(X, Y):
-            z: bool
-
         _1 = XYZ(
             x=1,
             y="2",
@@ -939,7 +944,7 @@ class TestTryCast(TestCase):
     def test_alias_to_union_with_forwardrefs(self) -> None:
         # Union with forward refs that have been resolved
         self.assertTryCastSuccess(
-            eval_type(
+            eval_type(  # type: ignore[16]  # pyre
                 test_data.forwardrefs_example.Shape,
                 test_data.forwardrefs_example.__dict__,
                 None,
@@ -966,7 +971,7 @@ class TestTryCast(TestCase):
     def test_alias_to_list_with_forwardrefs(self) -> None:
         # list with forward refs that have been resolved
         self.assertTryCastSuccess(
-            eval_type(
+            eval_type(  # type: ignore[16]  # pyre
                 test_data.forwardrefs_example.Scatterplot,
                 test_data.forwardrefs_example.__dict__,
                 None,
@@ -991,7 +996,7 @@ class TestTryCast(TestCase):
     def test_alias_to_dict_with_forwardrefs(self) -> None:
         # dict with forward refs that have been resolved
         self.assertTryCastSuccess(
-            eval_type(
+            eval_type(  # type: ignore[16]  # pyre
                 test_data.forwardrefs_example.PointForLabel,
                 test_data.forwardrefs_example.__dict__,
                 None,
@@ -1219,22 +1224,28 @@ class TestTryCast(TestCase):
         else:
             self.fail("Expected TypeNotSupportedError to be raised")
 
-    if sys.version_info >= (3, 8) and sys.version_info < (3, 9):
+    # NOTE: Cannot combine the following two if-checks with an `and`
+    #       because that is too complicated for Pyre to understand.
+    #
+    #       For more info about the forms that Pyre supports, see its tests:
+    #       https://github.com/facebook/pyre-check/blob/ee6d16129c112fb1feb1435a245d5e6a114e58d9/analysis/test/preprocessingTest.ml#L626
+    if sys.version_info >= (3, 8):
+        if sys.version_info < (3, 9):
 
-        def test_rejects_python_3_8_typeddict_when_strict_is_true(self) -> None:
-            class Point2D(typing.TypedDict):
-                x: int
-                y: int
+            def test_rejects_python_3_8_typeddict_when_strict_is_true(self) -> None:
+                class Point2D(typing.TypedDict):
+                    x: int
+                    y: int
 
-            class Point3D(Point2D, total=False):
-                z: int
+                class Point3D(Point2D, total=False):
+                    z: int
 
-            try:
-                trycast(Point3D, {"x": 1, "y": 2}, strict=True)
-            except TypeNotSupportedError:
-                pass
-            else:
-                self.fail("Expected TypeNotSupportedError to be raised")
+                try:
+                    trycast(Point3D, {"x": 1, "y": 2}, strict=True)
+                except TypeNotSupportedError:
+                    pass
+                else:
+                    self.fail("Expected TypeNotSupportedError to be raised")
 
     # === Misuse: Nice Error Messages ===
 
@@ -1366,6 +1377,27 @@ class TestTryCast(TestCase):
             self.fail(
                 f'pyright typechecking failed:\n\n{e.output.decode("utf-8").strip()}'
             )
+
+    def test_no_pyre_typechecker_errors_exist(self) -> None:
+        try:
+            subprocess.check_output(
+                ["pyre", "check"],
+                env={"LANG": "en_US.UTF-8", "PATH": os.environ.get("PATH", "")},
+                stderr=subprocess.STDOUT,
+            )
+        except subprocess.CalledProcessError as e:
+            output_str = e.output.decode("utf-8").strip()
+
+            # Don't run pyre during automated tests on macOS 10.14
+            # because pyre won't run on that macOS version.
+            # See: https://github.com/facebook/pyre-check/issues/545
+            if "___darwin_check_fd_set_overflow" in output_str and platform.mac_ver()[
+                0
+            ].startswith("10.14."):
+                self.skipTest("Cannot run Pyre on macOS 10.14")
+                return
+
+            self.fail(f"pyre typechecking failed:\n\n{output_str}")
 
     # === Utility ===
 

@@ -74,13 +74,13 @@ elif sys.version_info >= (3, 7):
     from typing import _GenericAlias  # type: ignore  # private API not in stubs
 
     def get_origin(tp: object) -> Optional[object]:
-        if isinstance(tp, _GenericAlias):
+        if isinstance(tp, _GenericAlias):  # type: ignore[16]  # pyre
             return tp.__origin__  # type: ignore  # private API not in stubs
         else:
             return None
 
     def get_args(tp: object) -> Tuple[object, ...]:
-        if isinstance(tp, _GenericAlias):
+        if isinstance(tp, _GenericAlias):  # type: ignore[16]  # pyre
             return tp.__args__  # type: ignore  # private API not in stubs
         else:
             return ()
@@ -129,7 +129,7 @@ try:
     # private API not in stubs.
     from typing import _TypedDictMeta as _TypingTypedDictMeta  # type: ignore
 
-    _typed_dict_meta_list.append(_TypingTypedDictMeta)
+    _typed_dict_meta_list.append(_TypingTypedDictMeta)  # type: ignore[16]  # pyre
 except ImportError:
     pass
 
@@ -138,7 +138,7 @@ try:
         _TypedDictMeta as _TypingExtensionsTypedDictMeta,  # type: ignore[reportGeneralTypeIssues]  # pyright
     )
 
-    _typed_dict_meta_list.append(_TypingExtensionsTypedDictMeta)
+    _typed_dict_meta_list.append(_TypingExtensionsTypedDictMeta)  # type: ignore[16]  # pyre
 except ImportError:
     pass
 
@@ -147,7 +147,7 @@ try:
         _TypedDictMeta as _MypyExtensionsTypedDictMeta,  # type: ignore[reportGeneralTypeIssues]  # pyright
     )
 
-    _typed_dict_meta_list.append(_MypyExtensionsTypedDictMeta)
+    _typed_dict_meta_list.append(_MypyExtensionsTypedDictMeta)  # type: ignore[16]  # pyre
 except ImportError:
     pass
 
@@ -183,26 +183,26 @@ _FAILURE = object()
 
 
 @overload
-def trycast(
+def trycast(  # type: ignore[43]  # pyre
     tp: str, value: object, *, strict: bool = False, eval: Literal[False]
 ) -> NoReturn:
     ...
 
 
 @overload
-def trycast(tp: str, value: object, *, strict: bool = False, eval: bool = True) -> bool:
+def trycast(tp: str, value: object, *, strict: bool = False, eval: bool = True) -> bool:  # type: ignore[43]  # pyre
     ...
 
 
 @overload
-def trycast(
+def trycast(  # type: ignore[43]  # pyre
     tp: Type[_T], value: object, *, strict: bool = False, eval: bool = True
 ) -> Optional[_T]:
     ...
 
 
 @overload
-def trycast(
+def trycast(  # type: ignore[43]  # pyre
     tp: object, value: object, *, strict: bool = False, eval: bool = True
 ) -> Optional[object]:
     ...
@@ -725,7 +725,7 @@ _isassignable_failure = object()
 
 _IMPORTABLE_TYPE_EXPRESSION_RE = re.compile(r"^((?:[a-zA-Z0-9_]+\.)+)(.*)$")
 _UNIMPORTABLE_TYPE_EXPRESSION_RE = re.compile(r"^[a-zA-Z0-9_]+(\[.*\])?$")
-_BUILTINS_MODULE = builtins
+_BUILTINS_MODULE: ModuleType = builtins
 _EXTRA_ADVISE_IF_MOD_IS_BUILTINS = (
     " Try altering the type argument to be a string "
     "reference (surrounded with quotes) instead, "
@@ -801,7 +801,7 @@ def eval_type_str(tp: str) -> object:
 
     # Resolve any ForwardRef instances inside the type
     try:
-        member = eval_type(member, mod.__dict__, None)
+        member = eval_type(member, mod.__dict__, None)  # type: ignore[16]  # pyre
     except Exception:
         raise UnresolvableTypeError(
             f"Could not resolve type {tp!r}: "
@@ -812,7 +812,7 @@ def eval_type_str(tp: str) -> object:
     # 1. Ensure the object is actually a type
     # 2. As a special case, interpret None as type(None)
     try:
-        member = type_check(member, f"Could not resolve type {tp!r}: ")
+        member = type_check(member, f"Could not resolve type {tp!r}: ")  # type: ignore[16]  # pyre
     except TypeError as e:
         raise UnresolvableTypeError(str(e))
     return member
