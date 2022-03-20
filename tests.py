@@ -427,21 +427,21 @@ class TestTryCast(TestCase):
 
         def test_tuple_t_ellipsis(self) -> None:
             # Actual tuple[T, ...]
-            self.assertTryCastSuccess(tuple[int, ...], ())
-            self.assertTryCastSuccess(tuple[int, ...], (1,))
-            self.assertTryCastSuccess(tuple[int, ...], (1, 2))
+            self.assertTryCastSuccess(tuple[int, ...], ())  # type: ignore[6]  # pyre
+            self.assertTryCastSuccess(tuple[int, ...], (1,))  # type: ignore[6]  # pyre
+            self.assertTryCastSuccess(tuple[int, ...], (1, 2))  # type: ignore[6]  # pyre
 
             # tuple[T, ...]-like tuples
-            self.assertTryCastFailure(tuple[int, ...], (True,))
-            self.assertTryCastFailure(tuple[int, ...], (1, True))
+            self.assertTryCastFailure(tuple[int, ...], (True,))  # type: ignore[6]  # pyre
+            self.assertTryCastFailure(tuple[int, ...], (1, True))  # type: ignore[6]  # pyre
 
             # non-tuple[T, ...]s
-            self.assertTryCastFailure(tuple[int, ...], 0)
-            self.assertTryCastFailure(tuple[int, ...], "foo")
-            self.assertTryCastFailure(tuple[int, ...], ["1"])
-            self.assertTryCastFailure(tuple[int, ...], {1: 1})
-            self.assertTryCastFailure(tuple[int, ...], {1})
-            self.assertTryCastFailure(tuple[int, ...], object())
+            self.assertTryCastFailure(tuple[int, ...], 0)  # type: ignore[6]  # pyre
+            self.assertTryCastFailure(tuple[int, ...], "foo")  # type: ignore[6]  # pyre
+            self.assertTryCastFailure(tuple[int, ...], ["1"])  # type: ignore[6]  # pyre
+            self.assertTryCastFailure(tuple[int, ...], {1: 1})  # type: ignore[6]  # pyre
+            self.assertTryCastFailure(tuple[int, ...], {1})  # type: ignore[6]  # pyre
+            self.assertTryCastFailure(tuple[int, ...], object())  # type: ignore[6]  # pyre
 
     def test_big_tuple_t_ellipsis(self) -> None:
         # Actual tuple[T, ...]
