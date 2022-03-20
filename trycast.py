@@ -183,26 +183,26 @@ _FAILURE = object()
 
 
 @overload
-def trycast(
+def trycast(  # type: ignore[43]  # pyre
     tp: str, value: object, *, strict: bool = False, eval: Literal[False]
 ) -> NoReturn:
     ...
 
 
 @overload
-def trycast(tp: str, value: object, *, strict: bool = False, eval: bool = True) -> bool:
+def trycast(tp: str, value: object, *, strict: bool = False, eval: bool = True) -> bool:  # type: ignore[43]  # pyre
     ...
 
 
 @overload
-def trycast(
+def trycast(  # type: ignore[43]  # pyre
     tp: Type[_T], value: object, *, strict: bool = False, eval: bool = True
 ) -> Optional[_T]:
     ...
 
 
 @overload
-def trycast(
+def trycast(  # type: ignore[43]  # pyre
     tp: object, value: object, *, strict: bool = False, eval: bool = True
 ) -> Optional[object]:
     ...
