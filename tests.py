@@ -56,6 +56,40 @@ from typing import _eval_type as eval_type  # type: ignore  # private API not in
 _FAILURE = object()
 
 
+class _Movie(TypedDict):
+    name: str
+    year: int
+
+
+class _BookBasedMovie(_Movie):
+    based_on: str
+
+
+class _MaybeBookBasedMovie(_Movie, total=False):
+    based_on: str
+
+
+class _MaybeMovie(TypedDict, total=False):
+    name: str
+    year: int
+
+
+class _BookBasedMaybeMovie(_MaybeMovie):
+    based_on: str
+
+
+class X(TypedDict):
+    x: int
+
+
+class Y(TypedDict):
+    y: str
+
+
+class XYZ(X, Y):
+    z: bool
+
+
 class TestTryCast(TestCase):
     # === Scalars ===
 
@@ -569,20 +603,13 @@ class TestTryCast(TestCase):
         self.assertTryCastSuccess(Point3D, {"x": 1, "y": 1, "z": 1})
 
     def test_typeddict_single_inheritance(self) -> None:
-        class Movie(TypedDict):
-            name: str
-            year: int
-
-        class BookBasedMovie(Movie):
-            based_on: str
-
-        _1 = BookBasedMovie(
+        _1 = _BookBasedMovie(
             name="Blade Runner",
             year=1982,
             based_on="Blade Runner",
         )
         self.assertTryCastSuccess(
-            BookBasedMovie,
+            _BookBasedMovie,
             dict(
                 name="Blade Runner",
                 year=1982,
@@ -591,34 +618,27 @@ class TestTryCast(TestCase):
         )
 
         self.assertTryCastFailure(
-            BookBasedMovie,
+            _BookBasedMovie,
             dict(
                 name="Blade Runner",
                 year=1982,
             ),
         )
         self.assertTryCastFailure(
-            BookBasedMovie,
+            _BookBasedMovie,
             dict(
                 based_on="Blade Runner",
             ),
         )
 
     def test_typeddict_single_inheritance_with_mixed_totality(self) -> None:
-        class Movie(TypedDict):
-            name: str
-            year: int
-
-        class MaybeBookBasedMovie(Movie, total=False):
-            based_on: str
-
-        _1 = MaybeBookBasedMovie(
+        _1 = _MaybeBookBasedMovie(
             name="Blade Runner",
             year=1982,
             based_on="Blade Runner",
         )
         self.assertTryCastSuccess(
-            MaybeBookBasedMovie,
+            _MaybeBookBasedMovie,
             dict(
                 name="Blade Runner",
                 year=1982,
@@ -626,12 +646,12 @@ class TestTryCast(TestCase):
             ),
         )
 
-        _2 = MaybeBookBasedMovie(
+        _2 = _MaybeBookBasedMovie(
             name="Blade Runner",
             year=1982,
         )
         self.assertTryCastSuccess(
-            MaybeBookBasedMovie,
+            _MaybeBookBasedMovie,
             dict(
                 name="Blade Runner",
                 year=1982,
@@ -648,33 +668,26 @@ class TestTryCast(TestCase):
             # typing_extensions.TypedDict over typing.TypedDict
             # if they must use Python 3.8 (and cannot upgrade to Python 3.9+).
             self.assertTryCastSuccess(
-                MaybeBookBasedMovie,
+                _MaybeBookBasedMovie,
                 dict(
                     based_on="Blade Runner",
                 ),
             )
         else:
             self.assertTryCastFailure(
-                MaybeBookBasedMovie,
+                _MaybeBookBasedMovie,
                 dict(
                     based_on="Blade Runner",
                 ),
             )
 
-        class MaybeMovie(TypedDict, total=False):
-            name: str
-            year: int
-
-        class BookBasedMaybeMovie(MaybeMovie):
-            based_on: str
-
-        _3 = BookBasedMaybeMovie(
+        _3 = _BookBasedMaybeMovie(
             name="Blade Runner",
             year=1982,
             based_on="Blade Runner",
         )
         self.assertTryCastSuccess(
-            BookBasedMaybeMovie,
+            _BookBasedMaybeMovie,
             dict(
                 name="Blade Runner",
                 year=1982,
@@ -683,7 +696,7 @@ class TestTryCast(TestCase):
         )
 
         self.assertTryCastFailure(
-            BookBasedMaybeMovie,
+            _BookBasedMaybeMovie,
             dict(
                 name="Blade Runner",
                 year=1982,
@@ -700,32 +713,23 @@ class TestTryCast(TestCase):
             # typing_extensions.TypedDict over typing.TypedDict
             # if they must use Python 3.8 (and cannot upgrade to Python 3.9+).
             self.assertTryCastFailure(
-                BookBasedMaybeMovie,
+                _BookBasedMaybeMovie,
                 dict(
                     based_on="Blade Runner",
                 ),
             )
         else:
-            _4 = BookBasedMaybeMovie(
+            _4 = _BookBasedMaybeMovie(
                 based_on="Blade Runner",
             )
             self.assertTryCastSuccess(
-                BookBasedMaybeMovie,
+                _BookBasedMaybeMovie,
                 dict(
                     based_on="Blade Runner",
                 ),
             )
 
     def test_typeddict_multiple_inheritance(self) -> None:
-        class X(TypedDict):
-            x: int
-
-        class Y(TypedDict):
-            y: str
-
-        class XYZ(X, Y):
-            z: bool
-
         _1 = XYZ(
             x=1,
             y="2",
