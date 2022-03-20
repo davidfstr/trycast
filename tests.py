@@ -576,7 +576,7 @@ class TestTryCast(TestCase):
         class BookBasedMovie(Movie):
             based_on: str
 
-        _1: BookBasedMovie = dict(
+        _1 = BookBasedMovie(
             name="Blade Runner",
             year=1982,
             based_on="Blade Runner",
@@ -612,7 +612,7 @@ class TestTryCast(TestCase):
         class MaybeBookBasedMovie(Movie, total=False):
             based_on: str
 
-        _1: MaybeBookBasedMovie = dict(
+        _1 = MaybeBookBasedMovie(
             name="Blade Runner",
             year=1982,
             based_on="Blade Runner",
@@ -626,7 +626,7 @@ class TestTryCast(TestCase):
             ),
         )
 
-        _2: MaybeBookBasedMovie = dict(
+        _2 = MaybeBookBasedMovie(
             name="Blade Runner",
             year=1982,
         )
@@ -668,7 +668,7 @@ class TestTryCast(TestCase):
         class BookBasedMaybeMovie(MaybeMovie):
             based_on: str
 
-        _3: BookBasedMaybeMovie = dict(
+        _3 = BookBasedMaybeMovie(
             name="Blade Runner",
             year=1982,
             based_on="Blade Runner",
@@ -706,7 +706,7 @@ class TestTryCast(TestCase):
                 ),
             )
         else:
-            _4: BookBasedMaybeMovie = dict(
+            _4 = BookBasedMaybeMovie(
                 based_on="Blade Runner",
             )
             self.assertTryCastSuccess(
@@ -726,7 +726,7 @@ class TestTryCast(TestCase):
         class XYZ(X, Y):
             z: bool
 
-        _1: XYZ = dict(
+        _1 = XYZ(
             x=1,
             y="2",
             z=True,
@@ -1205,7 +1205,7 @@ class TestTryCast(TestCase):
     # === strict=True mode ===
 
     def test_rejects_mypy_typeddict_when_strict_is_true(self) -> None:
-        class Point2D(mypy_extensions.TypedDict):
+        class Point2D(mypy_extensions.TypedDict):  # type: ignore[reportGeneralTypeIssues]  # pyright
             x: int
             y: int
 
@@ -1341,7 +1341,7 @@ class TestTryCast(TestCase):
 
     # === Typecheck ===
 
-    def test_no_typechecker_errors_exist(self) -> None:
+    def test_no_mypy_typechecker_errors_exist(self) -> None:
         try:
             subprocess.check_output(
                 ["mypy"],
@@ -1349,7 +1349,23 @@ class TestTryCast(TestCase):
                 stderr=subprocess.STDOUT,
             )
         except subprocess.CalledProcessError as e:
-            self.fail(f'Typechecking failed:\n\n{e.output.decode("utf-8").strip()}')
+            self.fail(
+                f'mypy typechecking failed:\n\n{e.output.decode("utf-8").strip()}'
+            )
+
+    # TODO: This test runs very slowly (4.8 seconds on @davidfstr's laptop).
+    #       Investigate way to configure pyright to have a faster startup time.
+    def test_no_pyright_typechecker_errors_exist(self) -> None:
+        try:
+            subprocess.check_output(
+                ["pyright"],
+                env={"LANG": "en_US.UTF-8", "PATH": os.environ.get("PATH", "")},
+                stderr=subprocess.STDOUT,
+            )
+        except subprocess.CalledProcessError as e:
+            self.fail(
+                f'pyright typechecking failed:\n\n{e.output.decode("utf-8").strip()}'
+            )
 
     # === Utility ===
 
@@ -1391,7 +1407,7 @@ class TypingExtensionsPoint(TypingExtensionsTypedDict):
 from mypy_extensions import TypedDict as MypyExtensionsTypedDict
 
 
-class MypyExtensionsPoint(MypyExtensionsTypedDict):
+class MypyExtensionsPoint(MypyExtensionsTypedDict):  # type: ignore[reportGeneralTypeIssues]  # pyright
     x: int
     y: int
 

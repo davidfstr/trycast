@@ -30,6 +30,7 @@ coverage = "*"
 [tool.poetry.dev-dependencies]
 mypy = "^0.931"
 mypy_extensions = "*"
+pyright = "^1.1.230"
 tox = "^3.23.1"
 black = "==22.1.0"
 isort = "^5.9.1"
@@ -47,6 +48,14 @@ build-backend = "poetry.core.masonry.api"
 files = "trycast.py,tests.py"
 mypy_path = "."
 strict_optional = true
+
+# Type Checker: Pyright
+# 
+# Config Syntax Reference:
+[tool.pyright]
+include = ["."]
+pythonPlatform = "All"
+#typeCheckingMode = "strict"  # TODO: try this
 
 # Formatter: Isort
 [tool.isort]
