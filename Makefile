@@ -9,6 +9,9 @@ endef
 
 path := .
 
+# ex: "10.14.6" (if on macOS) or "" if not on macOS
+macos_version := $(shell which sw_vers > /dev/null 2>&1 && sw_vers -productVersion)
+
 
 .PHONY: help
 help:  ## Show this help message.
@@ -74,8 +77,15 @@ pyright:  ## Run pyright typechecker.
 
 
 .PHONY: pyre
+# Don't try to run Pyre on macOS 10.14.6 because it doesn't work.
+# See: https://github.com/facebook/pyre-check/issues/545
+ifneq "$(macos_version)" "10.14.6"
 pyre:  ## Run pyre typechecker.
 	pyre check
+else
+pyre:
+	echo $(macos_version)
+endif
 
 
 .PHONY: coverage
