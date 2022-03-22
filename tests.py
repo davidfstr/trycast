@@ -1401,6 +1401,23 @@ class TestTryCast(TestCase):
 
             self.fail(f"pyre typechecking failed:\n\n{output_str}")
 
+    def test_no_pytype_typechecker_errors_exist(self) -> None:
+        try:
+            subprocess.check_output(
+                ["pytype", "--keep-going", "trycast.py", "tests.py"],
+                env={"LANG": "en_US.UTF-8", "PATH": os.environ.get("PATH", "")},
+                stderr=subprocess.STDOUT,
+            )
+        except subprocess.CalledProcessError as e:
+            self.fail(
+                f'pytype typechecking failed:\n\n{e.output.decode("utf-8").strip()}'
+            )
+        except FileNotFoundError:
+            if sys.version_info >= (3, 10):
+                self.skipTest("Cannot run pytype on Python 3.10+")
+            else:
+                raise
+
     # === Utility ===
 
     def assertTryCastSuccess(self, tp: object, value: object) -> None:
