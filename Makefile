@@ -38,7 +38,7 @@ publish: testall  ## Publish the package to PyPI.
 
 
 .PHONY: format
-format: black isort flake typecheck  ## Reformat code. Run linters.
+format: black isort flake  ## Reformat code.
 
 
 .PHONY: lint
