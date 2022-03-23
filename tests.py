@@ -46,13 +46,27 @@ if sys.version_info >= (3, 8):
 else:
     from typing_extensions import Literal  # Python 3.5+
 
-# TypedDict
+# NativeTypedDict
 if sys.version_info >= (3, 8):
     # Python 3.8+
-    from typing import TypedDict  # type: ignore[not-supported-yet]  # pytype
+    from typing import (
+        TypedDict as NativeTypedDict,  # type: ignore[not-supported-yet]  # pytype
+    )
 else:
     # Python 3.5+
-    from typing_extensions import TypedDict  # type: ignore[not-supported-yet]  # pytype
+    from typing_extensions import (
+        TypedDict as NativeTypedDict,  # type: ignore[not-supported-yet]  # pytype
+    )
+
+# RichTypedDict
+if sys.version_info >= (3, 9):
+    # Python 3.9+
+    from typing import (
+        TypedDict as RichTypedDict,  # type: ignore[not-supported-yet]  # pytype
+    )
+else:
+    # Python 3.5+
+    from typing_extensions import TypedDict as RichTypedDict  # type: ignore[not-supported-yet]  # pytype
 
 from typing import _eval_type as eval_type  # type: ignore[attr-defined]
 
@@ -62,7 +76,13 @@ _FAILURE = object()
 # ------------------------------------------------------------------------------
 # TestTryCast
 
-class _Movie(TypedDict):
+
+class _Movie(RichTypedDict):
+    name: str
+    year: int
+
+
+class _Movie_NativeTypedDict(NativeTypedDict):
     name: str
     year: int
 
@@ -75,7 +95,16 @@ class _MaybeBookBasedMovie(_Movie, total=False):
     based_on: str
 
 
-class _MaybeMovie(TypedDict, total=False):
+class _MaybeBookBasedMovie_NativeTypedDict(_Movie_NativeTypedDict, total=False):
+    based_on: str
+
+
+class _MaybeMovie(RichTypedDict, total=False):
+    name: str
+    year: int
+
+
+class _MaybeMovie_NativeTypedDict(NativeTypedDict, total=False):
     name: str
     year: int
 
@@ -84,11 +113,15 @@ class _BookBasedMaybeMovie(_MaybeMovie):
     based_on: str
 
 
-class X(TypedDict):
+class _BookBasedMaybeMovie_NativeTypedDict(_MaybeMovie_NativeTypedDict):
+    based_on: str
+
+
+class X(RichTypedDict):
     x: int
 
 
-class Y(TypedDict):
+class Y(RichTypedDict):
     y: str
 
 
@@ -580,15 +613,15 @@ class TestTryCast(TestCase):
     # === TypedDicts ===
 
     def test_typeddict(self) -> None:
-        class Point2D(TypedDict):
+        class Point2D(RichTypedDict):
             x: int
             y: int
 
-        class PartialPoint2D(TypedDict, total=False):
+        class PartialPoint2D(RichTypedDict, total=False):
             x: int
             y: int
 
-        class Point3D(TypedDict):
+        class Point3D(RichTypedDict):
             x: int
             y: int
             z: int
@@ -664,6 +697,13 @@ class TestTryCast(TestCase):
             ),
         )
 
+        self.assertTryCastFailure(
+            _MaybeBookBasedMovie,
+            dict(
+                based_on="Blade Runner",
+            ),
+            strict=True,
+        )
         if sys.version_info >= (3, 8) and sys.version_info < (3, 9):
             # Unfortunately there isn't enough type annotation information
             # preserved at runtime for Python 3.8's typing.TypedDict
@@ -674,17 +714,19 @@ class TestTryCast(TestCase):
             # typing_extensions.TypedDict over typing.TypedDict
             # if they must use Python 3.8 (and cannot upgrade to Python 3.9+).
             self.assertTryCastSuccess(
-                _MaybeBookBasedMovie,
+                _MaybeBookBasedMovie_NativeTypedDict,
                 dict(
                     based_on="Blade Runner",
                 ),
+                strict=False,
             )
         else:
             self.assertTryCastFailure(
-                _MaybeBookBasedMovie,
+                _MaybeBookBasedMovie_NativeTypedDict,
                 dict(
                     based_on="Blade Runner",
                 ),
+                strict=False,
             )
 
         _3 = _BookBasedMaybeMovie(
@@ -709,6 +751,13 @@ class TestTryCast(TestCase):
             ),
         )
 
+        self.assertTryCastSuccess(
+            _BookBasedMaybeMovie,
+            dict(
+                based_on="Blade Runner",
+            ),
+            strict=True,
+        )
         if sys.version_info >= (3, 8) and sys.version_info < (3, 9):
             # Unfortunately there isn't enough type annotation information
             # preserved at runtime for Python 3.8's typing.TypedDict
@@ -719,20 +768,22 @@ class TestTryCast(TestCase):
             # typing_extensions.TypedDict over typing.TypedDict
             # if they must use Python 3.8 (and cannot upgrade to Python 3.9+).
             self.assertTryCastFailure(
-                _BookBasedMaybeMovie,
+                _BookBasedMaybeMovie_NativeTypedDict,
                 dict(
                     based_on="Blade Runner",
                 ),
+                strict=False,
             )
         else:
-            _4 = _BookBasedMaybeMovie(
+            _4 = _BookBasedMaybeMovie_NativeTypedDict(
                 based_on="Blade Runner",
             )
             self.assertTryCastSuccess(
-                _BookBasedMaybeMovie,
+                _BookBasedMaybeMovie_NativeTypedDict,
                 dict(
                     based_on="Blade Runner",
                 ),
+                strict=False,
             )
 
     def test_typeddict_multiple_inheritance(self) -> None:
@@ -803,10 +854,10 @@ class TestTryCast(TestCase):
         self.assertTryCastFailure(NontotalMovie, {"year": 1982})
 
     def test_typeddict_using_mapping_value(self) -> None:
-        class NamedObject(TypedDict):
+        class NamedObject(RichTypedDict):
             name: str
 
-        class ValuedObject(TypedDict):
+        class ValuedObject(RichTypedDict):
             value: object
 
         class MyNamedMapping(Mapping):
@@ -1222,12 +1273,15 @@ class TestTryCast(TestCase):
         class Point3D(Point2D, total=False):
             z: int
 
-        try:
-            trycast(Point3D, {"x": 1, "y": 2}, strict=True)
-        except TypeNotSupportedError:
-            pass
-        else:
-            self.fail("Expected TypeNotSupportedError to be raised")
+        self.assertRaisesRegex(
+            TypeNotSupportedError,
+            (
+                "trycast cannot determine which keys are required.*?"
+                "Suggest use a typing(_extensions)?.TypedDict.*?"
+                "strict=False"
+            ),
+            lambda: trycast(Point3D, {"x": 1, "y": 2}, strict=True),
+        )
 
     # NOTE: Cannot combine the following two if-checks with an `and`
     #       because that is too complicated for Pyre to understand.
@@ -1245,12 +1299,101 @@ class TestTryCast(TestCase):
                 class Point3D(Point2D, total=False):
                     z: int
 
-                try:
-                    trycast(Point3D, {"x": 1, "y": 2}, strict=True)
-                except TypeNotSupportedError:
-                    pass
-                else:
-                    self.fail("Expected TypeNotSupportedError to be raised")
+                self.assertRaisesRegex(
+                    TypeNotSupportedError,
+                    (
+                        "trycast cannot determine which keys are required.*?"
+                        "Suggest use a typing(_extensions)?.TypedDict.*?"
+                        "strict=False"
+                    ),
+                    lambda: trycast(Point3D, {"x": 1, "y": 2}, strict=True),
+                )
+
+    # === strict=False mode ===
+
+    def test_accepts_mypy_typeddict_when_strict_is_false(self) -> None:
+        class Point2D(mypy_extensions.TypedDict):  # type: ignore[reportGeneralTypeIssues]  # pyright
+            x: int
+            y: int
+
+        # NOTE: mypy_extensions.TypedDict doesn't preserve at runtime
+        #       which of Point3D's inherited fields from Point2D are required.
+        #       So trycast() guesses (incorrectly) that ALL fields of Point3D
+        #       are not-required because Point3D is declared as total=False.
+        class Point3D(Point2D, total=False):
+            z: int
+
+        class MaybePoint1D(mypy_extensions.TypedDict, total=False):  # type: ignore[reportGeneralTypeIssues]  # pyright
+            x: int
+
+        class TaggedMaybePoint1D(MaybePoint1D):
+            name: str
+
+        self.assertTryCastSuccess(Point2D, {"x": 1, "y": 2}, strict=False)
+        self.assertTryCastFailure(Point2D, {"x": 1}, strict=False)
+
+        self.assertTryCastSuccess(Point3D, {"x": 1, "y": 2, "z": 3}, strict=False)
+        self.assertTryCastSuccess(Point3D, {"x": 1, "y": 2}, strict=False)
+        self.assertTryCastSuccess(Point3D, {"x": 1}, strict=False)  # surprise!
+        self.assertTryCastFailure(Point3D, {"q": 1}, strict=False)
+
+        self.assertTryCastSuccess(MaybePoint1D, {"x": 1}, strict=False)
+        self.assertTryCastSuccess(MaybePoint1D, {}, strict=False)
+        self.assertTryCastFailure(MaybePoint1D, {"q": 1}, strict=False)
+
+        self.assertTryCastSuccess(
+            TaggedMaybePoint1D, {"x": 1, "name": "one"}, strict=False
+        )
+        self.assertTryCastFailure(
+            TaggedMaybePoint1D, {"name": "one"}, strict=False
+        )  # surprise!
+
+    # NOTE: Cannot combine the following two if-checks with an `and`
+    #       because that is too complicated for Pyre to understand.
+    #
+    #       For more info about the forms that Pyre supports, see its tests:
+    #       https://github.com/facebook/pyre-check/blob/ee6d16129c112fb1feb1435a245d5e6a114e58d9/analysis/test/preprocessingTest.ml#L626
+    if sys.version_info >= (3, 8):
+        if sys.version_info < (3, 9):
+
+            def test_accepts_python_3_8_typeddict_when_strict_is_false(self) -> None:
+                class Point2D(typing.TypedDict):  # type: ignore[not-supported-yet]  # pytype
+                    x: int
+                    y: int
+
+                # NOTE: typing.TypedDict in Python 3.8 doesn't preserve at runtime
+                #       which of Point3D's inherited fields from Point2D are required.
+                #       So trycast() guesses (incorrectly) that ALL fields of Point3D
+                #       are not-required because Point3D is declared as total=False.
+                class Point3D(Point2D, total=False):
+                    z: int
+
+                class MaybePoint1D(typing.TypedDict, total=False):  # type: ignore[not-supported-yet]  # pytype
+                    x: int
+
+                class TaggedMaybePoint1D(MaybePoint1D):
+                    name: str
+
+                self.assertTryCastSuccess(Point2D, {"x": 1, "y": 2}, strict=False)
+                self.assertTryCastFailure(Point2D, {"x": 1}, strict=False)
+
+                self.assertTryCastSuccess(
+                    Point3D, {"x": 1, "y": 2, "z": 3}, strict=False
+                )
+                self.assertTryCastSuccess(Point3D, {"x": 1, "y": 2}, strict=False)
+                self.assertTryCastSuccess(Point3D, {"x": 1}, strict=False)  # surprise!
+                self.assertTryCastFailure(Point3D, {"q": 1}, strict=False)
+
+                self.assertTryCastSuccess(MaybePoint1D, {"x": 1}, strict=False)
+                self.assertTryCastSuccess(MaybePoint1D, {}, strict=False)
+                self.assertTryCastFailure(MaybePoint1D, {"q": 1}, strict=False)
+
+                self.assertTryCastSuccess(
+                    TaggedMaybePoint1D, {"x": 1, "name": "one"}, strict=False
+                )
+                self.assertTryCastFailure(
+                    TaggedMaybePoint1D, {"name": "one"}, strict=False
+                )  # surprise!
 
     # === Misuse: Nice Error Messages ===
 
@@ -1357,11 +1500,17 @@ class TestTryCast(TestCase):
 
     # === Utility ===
 
-    def assertTryCastSuccess(self, tp: object, value: object) -> None:
-        self.assertIs(value, trycast(tp, value))
+    def assertTryCastSuccess(
+        self, tp: object, value: object, *, strict: Optional[bool] = None
+    ) -> None:
+        kwargs = dict(strict=strict) if strict is not None else dict()
+        self.assertIs(value, trycast(tp, value, **kwargs))
 
-    def assertTryCastFailure(self, tp: object, value: object) -> None:
-        self.assertIs(None, trycast(tp, value))
+    def assertTryCastFailure(
+        self, tp: object, value: object, *, strict: Optional[bool] = None
+    ) -> None:
+        kwargs = dict(strict=strict) if strict is not None else dict()
+        self.assertIs(None, trycast(tp, value, **kwargs))
 
     def assertTryCastNoneSuccess(self, tp: object) -> None:
         self.assertIs(None, trycast(tp, None, _FAILURE))
@@ -1399,10 +1548,7 @@ class TypingExtensionsPoint(TypingExtensionsTypedDict):
     y: int
 
 
-from mypy_extensions import TypedDict as MypyExtensionsTypedDict
-
-
-class MypyExtensionsPoint(MypyExtensionsTypedDict):  # type: ignore[reportGeneralTypeIssues]  # pyright
+class MypyExtensionsPoint(mypy_extensions.TypedDict):  # type: ignore[reportGeneralTypeIssues]  # pyright
     x: int
     y: int
 
@@ -1423,7 +1569,8 @@ class TestIsTypedDict(TestCase):
 # ------------------------------------------------------------------------------
 # TestIsAssignable
 
-class _Cell(TypedDict):
+
+class _Cell(RichTypedDict):
     value: object
 
 
@@ -1475,6 +1622,7 @@ class TestIsAssignable(TestCase):
 
 # ------------------------------------------------------------------------------
 # TestTypechecks
+
 
 class TestTypechecks(TestCase):
     def test_no_mypy_typechecker_errors_exist(self) -> None:

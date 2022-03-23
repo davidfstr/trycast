@@ -183,6 +183,9 @@ A presentation about trycast was given at the 2021 PyCon Typing Summit:
 
 ### main
 
+* Finalize the initial API:
+    * Alter `trycast()` to use `strict=True` by default rather than
+      `strict=False`. **(Breaking change)**
 * Add support for additional type checkers, in addition to [Mypy]:
     * Add support for the [Pyright] type checker and
       [Pylance] language server extension (for Visual Studio Code).
@@ -216,7 +219,8 @@ A presentation about trycast was given at the 2021 PyCon Typing Summit:
 * Alter `trycast()` to interpret a type argument of `None` or `"None"` as an
   alias for `type(None)`, as consistent with
   [PEP 484](https://peps.python.org/pep-0484/#using-none).
-* Alter `TypeNotSupportedError` to extend `TypeError` rather than `ValueError`. **(Breaking change)**
+* Alter `TypeNotSupportedError` to extend `TypeError` rather than `ValueError`.
+  **(Breaking change)**
     * This is consistent with `trycast`'s and `isinstance`'s behavior of using
       a `TypeError` rather than a `ValueError` when there is a problem with its
       `tp` argument.

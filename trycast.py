@@ -184,26 +184,26 @@ _FAILURE = object()
 
 @overload
 def trycast(  # type: ignore[43]  # pyre
-    tp: str, value: object, *, strict: bool = False, eval: Literal[False]
+    tp: str, value: object, *, strict: bool = True, eval: Literal[False]
 ) -> NoReturn:
     ...
 
 
 @overload
-def trycast(tp: str, value: object, *, strict: bool = False, eval: bool = True) -> bool:  # type: ignore[43]  # pyre
+def trycast(tp: str, value: object, *, strict: bool = True, eval: bool = True) -> bool:  # type: ignore[43]  # pyre
     ...
 
 
 @overload
 def trycast(  # type: ignore[43]  # pyre
-    tp: Type[_T], value: object, *, strict: bool = False, eval: bool = True
+    tp: Type[_T], value: object, *, strict: bool = True, eval: bool = True
 ) -> Optional[_T]:
     ...
 
 
 @overload
 def trycast(  # type: ignore[43]  # pyre
-    tp: object, value: object, *, strict: bool = False, eval: bool = True
+    tp: object, value: object, *, strict: bool = True, eval: bool = True
 ) -> Optional[object]:
     ...
 
@@ -214,7 +214,7 @@ def trycast(
     value: object,
     failure: object,
     *,
-    strict: bool = False,
+    strict: bool = True,
     eval: Literal[False],
 ) -> NoReturn:
     ...
@@ -222,19 +222,19 @@ def trycast(
 
 @overload
 def trycast(
-    tp: Type[_T], value: object, failure: _F, *, strict: bool = False, eval: bool = True
+    tp: Type[_T], value: object, failure: _F, *, strict: bool = True, eval: bool = True
 ) -> Union[_T, _F]:
     ...
 
 
 @overload
 def trycast(
-    tp: object, value: object, failure: _F, *, strict: bool = False, eval: bool = True
+    tp: object, value: object, failure: _F, *, strict: bool = True, eval: bool = True
 ) -> Union[object, _F]:
     ...
 
 
-def trycast(tp, value, failure=None, *, strict=False, eval=True):
+def trycast(tp, value, failure=None, *, strict=True, eval=True):
     """
     If `value` is in the shape of `tp` (as accepted by a Python typechecker
     conforming to PEP 484 "Type Hints") then returns it, otherwise returns
@@ -467,10 +467,11 @@ def _trycast_inner(tp, value, failure, options):
                         advise = "Suggest use a typing.TypedDict instead."
                     else:
                         advise = "Suggest use a typing_extensions.TypedDict instead."
+                    advise2 = "Or use trycast(..., strict=False)."
                     raise TypeNotSupportedError(
-                        "trycast cannot determine which keys are required "
-                        "and which are potentially-missing for the "
-                        "specified kind of TypedDict. " + advise
+                        f"trycast cannot determine which keys are required "
+                        f"and which are potentially-missing for the "
+                        f"specified kind of TypedDict. {advise} {advise2}"
                     )
                 else:
                     if tp.__total__:  # type: ignore[attribute-error]  # pytype
