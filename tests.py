@@ -59,6 +59,9 @@ from typing import _eval_type as eval_type  # type: ignore[attr-defined]
 _FAILURE = object()
 
 
+# ------------------------------------------------------------------------------
+# TestTryCast
+
 class _Movie(TypedDict):
     name: str
     year: int
@@ -1437,6 +1440,9 @@ class _TypingExtensionsGoneLoader(MetaPathFinder):
         return None
 
 
+# ------------------------------------------------------------------------------
+# TestIsTypedDict
+
 from trycast import _is_typed_dict
 
 if sys.version_info >= (3, 8):
@@ -1479,6 +1485,9 @@ class TestIsTypedDict(TestCase):
     def test_recognizes_typed_dict_from_mypy_extensions(self) -> None:
         self.assertTrue(_is_typed_dict(MypyExtensionsPoint))
 
+
+# ------------------------------------------------------------------------------
+# TestIsAssignable
 
 class _Cell(TypedDict):
     value: object
@@ -1528,3 +1537,6 @@ class TestIsAssignable(TestCase):
     @staticmethod
     def _demands_a_never(value: NoReturn) -> NoReturn:  # type: ignore[invalid-annotation]  # pytype
         raise ValueError("expected this code to be unreachable")
+
+
+# ------------------------------------------------------------------------------
