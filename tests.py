@@ -1355,72 +1355,6 @@ class TestTryCast(TestCase):
         finally:
             sys.modules["trycast"] = old_tc_module
 
-    # === Typecheck ===
-
-    def test_no_mypy_typechecker_errors_exist(self) -> None:
-        try:
-            subprocess.check_output(
-                ["mypy"],
-                env={"LANG": "en_US.UTF-8", "PATH": os.environ.get("PATH", "")},
-                stderr=subprocess.STDOUT,
-            )
-        except subprocess.CalledProcessError as e:
-            self.fail(
-                f'mypy typechecking failed:\n\n{e.output.decode("utf-8").strip()}'
-            )
-
-    # TODO: This test runs very slowly (4.8 seconds on @davidfstr's laptop).
-    #       Investigate way to configure pyright to have a faster startup time.
-    def test_no_pyright_typechecker_errors_exist(self) -> None:
-        try:
-            subprocess.check_output(
-                ["pyright"],
-                env={"LANG": "en_US.UTF-8", "PATH": os.environ.get("PATH", "")},
-                stderr=subprocess.STDOUT,
-            )
-        except subprocess.CalledProcessError as e:
-            self.fail(
-                f'pyright typechecking failed:\n\n{e.output.decode("utf-8").strip()}'
-            )
-
-    def test_no_pyre_typechecker_errors_exist(self) -> None:
-        try:
-            subprocess.check_output(
-                ["pyre", "check"],
-                env={"LANG": "en_US.UTF-8", "PATH": os.environ.get("PATH", "")},
-                stderr=subprocess.STDOUT,
-            )
-        except subprocess.CalledProcessError as e:
-            output_str = e.output.decode("utf-8").strip()
-
-            # Don't run pyre during automated tests on macOS 10.14
-            # because pyre won't run on that macOS version.
-            # See: https://github.com/facebook/pyre-check/issues/545
-            if "___darwin_check_fd_set_overflow" in output_str and platform.mac_ver()[
-                0
-            ].startswith("10.14."):
-                self.skipTest("Cannot run Pyre on macOS 10.14")
-                return
-
-            self.fail(f"pyre typechecking failed:\n\n{output_str}")
-
-    def test_no_pytype_typechecker_errors_exist(self) -> None:
-        try:
-            subprocess.check_output(
-                ["pytype", "--keep-going", "trycast.py", "tests.py"],
-                env={"LANG": "en_US.UTF-8", "PATH": os.environ.get("PATH", "")},
-                stderr=subprocess.STDOUT,
-            )
-        except subprocess.CalledProcessError as e:
-            self.fail(
-                f'pytype typechecking failed:\n\n{e.output.decode("utf-8").strip()}'
-            )
-        except FileNotFoundError:
-            if sys.version_info >= (3, 10):
-                self.skipTest("Cannot run pytype on Python 3.10+")
-            else:
-                raise
-
     # === Utility ===
 
     def assertTryCastSuccess(self, tp: object, value: object) -> None:
@@ -1537,6 +1471,75 @@ class TestIsAssignable(TestCase):
     @staticmethod
     def _demands_a_never(value: NoReturn) -> NoReturn:  # type: ignore[invalid-annotation]  # pytype
         raise ValueError("expected this code to be unreachable")
+
+
+# ------------------------------------------------------------------------------
+# TestTypechecks
+
+class TestTypechecks(TestCase):
+    def test_no_mypy_typechecker_errors_exist(self) -> None:
+        try:
+            subprocess.check_output(
+                ["mypy"],
+                env={"LANG": "en_US.UTF-8", "PATH": os.environ.get("PATH", "")},
+                stderr=subprocess.STDOUT,
+            )
+        except subprocess.CalledProcessError as e:
+            self.fail(
+                f'mypy typechecking failed:\n\n{e.output.decode("utf-8").strip()}'
+            )
+
+    # TODO: This test runs very slowly (4.8 seconds on @davidfstr's laptop).
+    #       Investigate way to configure pyright to have a faster startup time.
+    def test_no_pyright_typechecker_errors_exist(self) -> None:
+        try:
+            subprocess.check_output(
+                ["pyright"],
+                env={"LANG": "en_US.UTF-8", "PATH": os.environ.get("PATH", "")},
+                stderr=subprocess.STDOUT,
+            )
+        except subprocess.CalledProcessError as e:
+            self.fail(
+                f'pyright typechecking failed:\n\n{e.output.decode("utf-8").strip()}'
+            )
+
+    def test_no_pyre_typechecker_errors_exist(self) -> None:
+        try:
+            subprocess.check_output(
+                ["pyre", "check"],
+                env={"LANG": "en_US.UTF-8", "PATH": os.environ.get("PATH", "")},
+                stderr=subprocess.STDOUT,
+            )
+        except subprocess.CalledProcessError as e:
+            output_str = e.output.decode("utf-8").strip()
+
+            # Don't run pyre during automated tests on macOS 10.14
+            # because pyre won't run on that macOS version.
+            # See: https://github.com/facebook/pyre-check/issues/545
+            if "___darwin_check_fd_set_overflow" in output_str and platform.mac_ver()[
+                0
+            ].startswith("10.14."):
+                self.skipTest("Cannot run Pyre on macOS 10.14")
+                return
+
+            self.fail(f"pyre typechecking failed:\n\n{output_str}")
+
+    def test_no_pytype_typechecker_errors_exist(self) -> None:
+        try:
+            subprocess.check_output(
+                ["pytype", "--keep-going", "trycast.py", "tests.py"],
+                env={"LANG": "en_US.UTF-8", "PATH": os.environ.get("PATH", "")},
+                stderr=subprocess.STDOUT,
+            )
+        except subprocess.CalledProcessError as e:
+            self.fail(
+                f'pytype typechecking failed:\n\n{e.output.decode("utf-8").strip()}'
+            )
+        except FileNotFoundError:
+            if sys.version_info >= (3, 10):
+                self.skipTest("Cannot run pytype on Python 3.10+")
+            else:
+                raise
 
 
 # ------------------------------------------------------------------------------
