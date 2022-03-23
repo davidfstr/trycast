@@ -11,7 +11,7 @@ path := .
 
 # ex: "10.14.6" (if on macOS) or "" if not on macOS
 macos_version := $(shell which sw_vers > /dev/null 2>&1 && sw_vers -productVersion)
-
+pytype_path := $(shell which pytype)
 
 .PHONY: help
 help:  ## Show this help message.
@@ -38,7 +38,7 @@ publish: testall  ## Publish the package to PyPI.
 
 
 .PHONY: format
-format: black isort flake typecheck  ## Reformat code. Run linters.
+format: black isort flake  ## Reformat code.
 
 
 .PHONY: lint
@@ -63,7 +63,7 @@ flake:  ## Run flake8 linter.
 
 
 .PHONY: typecheck
-typecheck: mypy pyright pyre  ## Run all typecheckers.
+typecheck: mypy pyright pyre pytype  ## Run all typecheckers.
 
 
 .PHONY: mypy
@@ -84,7 +84,15 @@ pyre:  ## Run pyre typechecker.
 	pyre check
 else
 pyre:
-	echo $(macos_version)
+endif
+
+
+.PHONY: pytype
+ifneq "$(pytype_path)" ""
+pytype:  ## Run pytype typechecker.
+	pytype --keep-going trycast.py tests.py
+else
+pytype:
 endif
 
 

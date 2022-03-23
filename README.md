@@ -183,13 +183,20 @@ A presentation about trycast was given at the 2021 PyCon Typing Summit:
 
 ### main
 
-* Add support for additional type checkers:
-    * Add support for the Pyright type checker and
-      Pylance language server extension (for Visual Studio Code).
-    * Add support for the Pyre type checker.
+* Add support for additional type checkers, in addition to [Mypy]:
+    * Add support for the [Pyright] type checker and
+      [Pylance] language server extension (for Visual Studio Code).
+    * Add support for the [Pyre] type checker.
+    * Add support for the [Pytype] type checker.
 * Extend `trycast()` to recognize special `Any` and `NoReturn` values.
 * Fix `trycast()` to provide better diagnostic error when given a tuple
   of types as its `tp` argument. Was broken in v0.6.0.
+
+[Mypy]: http://mypy-lang.org/
+[Pyright]: https://github.com/microsoft/pyright#readme
+[Pylance]: https://github.com/microsoft/pylance-release#readme
+[Pyre]: https://pyre-check.org/
+[Pytype]: https://google.github.io/pytype/
 
 ### v0.6.1
 

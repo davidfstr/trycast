@@ -32,6 +32,7 @@ mypy = "^0.931"
 mypy_extensions = "*"
 pyright = "^1.1.230"
 pyre-check = "^0.9.10"
+pytype = { version = "==2022.3.21", python = ">=3.7.4,<3.10" }
 tox = "^3.23.1"
 black = "==22.1.0"
 isort = "^5.9.1"
@@ -63,7 +64,7 @@ pythonPlatform = "All"
 profile = "black"
 atomic = true
 line_length = 88
-skip_glob = ["venv*", "test_data/forwardrefs_example_with_import_annotations.py"]
+skip_glob = ["venv*", "test_data/forwardrefs_example_with_import_annotations.py", ".pytype"]
 
 # Formatter: Black
 [tool.black]

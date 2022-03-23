@@ -48,9 +48,11 @@ else:
 
 # TypedDict
 if sys.version_info >= (3, 8):
-    from typing import TypedDict  # Python 3.8+
+    # Python 3.8+
+    from typing import TypedDict  # type: ignore[not-supported-yet]  # pytype
 else:
-    from typing_extensions import TypedDict  # Python 3.5+
+    # Python 3.5+
+    from typing_extensions import TypedDict  # type: ignore[not-supported-yet]  # pytype
 
 from typing import _eval_type as eval_type  # type: ignore[attr-defined]
 
@@ -773,12 +775,12 @@ class TestTryCast(TestCase):
         if not hasattr(typing_extensions, "get_type_hints"):
             self.skipTest("Checking for Required and NotRequired requires Python 3.7+")
 
-        class TotalMovie(typing_extensions.TypedDict):
+        class TotalMovie(typing_extensions.TypedDict):  # type: ignore[not-supported-yet]  # pytype
             title: str
-            year: typing_extensions.NotRequired[int]
+            year: typing_extensions.NotRequired[int]  # type: ignore[not-supported-yet]  # pytype
 
         class NontotalMovie(typing_extensions.TypedDict, total=False):
-            title: typing_extensions.Required[str]
+            title: typing_extensions.Required[str]  # type: ignore[not-supported-yet]  # pytype
             year: int
 
         # TotalMovie
@@ -925,13 +927,13 @@ class TestTryCast(TestCase):
         self.assertTryCastSuccess(Any, str)
 
     def test_noreturn(self) -> None:
-        self.assertTryCastFailure(NoReturn, "words")
-        self.assertTryCastFailure(NoReturn, 1)
-        self.assertTryCastFailure(NoReturn, None)
-        self.assertTryCastFailure(NoReturn, str)
+        self.assertTryCastFailure(NoReturn, "words")  # type: ignore[wrong-arg-types]  # pytype
+        self.assertTryCastFailure(NoReturn, 1)  # type: ignore[wrong-arg-types]  # pytype
+        self.assertTryCastFailure(NoReturn, None)  # type: ignore[wrong-arg-types]  # pytype
+        self.assertTryCastFailure(NoReturn, str)  # type: ignore[wrong-arg-types]  # pytype
 
-        self.assertTryCastFailure(NoReturn, ValueError)
-        self.assertTryCastFailure(NoReturn, ValueError())
+        self.assertTryCastFailure(NoReturn, ValueError)  # type: ignore[wrong-arg-types]  # pytype
+        self.assertTryCastFailure(NoReturn, ValueError())  # type: ignore[wrong-arg-types]  # pytype
 
     # === Forward References ===
 
@@ -1233,7 +1235,7 @@ class TestTryCast(TestCase):
         if sys.version_info < (3, 9):
 
             def test_rejects_python_3_8_typeddict_when_strict_is_true(self) -> None:
-                class Point2D(typing.TypedDict):
+                class Point2D(typing.TypedDict):  # type: ignore[not-supported-yet]  # pytype
                     x: int
                     y: int
 
@@ -1399,6 +1401,23 @@ class TestTryCast(TestCase):
 
             self.fail(f"pyre typechecking failed:\n\n{output_str}")
 
+    def test_no_pytype_typechecker_errors_exist(self) -> None:
+        try:
+            subprocess.check_output(
+                ["pytype", "--keep-going", "trycast.py", "tests.py"],
+                env={"LANG": "en_US.UTF-8", "PATH": os.environ.get("PATH", "")},
+                stderr=subprocess.STDOUT,
+            )
+        except subprocess.CalledProcessError as e:
+            self.fail(
+                f'pytype typechecking failed:\n\n{e.output.decode("utf-8").strip()}'
+            )
+        except FileNotFoundError:
+            if sys.version_info >= (3, 10):
+                self.skipTest("Cannot run pytype on Python 3.10+")
+            else:
+                raise
+
     # === Utility ===
 
     def assertTryCastSuccess(self, tp: object, value: object) -> None:
@@ -1421,14 +1440,18 @@ class _TypingExtensionsGoneLoader(MetaPathFinder):
 from trycast import _is_typed_dict
 
 if sys.version_info >= (3, 8):
-    from typing import TypedDict as TypingTypedDict
+    from typing import (
+        TypedDict as TypingTypedDict,  # type: ignore[not-supported-yet]  # pytype
+    )
 
     class TypingPoint(TypingTypedDict):
         x: int
         y: int
 
 
-from typing_extensions import TypedDict as TypingExtensionsTypedDict
+from typing_extensions import (
+    TypedDict as TypingExtensionsTypedDict,  # type: ignore[not-supported-yet]  # pytype
+)
 
 
 class TypingExtensionsPoint(TypingExtensionsTypedDict):
@@ -1503,5 +1526,5 @@ class TestIsAssignable(TestCase):
     #        self._demands_a_never(value)  # ensure typechecks
 
     @staticmethod
-    def _demands_a_never(value: NoReturn) -> NoReturn:
+    def _demands_a_never(value: NoReturn) -> NoReturn:  # type: ignore[invalid-annotation]  # pytype
         raise ValueError("expected this code to be unreachable")

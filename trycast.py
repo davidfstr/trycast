@@ -8,11 +8,11 @@ from collections.abc import MutableMapping as CMutableMapping
 from collections.abc import MutableSequence as CMutableSequence
 from collections.abc import Sequence as CSequence
 from types import ModuleType
+from typing import ForwardRef  # type: ignore[import-error]  # pytype (for ForwardRef)
 from typing import (
     TYPE_CHECKING,
     Any,
     Dict,
-    ForwardRef,
     List,
     Mapping,
     MutableMapping,
@@ -57,7 +57,9 @@ if sys.version_info >= (3, 10):
     from typing import TypeGuard  # Python 3.10+
 else:
     try:
-        from typing_extensions import TypeGuard
+        from typing_extensions import (
+            TypeGuard,  # type: ignore[not-supported-yet]  # pytype
+        )
     except ImportError:
         if not TYPE_CHECKING:
 
@@ -162,7 +164,7 @@ __all__ = ("trycast",)
 _T = TypeVar("_T")
 _F = TypeVar("_F")
 _SimpleTypeVar = TypeVar("_SimpleTypeVar")
-_SimpleTypeVarCo = TypeVar("_SimpleTypeVarCo", covariant=True)
+_SimpleTypeVarCo = TypeVar("_SimpleTypeVarCo", covariant=True)  # type: ignore[not-supported-yet]  # pytest
 
 _MISSING = object()
 _FAILURE = object()
@@ -284,7 +286,7 @@ def trycast(tp, value, failure=None, *, strict=False, eval=True):
     """
     options = _TrycastOptions(strict, eval)
     if isinstance(tp, str):
-        if options.eval:
+        if eval:  # == options.eval (for pytype)
             tp = eval_type_str(tp)  # does use eval()
         else:
             raise UnresolvableTypeError(
@@ -305,7 +307,7 @@ def trycast(tp, value, failure=None, *, strict=False, eval=True):
             else:
                 raise
     try:
-        return _trycast_inner(tp, value, failure, options)
+        return _trycast_inner(tp, value, failure, options)  # type: ignore[bad-return-type]  # pytype
     except UnresolvedForwardRefError:
         if options.eval:
             advise = (
@@ -430,14 +432,20 @@ def _trycast_inner(tp, value, failure, options):
 
     if type_origin is Union:  # Union[T1, T2, ...]
         for T in get_args(tp):
-            if _trycast_inner(T, value, _FAILURE, options) is not _FAILURE:
-                return cast(_T, value)
+            if _trycast_inner(T, value, _FAILURE, options) is not _FAILURE:  # type: ignore[wrong-arg-types]  # pytype
+                if isinstance(tp, type):
+                    return cast(_T, value)
+                else:
+                    return value
         return failure
 
     if type_origin is Literal:  # Literal[...]
         for literal in get_args(tp):
             if value == literal:
-                return cast(_T, value)
+                if isinstance(tp, type):
+                    return cast(_T, value)
+                else:
+                    return value
         return failure
 
     if _is_typed_dict(tp):  # T extends TypedDict
@@ -447,11 +455,11 @@ def _trycast_inner(tp, value, failure, options):
                     tp
                 )  # resolve ForwardRefs in tp.__annotations__
             else:
-                resolved_annotations = tp.__annotations__
+                resolved_annotations = tp.__annotations__  # type: ignore[attribute-error]  # pytype
 
             try:
                 # {typing in Python 3.9+, typing_extensions}.TypedDict
-                required_keys = tp.__required_keys__
+                required_keys = tp.__required_keys__  # type: ignore[attribute-error]  # pytype
             except AttributeError:
                 # {typing in Python 3.8, mypy_extensions}.TypedDict
                 if options.strict:
@@ -465,25 +473,31 @@ def _trycast_inner(tp, value, failure, options):
                         "specified kind of TypedDict. " + advise
                     )
                 else:
-                    if tp.__total__:
+                    if tp.__total__:  # type: ignore[attribute-error]  # pytype
                         required_keys = resolved_annotations.keys()
                     else:
                         required_keys = frozenset()
 
-            for (k, v) in value.items():
+            for (k, v) in value.items():  # type: ignore[attribute-error]  # pytype
                 V = resolved_annotations.get(k, _MISSING)
                 if V is _MISSING or _trycast_inner(V, v, _FAILURE, options) is _FAILURE:
                     return failure
 
             for k in required_keys:
-                if k not in value:
+                if k not in value:  # type: ignore[unsupported-operands]  # pytype
                     return failure
-            return cast(_T, value)
+            if isinstance(tp, type):
+                return cast(_T, value)
+            else:
+                return value
         else:
             return failure
 
     if tp is Any:
-        return cast(_T, value)
+        if isinstance(tp, type):
+            return cast(_T, value)
+        else:
+            return value
 
     if tp is NoReturn:
         return failure
@@ -491,7 +505,7 @@ def _trycast_inner(tp, value, failure, options):
     if isinstance(tp, ForwardRef):
         raise UnresolvedForwardRefError()
 
-    if isinstance(value, tp):
+    if isinstance(value, tp):  # type: ignore[wrong-arg-types]  # pytype
         return value
     else:
         return failure
@@ -554,11 +568,14 @@ def _trycast_listlike(
         if _is_simple_typevar(T, covariant=covariant_t):
             pass
         else:
-            for x in value:
+            for x in value:  # type: ignore[attribute-error]  # pytype
                 if _trycast_inner(T, x, _FAILURE, options) is _FAILURE:
                     return failure
 
-        return cast(_T, value)
+        if isinstance(tp, type):
+            return cast(_T, value)
+        else:
+            return value
     else:
         return failure
 
@@ -604,24 +621,27 @@ def _trycast_dictlike(tp, value, failure, dictlike_type, options, *, covariant_v
         if _is_simple_typevar(K) and _is_simple_typevar(V, covariant=covariant_v):
             pass
         else:
-            for (k, v) in value.items():
+            for (k, v) in value.items():  # type: ignore[attribute-error]  # pytype
                 if (
                     _trycast_inner(K, k, _FAILURE, options) is _FAILURE
                     or _trycast_inner(V, v, _FAILURE, options) is _FAILURE
                 ):
                     return failure
-        return cast(_T, value)
+        if isinstance(tp, type):
+            return cast(_T, value)
+        else:
+            return value
     else:
         return failure
 
 
 def _is_simple_typevar(T: object, covariant: bool = False) -> bool:
     return (
-        isinstance(T, TypeVar)
-        and T.__constraints__ == ()
-        and T.__covariant__ == covariant
-        and T.__contravariant__ is False
-        and T.__constraints__ == ()
+        isinstance(T, TypeVar)  # type: ignore[wrong-arg-types]  # pytype
+        and T.__constraints__ == ()  # type: ignore[attribute-error]  # pytype
+        and T.__covariant__ == covariant  # type: ignore[attribute-error]  # pytype
+        and T.__contravariant__ is False  # type: ignore[attribute-error]  # pytype
+        and T.__constraints__ == ()  # type: ignore[attribute-error]  # pytype
     )
 
 
@@ -649,7 +669,7 @@ def isassignable(value: object, tp: str, *, eval: bool = True) -> bool:
 
 
 @overload
-def isassignable(value: object, tp: Type[_T], *, eval: bool = True) -> TypeGuard[_T]:
+def isassignable(value: object, tp: Type[_T], *, eval: bool = True) -> TypeGuard[_T]:  # type: ignore[invalid-annotation]  # pytype
     ...
 
 
@@ -701,8 +721,8 @@ def isassignable(value, tp, *, eval=True):
         If `tp` is a string that could not be resolved to a type.
     """
     if isinstance(tp, type):
-        return cast(
-            TypeGuard[_T],
+        return cast(  # type: ignore[invalid-annotation]  # pytype
+            TypeGuard[_T],  # type: ignore[not-indexable]  # pytype
             (
                 trycast(tp, value, _isassignable_failure, strict=True, eval=eval)
                 is not _isassignable_failure
