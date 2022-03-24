@@ -31,7 +31,7 @@ testall:  ## Run the tests against all supported versions of Python.
 .PHONY: publish
 publish: testall  ## Publish the package to PyPI.
 	poetry build && \
-	git tag v$$(cat pyproject.toml | grep version | sed 's/[^0-9.]*//g') && \
+	git tag v$$(cat pyproject.toml | grep "# publish: version" | sed 's/[^0-9.]*//g') && \
 	\
 	poetry publish && \
 	git push origin --tags
