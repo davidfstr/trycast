@@ -5,9 +5,10 @@ description = ""
 authors = ["David Foster <david@dafoster.net>"]
 license = "MIT"
 readme = "README.md"
-homepage = "https://github.com/davidfstr/trycast"
+homepage = "https://dafoster.net/projects/trycast/"
 repository = "https://github.com/davidfstr/trycast"
-#documentation = "TODO"
+# TODO: Create a dedicated documentation site for the trycast project
+documentation = "https://dafoster.net/projects/trycast/"
 classifiers = [  # https://pypi.org/classifiers/
     "Development Status :: 4 - Beta",
     "Environment :: Console",
