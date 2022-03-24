@@ -843,9 +843,6 @@ class TestTryCast(TestCase):
     def test_typeddict_required_notrequired(self) -> None:
         import typing_extensions
 
-        if not hasattr(typing_extensions, "get_type_hints"):
-            self.skipTest("Checking for Required and NotRequired requires Python 3.7+")
-
         class TotalMovie(typing_extensions.TypedDict):  # type: ignore[not-supported-yet]  # pytype
             title: str
             year: typing_extensions.NotRequired[int]  # type: ignore[not-supported-yet]  # pytype

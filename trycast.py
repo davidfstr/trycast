@@ -87,39 +87,8 @@ elif sys.version_info >= (3, 7):
         else:
             return ()
 
-elif sys.version_info >= (3, 6):
-    from typing import GenericMeta, _Union
-
-    try:
-        from typing_extensions import _Literal
-    except ImportError:
-        if not TYPE_CHECKING:
-
-            class _Literal:
-                pass
-
-    def get_origin(tp: object) -> Optional[object]:
-        if isinstance(tp, GenericMeta):
-            return tp.__origin__
-        elif isinstance(tp, _Union):
-            return Union
-        elif isinstance(tp, _Literal):
-            return Literal
-        else:
-            return None
-
-    def get_args(tp: object) -> Tuple[object, ...]:
-        if isinstance(tp, GenericMeta):
-            return tp.__args__
-        elif isinstance(tp, _Union):
-            return tp.__args__
-        elif isinstance(tp, _Literal):
-            return tp.__values__
-        else:
-            return ()
-
 else:
-    raise ImportError("Expected Python 3.6 or later.")
+    raise ImportError("Expected Python 3.7 or later.")
 
 
 # _is_typed_dict
