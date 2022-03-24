@@ -882,10 +882,10 @@ class TestTryCast(TestCase):
                 if key == "name":
                     return self._name
                 else:
-                    raise AttributeError
+                    raise AttributeError  # pragma: no cover
 
             def __len__(self) -> int:
-                return 1
+                return 1  # pragma: no cover
 
             def __iter__(self):
                 return (x for x in ["name"])
@@ -1484,7 +1484,7 @@ class TestTryCast(TestCase):
                 except ImportError:
                     pass  # good
                 else:
-                    raise AssertionError(
+                    raise AssertionError(  # pragma: no cover
                         "Failed to make typing_extensions unimportable"
                     )
 
@@ -1617,10 +1617,10 @@ class TestIsAssignable(TestCase):
     #    value = {"value": "contents"}
     #    if isassignable(value, _Cell):
     #        self._demands_a_typeddict(value)  # ensure typechecks
-
-    @staticmethod
-    def _demands_a_typeddict(cell: _Cell) -> object:
-        return cell["value"]
+    #
+    # @staticmethod
+    # def _demands_a_typeddict(cell: _Cell) -> object:
+    #    return cell["value"]
 
     # TODO: Add support for this case if/when support for a "strict" TypeGuard
     #       of some kind is introduced that narrows in the negative case.
@@ -1628,10 +1628,10 @@ class TestIsAssignable(TestCase):
     #    value = 'words'
     #    if not isassignable(value, str):
     #        self._demands_a_never(value)  # ensure typechecks
-
-    @staticmethod
-    def _demands_a_never(value: NoReturn) -> NoReturn:  # type: ignore[invalid-annotation]  # pytype
-        raise ValueError("expected this code to be unreachable")
+    #
+    # @staticmethod
+    # def _demands_a_never(value: NoReturn) -> NoReturn:  # type: ignore[invalid-annotation]  # pytype
+    #    raise ValueError("expected this code to be unreachable")
 
 
 # ------------------------------------------------------------------------------
@@ -1646,7 +1646,7 @@ class TestTypechecks(TestCase):
                 env={"LANG": "en_US.UTF-8", "PATH": os.environ.get("PATH", "")},
                 stderr=subprocess.STDOUT,
             )
-        except subprocess.CalledProcessError as e:
+        except subprocess.CalledProcessError as e:  # pragma: no cover
             self.fail(
                 f'mypy typechecking failed:\n\n{e.output.decode("utf-8").strip()}'
             )
@@ -1660,7 +1660,7 @@ class TestTypechecks(TestCase):
                 env={"LANG": "en_US.UTF-8", "PATH": os.environ.get("PATH", "")},
                 stderr=subprocess.STDOUT,
             )
-        except subprocess.CalledProcessError as e:
+        except subprocess.CalledProcessError as e:  # pragma: no cover
             self.fail(
                 f'pyright typechecking failed:\n\n{e.output.decode("utf-8").strip()}'
             )
@@ -1672,7 +1672,7 @@ class TestTypechecks(TestCase):
                 env={"LANG": "en_US.UTF-8", "PATH": os.environ.get("PATH", "")},
                 stderr=subprocess.STDOUT,
             )
-        except subprocess.CalledProcessError as e:
+        except subprocess.CalledProcessError as e:  # pragma: no cover
             output_str = e.output.decode("utf-8").strip()
 
             # Don't run pyre during automated tests on macOS 10.14
@@ -1693,14 +1693,14 @@ class TestTypechecks(TestCase):
                 env={"LANG": "en_US.UTF-8", "PATH": os.environ.get("PATH", "")},
                 stderr=subprocess.STDOUT,
             )
-        except subprocess.CalledProcessError as e:
+        except subprocess.CalledProcessError as e:  # pragma: no cover
             self.fail(
                 f'pytype typechecking failed:\n\n{e.output.decode("utf-8").strip()}'
             )
         except FileNotFoundError:
             if sys.version_info >= (3, 10):
                 self.skipTest("Cannot run pytype on Python 3.10+")
-            else:
+            else:  # pragma: no cover
                 raise
 
 

@@ -87,7 +87,7 @@ elif sys.version_info >= (3, 7):
         else:
             return ()
 
-else:
+else:  # pragma: no cover
     raise ImportError("Expected Python 3.7 or later.")
 
 
@@ -160,26 +160,26 @@ _FAILURE = object()
 def trycast(  # type: ignore[43]  # pyre
     tp: str, value: object, *, strict: bool = True, eval: Literal[False]
 ) -> NoReturn:
-    ...
+    ...  # pragma: no cover
 
 
 @overload
 def trycast(tp: str, value: object, *, strict: bool = True, eval: bool = True) -> bool:  # type: ignore[43]  # pyre
-    ...
+    ...  # pragma: no cover
 
 
 @overload
 def trycast(  # type: ignore[43]  # pyre
     tp: Type[_T], value: object, *, strict: bool = True, eval: bool = True
 ) -> Optional[_T]:
-    ...
+    ...  # pragma: no cover
 
 
 @overload
 def trycast(  # type: ignore[43]  # pyre
     tp: object, value: object, *, strict: bool = True, eval: bool = True
 ) -> Optional[object]:
-    ...
+    ...  # pragma: no cover
 
 
 @overload
@@ -191,21 +191,21 @@ def trycast(
     strict: bool = True,
     eval: Literal[False],
 ) -> NoReturn:
-    ...
+    ...  # pragma: no cover
 
 
 @overload
 def trycast(
     tp: Type[_T], value: object, failure: _F, *, strict: bool = True, eval: bool = True
 ) -> Union[_T, _F]:
-    ...
+    ...  # pragma: no cover
 
 
 @overload
 def trycast(
     tp: object, value: object, failure: _F, *, strict: bool = True, eval: bool = True
 ) -> Union[object, _F]:
-    ...
+    ...  # pragma: no cover
 
 
 def trycast(tp, value, failure=None, *, strict=True, eval=True):
@@ -315,14 +315,14 @@ class _TrycastOptions(NamedTuple):
 def _trycast_inner(
     tp: Type[_T], value: object, failure: _F, options: _TrycastOptions
 ) -> Union[_T, _F]:
-    ...
+    ...  # pragma: no cover
 
 
 @overload
 def _trycast_inner(
     tp: object, value: object, failure: _F, options: _TrycastOptions
 ) -> Union[object, _F]:
-    ...
+    ...  # pragma: no cover
 
 
 def _trycast_inner(tp, value, failure, options):
@@ -505,7 +505,7 @@ def _trycast_listlike(
     covariant_t: bool = False,
     t_ellipsis: bool = False,
 ) -> Union[_T, _F]:
-    ...
+    ...  # pragma: no cover
 
 
 @overload
@@ -519,7 +519,7 @@ def _trycast_listlike(
     covariant_t: bool = False,
     t_ellipsis: bool = False,
 ) -> Union[object, _F]:
-    ...
+    ...  # pragma: no cover
 
 
 def _trycast_listlike(
@@ -565,7 +565,7 @@ def _trycast_dictlike(
     *,
     covariant_v: bool = False,
 ) -> Union[_T, _F]:
-    ...
+    ...  # pragma: no cover
 
 
 @overload
@@ -578,7 +578,7 @@ def _trycast_dictlike(
     *,
     covariant_v: bool = False,
 ) -> Union[object, _F]:
-    ...
+    ...  # pragma: no cover
 
 
 def _trycast_dictlike(tp, value, failure, dictlike_type, options, *, covariant_v=False):
@@ -635,22 +635,22 @@ def _is_simple_typevar(T: object, covariant: bool = False) -> bool:
 
 @overload
 def isassignable(value: object, tp: str, *, eval: Literal[False]) -> NoReturn:
-    ...
+    ...  # pragma: no cover
 
 
 @overload
 def isassignable(value: object, tp: str, *, eval: bool = True) -> bool:
-    ...
+    ...  # pragma: no cover
 
 
 @overload
 def isassignable(value: object, tp: Type[_T], *, eval: bool = True) -> TypeGuard[_T]:  # type: ignore[invalid-annotation]  # pytype
-    ...
+    ...  # pragma: no cover
 
 
 @overload
 def isassignable(value: object, tp: object, *, eval: bool = True) -> bool:
-    ...
+    ...  # pragma: no cover
 
 
 def isassignable(value, tp, *, eval=True):
@@ -749,7 +749,7 @@ def eval_type_str(tp: str) -> object:
     * UnresolvableTypeError --
         If the specified string-reference could not be resolved to a type.
     """
-    if not isinstance(tp, str):
+    if not isinstance(tp, str):  # pragma: no cover
         raise ValueError()
 
     # Determine which module to lookup the type from
