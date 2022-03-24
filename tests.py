@@ -36,9 +36,9 @@ from trycast import (
     TypeNotSupportedError,
     UnresolvableTypeError,
     UnresolvedForwardRefError,
-    isassignable,
-    trycast,
 )
+from trycast import __all__ as trycast_all
+from trycast import isassignable, trycast
 
 # Literal
 if sys.version_info >= (3, 8):
@@ -71,6 +71,23 @@ else:
 from typing import _eval_type as eval_type  # type: ignore[attr-defined]
 
 _FAILURE = object()
+
+
+# ------------------------------------------------------------------------------
+# TestTryCastModule
+
+
+class TestTryCastModule(TestCase):
+    def test_import_star_from_trycast_does_only_import_trycast_and_isassignable_functions(
+        self,
+    ) -> None:
+        self.assertEqual(
+            (
+                "trycast",
+                "isassignable",
+            ),
+            trycast_all,
+        )
 
 
 # ------------------------------------------------------------------------------

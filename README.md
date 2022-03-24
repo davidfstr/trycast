@@ -186,6 +186,8 @@ A presentation about trycast was given at the 2021 PyCon Typing Summit:
 * Finalize the initial API:
     * Alter `trycast()` to use `strict=True` by default rather than
       `strict=False`. **(Breaking change)**
+    * Define trycast's `__all__` to export only the
+      `trycast` and `isassignable` functions.
 * Add support for additional type checkers, in addition to [Mypy]:
     * Add support for the [Pyright] type checker and
       [Pylance] language server extension (for Visual Studio Code).

@@ -158,7 +158,12 @@ def _is_typed_dict(tp: object) -> bool:
     return isinstance(tp, _typed_dict_metas)
 
 
-__all__ = ("trycast",)
+__all__ = (
+    "trycast",
+    "isassignable",
+    # NOTE: May be part of the API in the future
+    # "eval_type_str",
+)
 
 
 _T = TypeVar("_T")
