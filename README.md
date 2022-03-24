@@ -181,6 +181,18 @@ A presentation about trycast was given at the 2021 PyCon Typing Summit:
 
 * See the [Roadmap](https://github.com/davidfstr/trycast/wiki/Roadmap).
 
+### v0.7.1
+
+* Upgrade development status from Beta to Production/Stable: 🎉
+    * trycast is thoroughly tested.
+    * trycast has high code coverage (98%, across Python 3.7-3.10).
+    * trycast has been in production use for over a year
+      at [at least one company] without issues.
+    * trycast supports all major Python type checkers
+      (Mypy, Pyright/Pylance, Pyre, Pytype).
+    * trycast's initial API is finalized.
+* Fix `coverage` to be a dev-dependency rather than a regular dependency.
+
 ### v0.7.0
 
 * Finalize the initial API:
@@ -255,7 +267,7 @@ A presentation about trycast was given at the 2021 PyCon Typing Summit:
     * trycast is thoroughly tested.
     * trycast has high code coverage (92% on Python 3.9).
     * trycast has been in production use for over a year
-      at [at least one company] without issues
+      at [at least one company] without issues.
 * Add support for Python 3.10.
 * Setup continuous integration with GitHub Actions, against Python 3.6 - 3.10.
 * Migrate to the Black code style.
