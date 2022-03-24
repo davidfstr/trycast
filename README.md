@@ -181,7 +181,7 @@ A presentation about trycast was given at the 2021 PyCon Typing Summit:
 
 * See the [Roadmap](https://github.com/davidfstr/trycast/wiki/Roadmap).
 
-### main
+### v0.7.0
 
 * Finalize the initial API:
     * Alter `trycast()` to use `strict=True` by default rather than
