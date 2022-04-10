@@ -30,6 +30,14 @@ from typing import _eval_type as eval_type  # type: ignore[attr-defined]
 from typing import _type_check as type_check  # type: ignore[attr-defined]
 from typing import cast, overload
 
+try:
+    from types import UnionType  # type: ignore[attr-defined]
+except ImportError:
+
+    class UnionType(type):  # type: ignore[no-redef]
+        ...
+
+
 # get_type_hints
 try:
     # Python 3.7+
@@ -404,7 +412,7 @@ def _trycast_inner(tp, value, failure, options):
     ):  # MutableMapping, MutableMapping[K, V]
         return _trycast_dictlike(tp, value, failure, CMutableMapping, options)
 
-    if type_origin is Union:  # Union[T1, T2, ...]
+    if type_origin is Union or type_origin is UnionType:  # Union[T1, T2, ...]
         for T in get_args(tp):
             if _trycast_inner(T, value, _FAILURE, options) is not _FAILURE:  # type: ignore[wrong-arg-types]  # pytype
                 if isinstance(tp, type):
