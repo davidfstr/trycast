@@ -1,5 +1,7 @@
 # trycast
 
+<img src="https://raw.githubusercontent.com/davidfstr/trycast/main/README/trycast-logo.png" title="trycast logo" align="right" />
+
 The trycast module defines 2 functions, `trycast()` and `isassignable()`:
 
 
@@ -180,6 +182,10 @@ A presentation about trycast was given at the 2021 PyCon Typing Summit:
 ### Future
 
 * See the [Roadmap](https://github.com/davidfstr/trycast/wiki/Roadmap).
+
+### v0.7.2
+
+* Add logo.
 
 ### v0.7.1
 
