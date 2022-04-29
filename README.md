@@ -48,7 +48,7 @@ example, which is a tagged union that can be either a `Circle` or `Rect` value:
 ```python
 from bottle import HTTPResponse, request, route
 from trycast import trycast
-from typing import Literal, TypedDict, Union
+from typing import Literal, TypedDict
 
 class Point2D(TypedDict):
     x: float
@@ -66,7 +66,7 @@ class Rect(TypedDict):
     width: float
     height: float
 
-Shape = Union[Circle, Rect]  # a Tagged Union!
+Shape = Circle | Rect  # a Tagged Union!
 
 @route('/draw_shape')
 def draw_shape_endpoint() -> HTTPResponse:
@@ -94,7 +94,7 @@ def draw_shape_endpoint() -> HTTPResponse:
 
 ### isassignable()
 
-Here is an example of parsing a `Shape` object defined as a Union of
+Here is an example of parsing a `Shape` object defined as a union of
 `TypedDict`s using `isassignable()`:
 
 ```python
@@ -106,7 +106,7 @@ class Rect(TypedDict):
     type: Literal['rect']
     ...
 
-Shape = Union[Circle, Rect]  # a Tagged Union!
+Shape = Circle | Rect  # a Tagged Union!
 
 @route('/draw_shape')
 def draw_shape_endpoint() -> HTTPResponse:
