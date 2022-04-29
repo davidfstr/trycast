@@ -2,16 +2,18 @@
 
 <img src="https://raw.githubusercontent.com/davidfstr/trycast/main/README/trycast-logo.png" title="trycast logo" align="right" />
 
-The trycast module defines 2 functions, `trycast()` and `isassignable()`:
+Trycast helps parses JSON-like values whose shape is defined by
+[typed dictionaries](https://www.python.org/dev/peps/pep-0589/#abstract)
+(TypedDicts) and other standard Python type hints.
+
+You can use either the `trycast()` or `isassignable()` functions below
+for parsing:
 
 
 ### trycast()
 
-trycast() parses JSON-like values whose shape is defined by
-[typed dictionaries](https://www.python.org/dev/peps/pep-0589/#abstract)
-(TypedDicts) and other standard Python type hints.
-
-Here is an example of parsing a `Point2D` object defined as a `TypedDict`:
+Here is an example of parsing a `Point2D` object defined as a `TypedDict`
+using `trycast()`:
 
 ```python
 from bottle import HTTPResponse, request, route
@@ -92,15 +94,8 @@ def draw_shape_endpoint() -> HTTPResponse:
 
 ### isassignable()
 
-`isassignable(value, T)` checks whether `value` is assignable to a variable
-of type `T` (using PEP 484 static typechecking rules), but at *runtime*.
-
-It is similar to Python's builtin `isinstance()` method but
-additionally supports checking against TypedDict types, Union types,
-Literal types, and many others.
-
-Here is an example of checking assignability to a `Shape` object defined as a
-Union of TypedDicts:
+Here is an example of parsing a `Shape` object defined as a Union of
+`TypedDict`s using `isassignable()`:
 
 ```python
 class Circle(TypedDict):
@@ -135,6 +130,17 @@ def draw_shape_endpoint() -> HTTPResponse:
 > 
 > These limitations are in the process of being resolved by
 > [introducing TypeForm support to mypy](https://github.com/python/mypy/issues/9773).
+
+
+#### A better `isinstance()`
+
+`isassignable(value, T)` is similar to Python's builtin `isinstance()` but
+additionally supports checking against arbitrary type annotation objects
+including TypedDicts, Unions, Literals, and many others.
+
+Formally, `isassignable(value, T)` checks whether `value` is consistent with a 
+variable of type `T` (using [PEP 484](https://peps.python.org/pep-0484/) static
+typechecking rules), but at *runtime*.
 
 
 ## Motivation & Alternatives
@@ -187,6 +193,8 @@ A presentation about trycast was given at the 2021 PyCon Typing Summit:
 
 * Support X|Y syntax for Union types from 
   [PEP 604](https://peps.python.org/pep-0604/).
+* Documentation improvements:
+    * Improve introduction.
 
 ### v0.7.2
 
