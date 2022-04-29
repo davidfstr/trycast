@@ -315,7 +315,7 @@ Raises:
 
 * See the [Roadmap](https://github.com/davidfstr/trycast/wiki/Roadmap).
 
-### main
+### v0.7.3
 
 * Support X|Y syntax for Union types from 
   [PEP 604](https://peps.python.org/pep-0604/).
