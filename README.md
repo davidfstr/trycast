@@ -183,6 +183,132 @@ A presentation about trycast was given at the 2021 PyCon Typing Summit:
 [MIT](LICENSE.md)
 
 
+## API Reference
+
+### trycast API
+
+```
+def trycast(
+    tp: TypeForm[T], 
+    value: object,
+    /, failure: F = None,
+    *, strict: bool = True,
+    eval: bool = True
+) -> T | F:
+```
+
+If `value` is in the shape of `tp` (as accepted by a Python typechecker
+conforming to PEP 484 "Type Hints") then returns it, otherwise returns
+`failure` (which is None by default).
+
+This method logically performs an operation similar to:
+
+```
+return value if isinstance(tp, value) else failure
+```
+
+except that it supports many more types than `isinstance`, including:
+
+* List[T]
+* Dict[K, V]
+* Optional[T]
+* Union[T1, T2, ...]
+* Literal[...]
+* T extends TypedDict
+
+Note that unlike isinstance(), this method does NOT consider bool values
+to be valid int values, as consistent with Python typecheckers:
+
+> trycast(int, False) -> None
+> isinstance(False, int) -> True
+
+Note that unlike isinstance(), this method considers every int value to
+also be a valid float value, as consistent with Python typecheckers:
+
+> trycast(float, 1) -> 1
+> isinstance(1, float) -> False
+
+Parameters:
+
+* **strict** -- 
+  If strict=False then trycast will additionally accept
+  mypy_extensions.TypedDict instances and Python 3.8 typing.TypedDict
+  instances for the `tp` parameter. Normally these kinds of types are
+  rejected by trycast with a TypeNotSupportedError because these
+  types do not preserve enough information at runtime to reliably
+  determine which keys are required and which are potentially-missing.
+* **eval** --
+  If eval=False then trycast will not attempt to resolve string
+  type references, which requires the use of the eval() function.
+  Otherwise string type references will be accepted.
+
+Raises:
+
+* **TypeNotSupportedError** --
+  If strict=True and either mypy_extensions.TypedDict or a
+  Python 3.8 typing.TypedDict is found within the `tp` argument.
+* **UnresolvedForwardRefError** --
+  If `tp` is a type form which contains a ForwardRef.
+* **UnresolvableTypeError** --
+  If `tp` is a string that could not be resolved to a type.
+
+
+### isassignable API
+
+```
+def isassignable(
+    value: object,
+    tp: TypeForm[T],
+    *, eval: bool = True
+) -> TypeGuard[T]:
+```
+
+Returns whether `value` is in the shape of `tp`
+(as accepted by a Python typechecker conforming to PEP 484 "Type Hints").
+
+This method logically performs an operation similar to:
+
+```
+return isinstance(tp, value)
+```
+
+except that it supports many more types than `isinstance`, including:
+
+* List[T]
+* Dict[K, V]
+* Optional[T]
+* Union[T1, T2, ...]
+* Literal[...]
+* T extends TypedDict
+
+Note that unlike isinstance(), this method does NOT consider bool values
+to be valid int values, as consistent with Python typecheckers:
+
+> isassignable(False, int) -> False
+> isinstance(False, int) -> True
+
+Note that unlike isinstance(), this method considers every int value to
+also be a valid float value, as consistent with Python typecheckers:
+
+> isassignable(1, float) -> True
+> isinstance(1, float) -> False
+
+Parameters:
+* **eval** --
+  If eval=False then isassignable will not attempt to resolve string
+  type references, which requires the use of the eval() function.
+  Otherwise string type references will be accepted.
+
+Raises:
+* **TypeNotSupportedError** --
+  If mypy_extensions.TypedDict or a
+  Python 3.8 typing.TypedDict is found within the `tp` argument.
+* **UnresolvedForwardRefError** --
+  If `tp` is a type form which contains a ForwardRef.
+* **UnresolvableTypeError** --
+  If `tp` is a string that could not be resolved to a type.
+
+
 ## Changelog
 
 ### Future
@@ -195,6 +321,7 @@ A presentation about trycast was given at the 2021 PyCon Typing Summit:
   [PEP 604](https://peps.python.org/pep-0604/).
 * Documentation improvements:
     * Improve introduction.
+    * Add API reference.
 
 ### v0.7.2
 
