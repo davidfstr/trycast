@@ -189,12 +189,12 @@ A presentation about trycast was given at the 2021 PyCon Typing Summit:
 
 ```
 def trycast(
-    tp: TypeForm[T], 
+    tp: TypeForm[T]† | TypeFormString[T]‡,
     value: object,
     /, failure: F = None,
     *, strict: bool = True,
     eval: bool = True
-) -> T | F:
+) -> T | F: ...
 ```
 
 If `value` is in the shape of `tp` (as accepted by a Python typechecker
@@ -252,15 +252,23 @@ Raises:
 * **UnresolvableTypeError** --
   If `tp` is a string that could not be resolved to a type.
 
+Footnotes:
+
+* † TypeForm[T] is a [type annotation object]. For example: `list[str]`
+
+* ‡ TypeFormString[T] is a stringified [type annotation object]. For example: `"list[str]"`
+
+[type annotation object]: https://github.com/python/mypy/issues/9773
+
 
 ### isassignable API
 
 ```
 def isassignable(
     value: object,
-    tp: TypeForm[T],
+    tp: TypeForm[T]† | TypeFormString[T]‡,
     *, eval: bool = True
-) -> TypeGuard[T]:
+) -> TypeGuard[T]: ...
 ```
 
 Returns whether `value` is in the shape of `tp`
@@ -314,6 +322,12 @@ Raises:
 ### Future
 
 * See the [Roadmap](https://github.com/davidfstr/trycast/wiki/Roadmap).
+
+### main
+
+* Documentation improvements:
+    * Mention that trycast() and isassignable() accept TypeFormString[T]
+      in addition to TypeForm[T].
 
 ### v0.7.3
 
