@@ -272,6 +272,28 @@ class TestTryCast(TestCase):
         self.assertTryCastFailure(type(None), {1: 1})
         self.assertTryCastFailure(type(None), {1})
         self.assertTryCastFailure(type(None), object())
+    
+    # === Strings ===
+    
+    def test_str(self) -> None:
+        # Actual strs
+        self.assertTryCastSuccess(str, '')
+        self.assertTryCastSuccess(str, 'x')
+        self.assertTryCastSuccess(str, 'xy')
+
+        # str-like Sequences
+        self.assertTryCastFailure(str, b'')
+        self.assertTryCastFailure(str, b'x')
+        self.assertTryCastFailure(str, b'xy')
+
+        # non-strs
+        self.assertTryCastFailure(str, True)
+        self.assertTryCastFailure(str, 1)
+        self.assertTryCastFailure(str, 1.0)
+        self.assertTryCastFailure(str, [1])
+        self.assertTryCastFailure(str, {1: 1})
+        self.assertTryCastFailure(str, {1})
+        self.assertTryCastFailure(str, object())
 
     # === Raw Collections ===
 
@@ -387,6 +409,23 @@ class TestTryCast(TestCase):
         self.assertTryCastFailure(Sequence, {1: 1})
         self.assertTryCastFailure(Sequence, {1})
         self.assertTryCastFailure(Sequence, object())
+
+        # Actual MutableSequence
+        self.assertTryCastSuccess(MutableSequence, [])
+        self.assertTryCastSuccess(MutableSequence, [1])
+        self.assertTryCastSuccess(MutableSequence, [1, 2])
+
+        # MutableSequence-like sets
+        self.assertTryCastFailure(MutableSequence, set())
+        self.assertTryCastFailure(MutableSequence, {1})
+        self.assertTryCastFailure(MutableSequence, {1, 2})
+
+        # non-MutableSequences
+        self.assertTryCastFailure(MutableSequence, 0)
+        self.assertTryCastFailure(MutableSequence, "foo")
+        self.assertTryCastFailure(MutableSequence, {1: 1})
+        self.assertTryCastFailure(MutableSequence, {1})
+        self.assertTryCastFailure(MutableSequence, object())
 
     def test_dict(self) -> None:
         # Actual dict

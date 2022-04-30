@@ -183,6 +183,62 @@ A presentation about trycast was given at the 2021 PyCon Typing Summit:
 [MIT](LICENSE.md)
 
 
+## Feature Reference
+
+### Typing Features Supported
+
+* Scalars
+    * bool
+    * int
+    * float
+    * None, type(None)
+* Strings
+    * str
+* Raw Collections
+    * list, List
+    * tuple, Tuple
+    * Sequence, MutableSequence
+    * dict, Dict
+    * Mapping, MutableMapping
+* Generic Collections
+  (including [PEP 585](https://peps.python.org/pep-0585/))
+    * list[T], List[T]
+    * tuple[T, ...], Tuple[T, ...]
+    * Sequence[T], MutableSequence[T]
+    * dict[K, V], Dict[K, V]
+    * Mapping[K, V], MutableMapping[K, V]
+* TypedDict
+    * typing.TypedDict, typing_extensions.TypedDict
+      ([PEP 589](https://peps.python.org/pep-0589/))
+    * mypy_extensions.TypedDict (when strict=False)
+    * –––
+    * Required, NotRequired
+      ([PEP 655](https://peps.python.org/pep-0655/))
+* Tuples (Heterogeneous)
+    * tuple[T1], tuple[T1, T2], tuple[T1, T2, T3], etc
+    * Tuple[T1], Tuple[T1, T2], Tuple[T1, T2, T3], etc
+* Unions
+    * Union[X, Y]
+    * Optional[T]
+    * X | Y
+      ([PEP 604](https://peps.python.org/pep-0604/))
+* Literals
+    * Literal[value]
+      ([PEP 586](https://peps.python.org/pep-0586/))
+* Special Types
+    * Any
+    * NoReturn
+
+### Type Checkers Supported
+
+Trycast does type check successfully with the following type checkers:
+
+* [Mypy]
+* [Pyright] / [Pylance]
+* [Pyre]
+* [Pytype]
+
+
 ## API Reference
 
 ### trycast API
@@ -326,6 +382,7 @@ Raises:
 ### main
 
 * Documentation improvements:
+    * Document supported typing features & type checkers.
     * Mention that trycast() and isassignable() accept TypeFormString[T]
       in addition to TypeForm[T].
 
