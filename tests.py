@@ -272,19 +272,19 @@ class TestTryCast(TestCase):
         self.assertTryCastFailure(type(None), {1: 1})
         self.assertTryCastFailure(type(None), {1})
         self.assertTryCastFailure(type(None), object())
-    
+
     # === Strings ===
-    
+
     def test_str(self) -> None:
         # Actual strs
-        self.assertTryCastSuccess(str, '')
-        self.assertTryCastSuccess(str, 'x')
-        self.assertTryCastSuccess(str, 'xy')
+        self.assertTryCastSuccess(str, "")
+        self.assertTryCastSuccess(str, "x")
+        self.assertTryCastSuccess(str, "xy")
 
         # str-like Sequences
-        self.assertTryCastFailure(str, b'')
-        self.assertTryCastFailure(str, b'x')
-        self.assertTryCastFailure(str, b'xy')
+        self.assertTryCastFailure(str, b"")
+        self.assertTryCastFailure(str, b"x")
+        self.assertTryCastFailure(str, b"xy")
 
         # non-strs
         self.assertTryCastFailure(str, True)
