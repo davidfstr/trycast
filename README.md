@@ -178,6 +178,47 @@ A presentation about trycast was given at the 2021 PyCon Typing Summit:
 [![2021 PyCon Typing Summit Presentation](https://raw.githubusercontent.com/davidfstr/trycast/main/README/TypingSummit2021_Presentation_FirstSlide.png)](https://youtu.be/ld9rwCvGdhc?t=1782)
 
 
+## Contributing
+
+Pull requests are welcome! The [Python Community Code of Conduct] does apply.
+
+[Python Community Code of Conduct]: https://www.python.org/psf/conduct/
+
+You can checkout the code locally using:
+
+```
+git clone git@github.com:davidfstr/trycast.git
+cd trycast
+```
+
+Create your local virtual environment to develop in using [Poetry]:
+
+[Poetry]: https://python-poetry.org/
+
+```
+poetry shell
+poetry install
+```
+
+You can run the existing automated tests in the current version of Python with:
+
+```
+make test
+```
+
+You can also run the tests against *all* supported Python versions with:
+
+```
+make testall
+```
+
+See additional development commands by running:
+
+```
+make help
+```
+
+
 ## License
 
 [MIT](LICENSE.md)

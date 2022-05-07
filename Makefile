@@ -1,6 +1,7 @@
 define Comment
 	- Run `make help` to see all the available options.
-	- Run `make testall` to run all the tests.
+	- Run `make test` to run all tests against the current Python version.
+	- Run `make testall` to run all tests against all supported Python versions.
 	- Run `make format` to format code.
 	- Run `make lint` to check linter conformity.
 	- Run `make publish` to publish to PYPI.
