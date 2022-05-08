@@ -266,6 +266,9 @@ make help
 * Literals
     * Literal[value]
       ([PEP 586](https://peps.python.org/pep-0586/))
+* Callables
+    * Callable
+    * Callable[P, R] (when P and R only contain Any)
 * NewTypes (when strict=False)
 * Special Types
     * Any

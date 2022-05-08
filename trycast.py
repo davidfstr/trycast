@@ -1,17 +1,22 @@
 import builtins
 import functools
 import importlib
+import inspect
+import math
 import re
 import sys
+from collections.abc import Callable as CCallable
 from collections.abc import Mapping as CMapping
 from collections.abc import MutableMapping as CMutableMapping
 from collections.abc import MutableSequence as CMutableSequence
 from collections.abc import Sequence as CSequence
+from inspect import Parameter
 from types import ModuleType
 from typing import ForwardRef  # type: ignore[import-error]  # pytype (for ForwardRef)
 from typing import (
     TYPE_CHECKING,
     Any,
+    Callable,
     Dict,
     List,
     Mapping,
@@ -475,6 +480,88 @@ def _trycast_inner(tp, value, failure, options):
                 else:
                     return value
         return failure
+
+    if type_origin is CCallable:
+        callable_args = get_args(tp)
+        if callable_args == ():
+            # Callable
+            if callable(value):
+                return cast(_T, value)
+            else:
+                return failure
+        else:
+            if len(callable_args) != 2 or (
+                callable_args[0] is not Ellipsis
+                and not isinstance(callable_args[0], list)
+            ):
+                # Python 3.7
+                callable_args = (
+                    list(callable_args[: len(callable_args) - 1]),
+                    callable_args[len(callable_args) - 1],
+                )
+
+            assert len(callable_args) == 2
+            (param_types, return_type) = callable_args
+
+            if return_type is not Any:
+                # Callable[..., T]
+                raise TypeNotSupportedError(
+                    f"trycast cannot reliably determine whether value is "
+                    f"a {type_repr(tp)} because "
+                    f"callables at runtime do not always have a "
+                    f"declared return type. "
+                    f"Consider using trycast(Callable, value) instead."
+                )
+
+            if param_types is Ellipsis:
+                # Callable[..., Any]
+                return _trycast_inner(Callable, value, failure, options)
+
+            assert isinstance(param_types, list)
+            for param_type in param_types:
+                if param_type is not Any:
+                    raise TypeNotSupportedError(
+                        f"trycast cannot reliably determine whether value is "
+                        f"a {type_repr(tp)} because "
+                        f"callables at runtime do not always have "
+                        f"declared parameter types. "
+                        f"Consider using trycast("
+                        f"Callable[{','.join('Any' * len(param_types))}, Any], value) "
+                        f"instead."
+                    )
+
+            # Callable[[Any * N], Any]
+            if callable(value):
+                try:
+                    sig = inspect.signature(value)
+                except TypeError:
+                    # Not a callable
+                    return failure
+                except ValueError:
+                    # Unable to introspect signature for value.
+                    # It might be a built-in function that lacks signature support.
+                    # Assume conservatively that value does NOT match the requested type.
+                    return failure
+                else:
+                    sig_min_param_count = 0
+                    sig_max_param_count = 0
+                    for expected_param in sig.parameters.values():
+                        if (
+                            expected_param.kind == Parameter.POSITIONAL_ONLY
+                            or expected_param.kind == Parameter.POSITIONAL_OR_KEYWORD
+                        ):
+                            if expected_param.default is Parameter.empty:
+                                sig_min_param_count += 1
+                            sig_max_param_count += 1
+                        elif expected_param.kind == Parameter.VAR_POSITIONAL:
+                            sig_max_param_count = math.inf
+
+                    if sig_min_param_count <= len(param_types) <= sig_max_param_count:
+                        return cast(_T, value)
+                    else:
+                        return failure
+            else:
+                return failure
 
     if _is_typed_dict(tp):  # T extends TypedDict
         if isinstance(value, Mapping):

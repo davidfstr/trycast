@@ -9,6 +9,7 @@ from importlib.abc import MetaPathFinder
 from typing import (
     TYPE_CHECKING,
     Any,
+    Callable,
     Dict,
     Iterator,
     List,
@@ -145,6 +146,26 @@ class _Y(RichTypedDict):
 
 class _XYZ(_X, _Y):
     z: bool
+
+
+class _CallableObjectWithZeroArgs:
+    def __call__(self) -> None:
+        pass
+
+
+class _CallableObjectWithOneArg:
+    def __call__(self, value: str) -> None:
+        pass
+
+
+class _TypeWithZeroArgConstructor:
+    def __init__(self) -> None:
+        pass
+
+
+class _TypeWithOneArgConstructor:
+    def __init__(self, value: str) -> None:
+        pass
 
 
 _Url = NewType("_Url", str)
@@ -1060,6 +1081,131 @@ class TestTryCast(TestCase):
         self.assertTryCastFailure(Literal["circle"], {1: 1})
         self.assertTryCastFailure(Literal["circle"], {1})
         self.assertTryCastFailure(Literal["circle"], object())
+
+    # === Callables ===
+
+    def test_callable(self) -> None:
+        # Callable
+        self.assertTryCastSuccess(Callable, lambda: None)
+        self.assertTryCastSuccess(Callable, self.test_callable)
+        self.assertTryCastSuccess(Callable, _CallableObjectWithZeroArgs())
+        self.assertTryCastSuccess(Callable, str)
+        self.assertTryCastFailure(Callable, object())
+
+    def test_callable_p_r(self) -> None:
+        # Callable[[], T]
+        self.assertRaisesRegex(
+            TypeNotSupportedError,
+            r"trycast cannot reliably determine whether value is a typing\.Callable.*"
+            r"callables at runtime do not always have a declared return type",
+            lambda: trycast(Callable[[], None], lambda: None),  # type: ignore[6]  # pyre
+        )
+        self.assertRaisesRegex(
+            TypeNotSupportedError,
+            r"trycast cannot reliably determine whether value is a typing\.Callable.*"
+            r"callables at runtime do not always have a declared return type",
+            lambda: trycast(Callable[[], None], self._expects_zero_args),  # type: ignore[6]  # pyre
+        )
+        self.assertRaisesRegex(
+            TypeNotSupportedError,
+            r"trycast cannot reliably determine whether value is a typing\.Callable.*"
+            r"callables at runtime do not always have a declared return type",
+            lambda: trycast(Callable[[], None], _CallableObjectWithZeroArgs()),  # type: ignore[6]  # pyre
+        )
+        self.assertRaisesRegex(
+            TypeNotSupportedError,
+            r"trycast cannot reliably determine whether value is a typing\.Callable.*"
+            r"callables at runtime do not always have a declared return type",
+            lambda: trycast(Callable[[], None], _TypeWithZeroArgConstructor),  # type: ignore[6]  # pyre
+        )
+
+        # Callable[[], Any]
+        if True:
+            self.assertTryCastSuccess(Callable[[], Any], lambda: None)  # type: ignore[6]  # pyre
+            self.assertTryCastSuccess(Callable[[], Any], self._expects_zero_args)  # type: ignore[6]  # pyre
+            self.assertTryCastSuccess(Callable[[], Any], self._expects_variable_args)  # type: ignore[6]  # pyre
+            self.assertTryCastSuccess(Callable[[], Any], _CallableObjectWithZeroArgs())  # type: ignore[6]  # pyre
+            self.assertTryCastSuccess(Callable[[], Any], _TypeWithZeroArgConstructor)  # type: ignore[6]  # pyre
+
+            self.assertTryCastFailure(Callable[[], Any], lambda x: None)  # type: ignore[6]  # pyre
+            self.assertTryCastFailure(Callable[[], Any], self._expects_one_arg)  # type: ignore[6]  # pyre
+            self.assertTryCastFailure(Callable[[], Any], _CallableObjectWithOneArg())  # type: ignore[6]  # pyre
+            self.assertTryCastFailure(Callable[[], Any], _TypeWithOneArgConstructor)  # type: ignore[6]  # pyre
+
+            # NOTE: Cannot introspect constructor for certain built-in types
+            # TODO: Define __signature__ for failing internal types
+            self.assertTryCastFailure(Callable[[], Any], bool)  # type: ignore[6]  # pyre
+            self.assertTryCastFailure(Callable[[], Any], int)  # type: ignore[6]  # pyre
+            self.assertTryCastSuccess(Callable[[], Any], float)  # type: ignore[6]  # pyre
+            self.assertTryCastSuccess(Callable[[], Any], complex)  # type: ignore[6]  # pyre
+            self.assertTryCastFailure(Callable[[], Any], str)  # type: ignore[6]  # pyre
+            self.assertTryCastSuccess(Callable[[], Any], list)  # type: ignore[6]  # pyre
+            self.assertTryCastFailure(Callable[[], Any], dict)  # type: ignore[6]  # pyre
+            self.assertTryCastSuccess(Callable[[], Any], tuple)  # type: ignore[6]  # pyre
+
+        # Callable[[Any], Any]
+        if True:
+            self.assertTryCastSuccess(Callable[[Any], Any], lambda x: None)  # type: ignore[6]  # pyre
+            self.assertTryCastSuccess(Callable[[Any], Any], self._expects_one_arg)  # type: ignore[6]  # pyre
+            self.assertTryCastSuccess(Callable[[Any], Any], self._expects_variable_args)  # type: ignore[6]  # pyre
+            self.assertTryCastSuccess(Callable[[Any], Any], _CallableObjectWithOneArg())  # type: ignore[6]  # pyre
+            self.assertTryCastSuccess(Callable[[Any], Any], _TypeWithOneArgConstructor)  # type: ignore[6]  # pyre
+
+            self.assertTryCastFailure(Callable[[Any], Any], lambda: None)  # type: ignore[6]  # pyre
+            self.assertTryCastFailure(Callable[[Any], Any], self._expects_zero_args)  # type: ignore[6]  # pyre
+            self.assertTryCastFailure(
+                Callable[[Any], Any], _CallableObjectWithZeroArgs()  # type: ignore[6]  # pyre
+            )
+            self.assertTryCastFailure(Callable[[Any], Any], _TypeWithZeroArgConstructor)  # type: ignore[6]  # pyre
+
+            # NOTE: Cannot introspect constructor for certain built-in types
+            # TODO: Define __signature__ for failing internal types
+            self.assertTryCastFailure(Callable[[Any], Any], bool)  # type: ignore[6]  # pyre
+            self.assertTryCastFailure(Callable[[Any], Any], int)  # type: ignore[6]  # pyre
+            self.assertTryCastSuccess(Callable[[Any], Any], float)  # type: ignore[6]  # pyre
+            self.assertTryCastSuccess(Callable[[Any], Any], complex)  # type: ignore[6]  # pyre
+            self.assertTryCastFailure(Callable[[Any], Any], str)  # type: ignore[6]  # pyre
+            self.assertTryCastSuccess(Callable[[Any], Any], list)  # type: ignore[6]  # pyre
+            self.assertTryCastFailure(Callable[[Any], Any], dict)  # type: ignore[6]  # pyre
+            self.assertTryCastSuccess(Callable[[Any], Any], tuple)  # type: ignore[6]  # pyre
+
+        # Callable[[T], Any]
+        self.assertRaisesRegex(
+            TypeNotSupportedError,
+            r"trycast cannot reliably determine whether value is a typing\.Callable.*"
+            r"callables at runtime do not always have declared parameter types",
+            lambda: trycast(Callable[[str], Any], lambda x: None),  # type: ignore[6]  # pyre
+        )
+        self.assertRaisesRegex(
+            TypeNotSupportedError,
+            r"trycast cannot reliably determine whether value is a typing\.Callable.*"
+            r"callables at runtime do not always have declared parameter types",
+            lambda: trycast(Callable[[str], Any], self._expects_one_arg),  # type: ignore[6]  # pyre
+        )
+        self.assertRaisesRegex(
+            TypeNotSupportedError,
+            r"trycast cannot reliably determine whether value is a typing\.Callable.*"
+            r"callables at runtime do not always have declared parameter types",
+            lambda: trycast(Callable[[str], Any], _CallableObjectWithOneArg()),  # type: ignore[6]  # pyre
+        )
+        self.assertRaisesRegex(
+            TypeNotSupportedError,
+            r"trycast cannot reliably determine whether value is a typing\.Callable.*"
+            r"callables at runtime do not always have declared parameter types",
+            lambda: trycast(Callable[[str], Any], _TypeWithOneArgConstructor),  # type: ignore[6]  # pyre
+        )
+
+    @staticmethod
+    def _expects_zero_args() -> None:
+        pass
+
+    @staticmethod
+    def _expects_one_arg(value: str) -> None:
+        pass
+
+    @staticmethod
+    def _expects_variable_args(*args: str) -> None:
+        pass
 
     # === NewTypes ===
 
