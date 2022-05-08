@@ -4,6 +4,7 @@ define Comment
 	- Run `make testall` to run all tests against all supported Python versions.
 	- Run `make format` to format code.
 	- Run `make lint` to check linter conformity.
+	- Run `make typecheck` to check typechecker conformity.
 	- Run `make publish` to publish to PYPI.
 endef
 
@@ -43,7 +44,7 @@ format: black isort flake  ## Reformat code.
 
 
 .PHONY: lint
-lint: flake typecheck  ## Check whether code satisfies all linter and formatter rules.
+lint: flake  ## Check whether code satisfies all linter and formatter rules.
 	black --check $(path)
 	isort --check $(path)
 
