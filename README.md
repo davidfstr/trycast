@@ -268,7 +268,7 @@ make help
       ([PEP 586](https://peps.python.org/pep-0586/))
 * Callables
     * Callable
-    * Callable[P, R] (when P and R only contain Any)
+    * Callable[P, R] (where P=[Any]\*N and R=Any)
 * NewTypes (when strict=False)
 * Special Types
     * Any

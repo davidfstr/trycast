@@ -166,6 +166,28 @@ else:
     )
 
 
+# _inspect_signature
+if sys.version_info >= (3, 10):
+
+    def _inspect_signature(value):
+        return inspect.signature(
+            value,
+            # Don't auto-unwrap decorated functions
+            follow_wrapped=False,
+            # Don't need annotation information
+            eval_str=False,
+        )
+
+else:
+
+    def _inspect_signature(value):
+        return inspect.signature(
+            value,
+            # Don't auto-unwrap decorated functions
+            follow_wrapped=False,
+        )
+
+
 __all__ = (
     "trycast",
     "isassignable",
@@ -533,7 +555,7 @@ def _trycast_inner(tp, value, failure, options):
             # Callable[[Any * N], Any]
             if callable(value):
                 try:
-                    sig = inspect.signature(value)
+                    sig = _inspect_signature(value)
                 except TypeError:
                     # Not a callable
                     return failure

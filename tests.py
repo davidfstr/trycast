@@ -1,4 +1,5 @@
 # flake8: noqa
+import functools
 import os
 import platform
 import subprocess
@@ -21,6 +22,7 @@ from typing import (
     Optional,
     Sequence,
     Tuple,
+    TypeVar,
     Union,
     cast,
 )
@@ -166,6 +168,17 @@ class _TypeWithZeroArgConstructor:
 class _TypeWithOneArgConstructor:
     def __init__(self, value: str) -> None:
         pass
+
+
+_R = TypeVar("_R")
+
+
+def _count_arguments(func: Callable[[int], _R]) -> Callable[..., _R]:
+    @functools.wraps(func)
+    def inner(*args):
+        return func(len(args))
+
+    return inner
 
 
 _Url = NewType("_Url", str)
@@ -1195,6 +1208,11 @@ class TestTryCast(TestCase):
             lambda: trycast(Callable[[str], Any], _TypeWithOneArgConstructor),  # type: ignore[6]  # pyre
         )
 
+        # Ensure looks at unwrapped version of decorated function
+        self.assertTryCastSuccess(Callable[[], Any], self._expects_int_arg)  # type: ignore[6]  # pyre
+        self.assertTryCastSuccess(Callable[[Any], Any], self._expects_int_arg)  # type: ignore[6]  # pyre
+        self.assertTryCastSuccess(Callable[[Any, Any], Any], self._expects_int_arg)  # type: ignore[6]  # pyre
+
     @staticmethod
     def _expects_zero_args() -> None:
         pass
@@ -1205,6 +1223,11 @@ class TestTryCast(TestCase):
 
     @staticmethod
     def _expects_variable_args(*args: str) -> None:
+        pass
+
+    @_count_arguments  # type: ignore[56]  # pyre
+    @staticmethod
+    def _expects_int_arg(value: int) -> None:
         pass
 
     # === NewTypes ===
