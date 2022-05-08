@@ -18,6 +18,7 @@ from typing import (
     MutableMapping,
     MutableSequence,
     NamedTuple,
+    NewType,
     NoReturn,
     Optional,
     Sequence,
@@ -28,6 +29,7 @@ from typing import (
 )
 from typing import _eval_type as eval_type  # type: ignore[attr-defined]
 from typing import _type_check as type_check  # type: ignore[attr-defined]
+from typing import _type_repr as type_repr  # type: ignore[attr-defined]
 from typing import cast, overload
 
 try:
@@ -133,6 +135,30 @@ _typed_dict_metas = tuple(_typed_dict_meta_list)
 
 def _is_typed_dict(tp: object) -> bool:
     return isinstance(tp, _typed_dict_metas)
+
+
+# _is_newtype
+if NewType.__class__.__name__ == "function":  # type: ignore[reportGeneralTypeIssues]  # pyright
+    # Python 3.7 - 3.9
+    def _is_newtype(tp: object) -> bool:
+        return (
+            hasattr(tp, "__class__")
+            and tp.__class__.__name__ == "function"
+            and hasattr(tp, "__qualname__")
+            and tp.__qualname__.startswith("NewType.<locals>")  # type: ignore[attr-defined]
+            and hasattr(tp, "__module__")
+            and tp.__module__ == "typing"
+        )
+
+elif NewType.__class__.__name__ == "type":  # type: ignore[reportGeneralTypeIssues]  # pyright
+    # Python 3.10+
+    def _is_newtype(tp: object) -> bool:
+        return isinstance(tp, NewType)  # type: ignore[arg-type]
+
+else:
+    raise AssertionError(
+        "Do not know how to recognize NewType in this version of Python"
+    )
 
 
 __all__ = (
@@ -253,12 +279,16 @@ def trycast(tp, value, failure=None, *, strict=True, eval=True):
 
     Parameters:
     * strict --
-        If strict=False then trycast will additionally accept
-        mypy_extensions.TypedDict instances and Python 3.8 typing.TypedDict
-        instances for the `tp` parameter. Normally these kinds of types are
-        rejected by trycast with a TypeNotSupportedError because these
-        types do not preserve enough information at runtime to reliably
-        determine which keys are required and which are potentially-missing.
+        * If strict=False then trycast will additionally accept
+          mypy_extensions.TypedDict instances and Python 3.8 typing.TypedDict
+          instances for the `tp` parameter. Normally these kinds of types are
+          rejected by trycast with a TypeNotSupportedError because these
+          types do not preserve enough information at runtime to reliably
+          determine which keys are required and which are potentially-missing.
+        * If strict=False then trycast will treat `NewType("Foo", T)`
+          the same as `T`. Normally NewTypes are rejected by trycast with a
+          TypeNotSupportedError because values of NewTypes at runtime
+          are indistinguishable from their wrapped supertype.
     * eval --
         If eval=False then trycast will not attempt to resolve string
         type references, which requires the use of the eval() function.
@@ -266,8 +296,9 @@ def trycast(tp, value, failure=None, *, strict=True, eval=True):
 
     Raises:
     * TypeNotSupportedError --
-        If strict=True and either mypy_extensions.TypedDict or a
-        Python 3.8 typing.TypedDict is found within the `tp` argument.
+        * If strict=True and either mypy_extensions.TypedDict or a
+          Python 3.8 typing.TypedDict is found within the `tp` argument.
+        * If strict=True and a NewType is found within the `tp` argument.
     * UnresolvedForwardRefError --
         If `tp` is a type form which contains a ForwardRef.
     * UnresolvableTypeError --
@@ -490,6 +521,22 @@ def _trycast_inner(tp, value, failure, options):
                 return value
         else:
             return failure
+
+    if _is_newtype(tp):
+        if options.strict:
+            supertype_repr = type_repr(tp.__supertype__)  # type: ignore[attribute-error]  # pytype
+            raise TypeNotSupportedError(
+                f"trycast cannot reliably determine whether value is "
+                f"a NewType({tp.__name__!r}, {supertype_repr}) because "
+                f"NewType wrappers are erased at runtime "
+                f"and are indistinguishable from their supertype. "
+                f"Consider using trycast(..., strict=False) to treat "
+                f"NewType({tp.__name__!r}, {supertype_repr}) "
+                f"like {supertype_repr}."
+            )
+        else:
+            supertype = tp.__supertype__  # type: ignore[attribute-error]  # pytype
+            return _trycast_inner(supertype, value, failure, options)
 
     if tp is Any:
         if isinstance(tp, type):

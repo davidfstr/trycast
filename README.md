@@ -266,6 +266,7 @@ make help
 * Literals
     * Literal[value]
       ([PEP 586](https://peps.python.org/pep-0586/))
+* NewTypes (when strict=False)
 * Special Types
     * Any
     * NoReturn
@@ -336,12 +337,16 @@ also be a valid complex value, as consistent with Python typecheckers:
 Parameters:
 
 * **strict** -- 
-  If strict=False then trycast will additionally accept
-  mypy_extensions.TypedDict instances and Python 3.8 typing.TypedDict
-  instances for the `tp` parameter. Normally these kinds of types are
-  rejected by trycast with a TypeNotSupportedError because these
-  types do not preserve enough information at runtime to reliably
-  determine which keys are required and which are potentially-missing.
+    * If strict=False then trycast will additionally accept
+      mypy_extensions.TypedDict instances and Python 3.8 typing.TypedDict
+      instances for the `tp` parameter. Normally these kinds of types are
+      rejected by trycast with a TypeNotSupportedError because these
+      types do not preserve enough information at runtime to reliably
+      determine which keys are required and which are potentially-missing.
+    * If strict=False then trycast will treat `NewType("Foo", T)`
+      the same as `T`. Normally NewTypes are rejected by trycast with a
+      TypeNotSupportedError because values of NewTypes at runtime
+      are indistinguishable from their wrapped supertype.
 * **eval** --
   If eval=False then trycast will not attempt to resolve string
   type references, which requires the use of the eval() function.
@@ -350,8 +355,9 @@ Parameters:
 Raises:
 
 * **TypeNotSupportedError** --
-  If strict=True and either mypy_extensions.TypedDict or a
-  Python 3.8 typing.TypedDict is found within the `tp` argument.
+    * If strict=True and either mypy_extensions.TypedDict or a
+      Python 3.8 typing.TypedDict is found within the `tp` argument.
+    * If strict=True and a NewType is found within the `tp` argument.
 * **UnresolvedForwardRefError** --
   If `tp` is a type form which contains a ForwardRef.
 * **UnresolvableTypeError** --
@@ -430,6 +436,8 @@ Raises:
 
 ### main
 
+* Extend `trycast()` to recognize more kinds of types:
+    * Extend `trycast()` to recognize `NewType` values when strict=False.
 * Fix issues with PEP 484 conformance:
     * `bool` values are now correctly treated as assignable to `int`.
     * `bool`, `int`, and `float` values are now correctly treated as assignable to `complex`.

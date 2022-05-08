@@ -15,6 +15,7 @@ from typing import (
     Mapping,
     MutableMapping,
     MutableSequence,
+    NewType,
     NoReturn,
     Optional,
     Sequence,
@@ -134,16 +135,19 @@ class _BookBasedMaybeMovie_NativeTypedDict(_MaybeMovie_NativeTypedDict):
     based_on: str
 
 
-class X(RichTypedDict):
+class _X(RichTypedDict):
     x: int
 
 
-class Y(RichTypedDict):
+class _Y(RichTypedDict):
     y: str
 
 
-class XYZ(X, Y):
+class _XYZ(_X, _Y):
     z: bool
+
+
+_Url = NewType("_Url", str)
 
 
 class TestTryCast(TestCase):
@@ -859,13 +863,13 @@ class TestTryCast(TestCase):
             )
 
     def test_typeddict_multiple_inheritance(self) -> None:
-        _1 = XYZ(
+        _1 = _XYZ(
             x=1,
             y="2",
             z=True,
         )
         self.assertTryCastSuccess(
-            XYZ,
+            _XYZ,
             dict(
                 x=1,
                 y="2",
@@ -874,21 +878,21 @@ class TestTryCast(TestCase):
         )
 
         self.assertTryCastFailure(
-            XYZ,
+            _XYZ,
             dict(
                 y="2",
                 z=True,
             ),
         )
         self.assertTryCastFailure(
-            XYZ,
+            _XYZ,
             dict(
                 x=1,
                 z=True,
             ),
         )
         self.assertTryCastFailure(
-            XYZ,
+            _XYZ,
             dict(
                 x=1,
                 y="2",
@@ -1056,6 +1060,29 @@ class TestTryCast(TestCase):
         self.assertTryCastFailure(Literal["circle"], {1: 1})
         self.assertTryCastFailure(Literal["circle"], {1})
         self.assertTryCastFailure(Literal["circle"], object())
+
+    # === NewTypes ===
+
+    def test_newtype(self) -> None:
+        # strict=True
+        self.assertRaisesRegex(
+            TypeNotSupportedError,
+            "trycast cannot reliably determine whether value is a NewType",
+            lambda: trycast(_Url, _Url("http://example.com")),
+        )
+        self.assertRaisesRegex(
+            TypeNotSupportedError,
+            "trycast cannot reliably determine whether value is a NewType",
+            lambda: trycast(_Url, "http://example.com"),
+        )
+
+        # strict=False
+        self.assertTryCastSuccess(_Url, _Url("http://example.com"), strict=False)
+        # NOTE: This cast would be *failed* by a typechecker
+        self.assertTryCastSuccess(_Url, "http://example.com", strict=False)
+
+        self.assertTryCastSuccess(str, _Url("http://example.com"))
+        self.assertTryCastSuccess(str, "http://example.com")
 
     # === Special Types: Any, NoReturn ===
 
