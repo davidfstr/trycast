@@ -313,17 +313,25 @@ except that it supports many more types than `isinstance`, including:
 * Literal[...]
 * T extends TypedDict
 
-Note that unlike isinstance(), this method does NOT consider bool values
-to be valid int values, as consistent with Python typecheckers:
+Similar to isinstance(), this method considers every bool value to
+also be a valid int value, as consistent with Python typecheckers:
 
-> trycast(int, False) -> None
-> isinstance(False, int) -> True
+> trycast(int, True) -> True
+> isinstance(True, int) -> True
 
 Note that unlike isinstance(), this method considers every int value to
-also be a valid float value, as consistent with Python typecheckers:
+also be a valid float or complex value, as consistent with Python typecheckers:
 
 > trycast(float, 1) -> 1
+> trycast(complex, 1) -> 1
 > isinstance(1, float) -> False
+> isinstance(1, complex) -> False
+
+Note that unlike isinstance(), this method considers every float value to
+also be a valid complex value, as consistent with Python typecheckers:
+
+> trycast(complex, 1.0) -> 1
+> isinstance(1.0, complex) -> False
 
 Parameters:
 
@@ -422,6 +430,9 @@ Raises:
 
 ### main
 
+* Fix issues with PEP 484 conformance:
+    * `bool` values are now correctly treated as assignable to `int`.
+    * `bool`, `int`, and `float` values are now correctly treated as assignable to `complex`.
 * Documentation improvements:
     * Document supported typing features & type checkers.
     * Mention that trycast() and isassignable() accept TypeFormString[T]

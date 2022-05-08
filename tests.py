@@ -158,6 +158,9 @@ class TestTryCast(TestCase):
         self.assertTryCastFailure(bool, 0)
         self.assertTryCastFailure(bool, 1)
 
+        # bool-like strs
+        self.assertTryCastFailure(bool, "True")
+
         # Falsy values
         self.assertTryCastFailure(bool, 0)
         self.assertTryCastFailure(bool, "")
@@ -181,9 +184,9 @@ class TestTryCast(TestCase):
         self.assertTryCastSuccess(int, -1)
         self.assertTryCastSuccess(int, -2)
 
-        # int-like bools
-        self.assertTryCastFailure(int, False)
-        self.assertTryCastFailure(int, True)
+        # Actual bools
+        self.assertTryCastSuccess(int, False)
+        self.assertTryCastSuccess(int, True)
 
         # int-like floats
         self.assertTryCastFailure(int, 0.0)
@@ -194,6 +197,9 @@ class TestTryCast(TestCase):
         self.assertTryCastFailure(int, "0")
         self.assertTryCastFailure(int, "1")
         self.assertTryCastFailure(int, "-1")
+
+        # bool-like strs
+        self.assertTryCastFailure(int, "True")
 
         # non-ints
         self.assertTryCastFailure(int, "foo")
@@ -222,23 +228,22 @@ class TestTryCast(TestCase):
         self.assertTryCastSuccess(float, -1)
         self.assertTryCastSuccess(float, -2)
 
-        # float-like bools
-        self.assertTryCastFailure(float, False)
-        self.assertTryCastFailure(float, True)
+        # Actual bools
+        self.assertTryCastSuccess(float, False)
+        self.assertTryCastSuccess(float, True)
 
         # float-like strs
         self.assertTryCastFailure(float, "1.0")
         self.assertTryCastFailure(float, "inf")
         self.assertTryCastFailure(float, "Infinity")
 
-        # int-like bools
-        self.assertTryCastFailure(float, False)
-        self.assertTryCastFailure(float, True)
-
         # int-like strs
         self.assertTryCastFailure(float, "0")
         self.assertTryCastFailure(float, "1")
         self.assertTryCastFailure(float, "-1")
+
+        # bool-like strs
+        self.assertTryCastFailure(float, "True")
 
         # non-floats
         self.assertTryCastFailure(float, "foo")
@@ -247,12 +252,63 @@ class TestTryCast(TestCase):
         self.assertTryCastFailure(float, {1})
         self.assertTryCastFailure(float, object())
 
-        # non-ints
-        self.assertTryCastFailure(float, "foo")
-        self.assertTryCastFailure(float, [1])
-        self.assertTryCastFailure(float, {1: 1})
-        self.assertTryCastFailure(float, {1})
-        self.assertTryCastFailure(float, object())
+    def test_complex(self) -> None:
+        # Actual complexs
+        self.assertTryCastSuccess(complex, 1j)
+
+        # Actual floats
+        self.assertTryCastSuccess(complex, 1.0)
+
+        # Actual ints
+        self.assertTryCastSuccess(complex, 1)
+
+        # Actual bools
+        self.assertTryCastSuccess(complex, True)
+
+        # complex-like strs
+        self.assertTryCastFailure(complex, "1j")
+
+        # float-like strs
+        self.assertTryCastFailure(complex, "1.0")
+
+        # int-like strs
+        self.assertTryCastFailure(complex, "0")
+
+        # bool-like strs
+        self.assertTryCastFailure(complex, "True")
+
+        # non-complexs
+        self.assertTryCastFailure(complex, "foo")
+        self.assertTryCastFailure(complex, [1])
+        self.assertTryCastFailure(complex, {1: 1})
+        self.assertTryCastFailure(complex, {1})
+        self.assertTryCastFailure(complex, object())
+
+    def test_numerics(self) -> None:
+        """
+        Verifies that trycast agrees with special typechecker
+        rules for {bool, int, float, complex}, as least as far
+        as {mypy, pyre, pyright} are concerned as of 2022-05-07.
+        """
+        self.assertTryCastSuccess(bool, True)
+        self.assertTryCastSuccess(int, True)
+        self.assertTryCastSuccess(float, True)
+        self.assertTryCastSuccess(complex, True)
+
+        self.assertTryCastFailure(bool, 1)
+        self.assertTryCastSuccess(int, 1)
+        self.assertTryCastSuccess(float, 1)
+        self.assertTryCastSuccess(complex, 1)
+
+        self.assertTryCastFailure(bool, 1.0)
+        self.assertTryCastFailure(int, 1.0)
+        self.assertTryCastSuccess(float, 1.0)
+        self.assertTryCastSuccess(complex, 1.0)
+
+        self.assertTryCastFailure(bool, 1j)
+        self.assertTryCastFailure(int, 1j)
+        self.assertTryCastFailure(float, 1j)
+        self.assertTryCastSuccess(complex, 1j)
 
     def test_none(self) -> None:
         # None object, which is specially treated as type(None)
@@ -488,10 +544,6 @@ class TestTryCast(TestCase):
             self.assertTryCastSuccess(list[int], [1])
             self.assertTryCastSuccess(list[int], [1, 2])
 
-            # list[T]-like lists
-            self.assertTryCastFailure(list[int], [True])
-            self.assertTryCastFailure(list[int], [1, True])
-
             # non-list[T]s
             self.assertTryCastFailure(list[int], 0)
             self.assertTryCastFailure(list[int], "foo")
@@ -505,10 +557,6 @@ class TestTryCast(TestCase):
         self.assertTryCastSuccess(List[int], [])
         self.assertTryCastSuccess(List[int], [1])
         self.assertTryCastSuccess(List[int], [1, 2])
-
-        # list[T]-like lists
-        self.assertTryCastFailure(List[int], [True])
-        self.assertTryCastFailure(List[int], [1, True])
 
         # non-list[T]s
         self.assertTryCastFailure(List[int], 0)
@@ -526,10 +574,6 @@ class TestTryCast(TestCase):
             self.assertTryCastSuccess(tuple[int, ...], (1,))  # type: ignore[6]  # pyre
             self.assertTryCastSuccess(tuple[int, ...], (1, 2))  # type: ignore[6]  # pyre
 
-            # tuple[T, ...]-like tuples
-            self.assertTryCastFailure(tuple[int, ...], (True,))  # type: ignore[6]  # pyre
-            self.assertTryCastFailure(tuple[int, ...], (1, True))  # type: ignore[6]  # pyre
-
             # non-tuple[T, ...]s
             self.assertTryCastFailure(tuple[int, ...], 0)  # type: ignore[6]  # pyre
             self.assertTryCastFailure(tuple[int, ...], "foo")  # type: ignore[6]  # pyre
@@ -543,10 +587,6 @@ class TestTryCast(TestCase):
         self.assertTryCastSuccess(Tuple[int, ...], ())
         self.assertTryCastSuccess(Tuple[int, ...], (1,))
         self.assertTryCastSuccess(Tuple[int, ...], (1, 2))
-
-        # tuple[T, ...]-like tuples
-        self.assertTryCastFailure(Tuple[int, ...], (True,))
-        self.assertTryCastFailure(Tuple[int, ...], (1, True))
 
         # non-tuple[T, ...]s
         self.assertTryCastFailure(Tuple[int, ...], 0)
@@ -563,10 +603,6 @@ class TestTryCast(TestCase):
         self.assertTryCastSuccess(Sequence[int], [1, 2])
         self.assertTryCastSuccess(Sequence[str], "foo")
 
-        # Sequence[T]-like lists
-        self.assertTryCastFailure(Sequence[int], [True])
-        self.assertTryCastFailure(Sequence[int], [1, True])
-
         # non-Sequence[T]s
         self.assertTryCastFailure(Sequence[int], 0)
         self.assertTryCastFailure(Sequence[int], "foo")
@@ -579,10 +615,6 @@ class TestTryCast(TestCase):
         self.assertTryCastSuccess(MutableSequence[int], [])
         self.assertTryCastSuccess(MutableSequence[int], [1])
         self.assertTryCastSuccess(MutableSequence[int], [1, 2])
-
-        # MutableSequence[T]-like lists
-        self.assertTryCastFailure(MutableSequence[int], [True])
-        self.assertTryCastFailure(MutableSequence[int], [1, True])
 
         # non-MutableSequence[T]s
         self.assertTryCastFailure(MutableSequence[int], 0)
@@ -601,10 +633,6 @@ class TestTryCast(TestCase):
             self.assertTryCastSuccess(dict[str, int], {"x": 1})
             self.assertTryCastSuccess(dict[str, int], {"x": 1, "y": 2})
 
-            # dict[K, V]-like dicts
-            self.assertTryCastFailure(dict[str, int], {"x": True})
-            self.assertTryCastFailure(dict[str, int], {"x": 1, "y": True})
-
             # non-dict[K, V]s
             self.assertTryCastFailure(dict[str, int], 0)
             self.assertTryCastFailure(dict[str, int], "foo")
@@ -618,10 +646,6 @@ class TestTryCast(TestCase):
         self.assertTryCastSuccess(Dict[str, int], {})
         self.assertTryCastSuccess(Dict[str, int], {"x": 1})
         self.assertTryCastSuccess(Dict[str, int], {"x": 1, "y": 2})
-
-        # dict[K, V]-like dicts
-        self.assertTryCastFailure(Dict[str, int], {"x": True})
-        self.assertTryCastFailure(Dict[str, int], {"x": 1, "y": True})
 
         # non-dict[K, V]s
         self.assertTryCastFailure(Dict[str, int], 0)
@@ -637,10 +661,6 @@ class TestTryCast(TestCase):
         self.assertTryCastSuccess(Mapping[str, int], {"x": 1})
         self.assertTryCastSuccess(Mapping[str, int], {"x": 1, "y": 2})
 
-        # Mapping[K, V]-like dicts
-        self.assertTryCastFailure(Mapping[str, int], {"x": True})
-        self.assertTryCastFailure(Mapping[str, int], {"x": 1, "y": True})
-
         # non-Mapping[K, V]s
         self.assertTryCastFailure(Mapping[str, int], 0)
         self.assertTryCastFailure(Mapping[str, int], "foo")
@@ -653,10 +673,6 @@ class TestTryCast(TestCase):
         self.assertTryCastSuccess(MutableMapping[str, int], {})
         self.assertTryCastSuccess(MutableMapping[str, int], {"x": 1})
         self.assertTryCastSuccess(MutableMapping[str, int], {"x": 1, "y": 2})
-
-        # MutableMapping[K, V]-like dicts
-        self.assertTryCastFailure(MutableMapping[str, int], {"x": True})
-        self.assertTryCastFailure(MutableMapping[str, int], {"x": 1, "y": True})
 
         # non-MutableMapping[K, V]s
         self.assertTryCastFailure(MutableMapping[str, int], 0)
@@ -1573,13 +1589,21 @@ class TestTryCast(TestCase):
         self, tp: object, value: object, *, strict: Optional[bool] = None
     ) -> None:
         kwargs = dict(strict=strict) if strict is not None else dict()
-        self.assertIs(value, trycast(tp, value, **kwargs))
+        self.assertIs(
+            value,
+            trycast(tp, value, **kwargs),
+            f"Expected trycast({tp}, {value}) to SUCCEED",
+        )
 
     def assertTryCastFailure(
         self, tp: object, value: object, *, strict: Optional[bool] = None
     ) -> None:
         kwargs = dict(strict=strict) if strict is not None else dict()
-        self.assertIs(None, trycast(tp, value, **kwargs))
+        self.assertIs(
+            None,
+            trycast(tp, value, **kwargs),
+            f"Expected trycast({tp}, {value}) to FAIL",
+        )
 
     def assertTryCastNoneSuccess(self, tp: object) -> None:
         self.assertIs(None, trycast(tp, None, _FAILURE))
@@ -1654,7 +1678,9 @@ class TestIsAssignable(TestCase):
         self.assertFalse(isassignable(True, str))
 
     def test_is_different_from_isinstance_where_pep_484_differs(self) -> None:
-        self.assertFalse(isassignable(True, int))
+        self.assertTrue(isassignable(True, int))
+        self.assertTrue(isassignable(1, float))
+        self.assertTrue(isassignable(1.0, complex))
 
     def test_return_type_is_typeguarded_positively_for_types(self) -> None:
         value = "words"
