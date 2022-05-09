@@ -19,7 +19,7 @@ jobs:
         run: python -c "import sys; print(sys.version)"
 
       - name: Install Poetry
-        uses: Gr1N/setup-poetry@v4
+        uses: Gr1N/setup-poetry@v7
 
       - name: Display Poetry version
         run: poetry --version
