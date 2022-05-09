@@ -1139,6 +1139,10 @@ class TestTryCast(TestCase):
     def test_typeddict_required_notrequired(self) -> None:
         import typing_extensions
 
+        if sys.version_info >= (3, 11):
+            self.assertIs(typing.Required, typing_extensions.Required)  # type: ignore[16]  # pyre
+            self.assertIs(typing.NotRequired, typing_extensions.NotRequired)  # type: ignore[16]  # pyre
+
         class TotalMovie(typing_extensions.TypedDict):  # type: ignore[not-supported-yet]  # pytype
             title: str
             year: typing_extensions.NotRequired[int]  # type: ignore[not-supported-yet]  # pytype
