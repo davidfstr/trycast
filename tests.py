@@ -1253,6 +1253,16 @@ class TestTryCast(TestCase):
         self.assertTryCastSuccess(str, _Url("http://example.com"))
         self.assertTryCastSuccess(str, "http://example.com")
 
+    # === TypeVars ===
+
+    def test_typevar(self) -> None:
+        _T = TypeVar("_T")
+        self.assertRaisesRegex(
+            TypeNotSupportedError,
+            "trycast cannot reliably determine whether value matches a TypeVar",
+            lambda: trycast(Tuple[_T, _T], ("str", 123)),
+        )
+
     # === Special Types: Any, NoReturn ===
 
     def test_any(self) -> None:
