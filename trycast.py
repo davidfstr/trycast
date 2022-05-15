@@ -13,6 +13,7 @@ from collections.abc import Sequence as CSequence
 from inspect import Parameter
 from types import ModuleType
 from typing import ForwardRef  # type: ignore[import-error]  # pytype (for ForwardRef)
+from typing import _GenericAlias  # type: ignore[attr-defined]
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -88,7 +89,6 @@ if sys.version_info >= (3, 8):
     from typing import get_args, get_origin  # Python 3.8+
 
 elif sys.version_info >= (3, 7):
-    from typing import _GenericAlias  # type: ignore[attr-defined]
 
     def get_origin(tp: object) -> Optional[object]:
         if isinstance(tp, _GenericAlias):  # type: ignore[16]  # pyre
@@ -327,6 +327,7 @@ def trycast(tp, value, failure=None, *, strict=True, eval=True):
           Python 3.8 typing.TypedDict is found within the `tp` argument.
         * If strict=True and a NewType is found within the `tp` argument.
         * If a TypeVar is found within the `tp` argument.
+        * If an unrecognized Generic type is found within the `tp` argument.
     * UnresolvedForwardRefError --
         If `tp` is a type form which contains a ForwardRef.
     * UnresolvableTypeError --
@@ -585,6 +586,12 @@ def _trycast_inner(tp, value, failure, options):
                         return failure
             else:
                 return failure
+
+    if isinstance(tp, _GenericAlias):
+        raise TypeNotSupportedError(
+            f"trycast does not know how to recognize generic type "
+            f"{type_repr(type_origin)}."
+        )
 
     if _is_typed_dict(tp):  # T extends TypedDict
         if isinstance(value, Mapping):
@@ -877,6 +884,7 @@ def isassignable(value, tp, *, eval=True):
           Python 3.8 typing.TypedDict is found within the `tp` argument.
         * If strict=True and a NewType is found within the `tp` argument.
         * If a TypeVar is found within the `tp` argument.
+        * If an unrecognized Generic type is found within the `tp` argument.
     * UnresolvedForwardRefError --
         If `tp` is a type form which contains a ForwardRef.
     * UnresolvableTypeError --

@@ -12,6 +12,7 @@ from typing import (
     Any,
     Callable,
     Dict,
+    Generic,
     Iterator,
     List,
     Mapping,
@@ -96,6 +97,15 @@ class TestTryCastModule(TestCase):
 
 # ------------------------------------------------------------------------------
 # TestTryCast
+
+_T = TypeVar("_T")
+
+
+class _CellClass(Generic[_T]):
+    value: _T
+
+    def __init__(self, value: _T) -> None:
+        self.value = value
 
 
 class _Movie(RichTypedDict):
@@ -719,6 +729,17 @@ class TestTryCast(TestCase):
         self.assertTryCastFailure(MutableMapping[str, int], {1: 1})
         self.assertTryCastFailure(MutableMapping[str, int], {1})
         self.assertTryCastFailure(MutableMapping[str, int], object())
+
+    # === User-Defined Generic Types ===
+
+    def test_generic_types(self) -> None:
+        cell = _CellClass[int](1)
+        self.assertTryCastSuccess(_CellClass, cell)
+        self.assertRaisesRegex(
+            TypeNotSupportedError,
+            r"trycast does not know how to recognize generic type",
+            lambda: trycast(_CellClass[int], cell),
+        )
 
     # === TypedDicts ===
 
