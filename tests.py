@@ -22,6 +22,7 @@ from typing import (
     NoReturn,
     Optional,
     Sequence,
+    Set,
     Tuple,
     TypeVar,
     Union,
@@ -447,6 +448,60 @@ class TestTryCast(TestCase):
         self.assertTryCastFailure(List, {1})
         self.assertTryCastFailure(List, object())
 
+    def test_set(self) -> None:
+        # Actual set
+        self.assertTryCastSuccess(set, set())
+        self.assertTryCastSuccess(set, {1})
+        self.assertTryCastSuccess(set, {1, 2})
+
+        # set-like tuples
+        self.assertTryCastFailure(set, ())
+        self.assertTryCastFailure(set, (1,))
+        self.assertTryCastFailure(set, (1, 2))
+
+        # set-like lists
+        self.assertTryCastFailure(set, [])
+        self.assertTryCastFailure(
+            set,
+            [
+                1,
+            ],
+        )
+        self.assertTryCastFailure(set, [1, 2])
+
+        # non-sets
+        self.assertTryCastFailure(set, 0)
+        self.assertTryCastFailure(set, "foo")
+        self.assertTryCastFailure(set, {1: 1})
+        self.assertTryCastFailure(set, object())
+
+    def test_big_set(self) -> None:
+        # Actual set
+        self.assertTryCastSuccess(Set, set())
+        self.assertTryCastSuccess(Set, {1})
+        self.assertTryCastSuccess(Set, {1, 2})
+
+        # set-like tuples
+        self.assertTryCastFailure(Set, ())
+        self.assertTryCastFailure(Set, (1,))
+        self.assertTryCastFailure(Set, (1, 2))
+
+        # set-like lists
+        self.assertTryCastFailure(Set, [])
+        self.assertTryCastFailure(
+            Set,
+            [
+                1,
+            ],
+        )
+        self.assertTryCastFailure(Set, [1, 2])
+
+        # non-sets
+        self.assertTryCastFailure(Set, 0)
+        self.assertTryCastFailure(Set, "foo")
+        self.assertTryCastFailure(Set, {1: 1})
+        self.assertTryCastFailure(Set, object())
+
     def test_tuple(self) -> None:
         # Actual tuple
         self.assertTryCastSuccess(tuple, ())
@@ -613,6 +668,36 @@ class TestTryCast(TestCase):
         self.assertTryCastFailure(List[int], {1: 1})
         self.assertTryCastFailure(List[int], {1})
         self.assertTryCastFailure(List[int], object())
+
+    if sys.version_info >= (3, 9):
+
+        def test_set_t(self) -> None:
+            # Actual set[T]
+            self.assertTryCastSuccess(set[int], set())
+            self.assertTryCastSuccess(set[int], {1})
+            self.assertTryCastSuccess(set[int], {1, 2})
+
+            # non-set[T]s
+            self.assertTryCastFailure(set[int], 0)
+            self.assertTryCastFailure(set[int], "foo")
+            self.assertTryCastFailure(set[int], ["1"])
+            self.assertTryCastFailure(set[int], {1: 1})
+            self.assertTryCastFailure(set[int], [1])
+            self.assertTryCastFailure(set[int], object())
+
+    def test_big_set_t(self) -> None:
+        # Actual set[T]
+        self.assertTryCastSuccess(Set[int], set())
+        self.assertTryCastSuccess(Set[int], {1})
+        self.assertTryCastSuccess(Set[int], {1, 2})
+
+        # non-set[T]s
+        self.assertTryCastFailure(Set[int], 0)
+        self.assertTryCastFailure(Set[int], "foo")
+        self.assertTryCastFailure(Set[int], ["1"])
+        self.assertTryCastFailure(Set[int], {1: 1})
+        self.assertTryCastFailure(Set[int], [1])
+        self.assertTryCastFailure(Set[int], object())
 
     if sys.version_info >= (3, 9):
 

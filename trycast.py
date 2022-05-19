@@ -28,6 +28,7 @@ from typing import (
     NoReturn,
     Optional,
     Sequence,
+    Set,
     Tuple,
     Type,
     TypeVar,
@@ -432,8 +433,12 @@ def _trycast_inner(tp, value, failure, options):
             return failure
 
     type_origin = get_origin(tp)
+
     if type_origin is list or type_origin is List:  # List, List[T]
         return _trycast_listlike(tp, value, failure, list, options)
+
+    if type_origin is set or type_origin is Set:  # Set, Set[T]
+        return _trycast_listlike(tp, value, failure, set, options)
 
     if type_origin is tuple or type_origin is Tuple:
         if isinstance(value, tuple):
