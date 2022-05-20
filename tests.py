@@ -12,6 +12,7 @@ from typing import (
     Any,
     Callable,
     Dict,
+    FrozenSet,
     Generic,
     Iterator,
     List,
@@ -502,6 +503,66 @@ class TestTryCast(TestCase):
         self.assertTryCastFailure(Set, {1: 1})
         self.assertTryCastFailure(Set, object())
 
+    def test_frozenset(self) -> None:
+        # Actual frozenset
+        self.assertTryCastSuccess(frozenset, frozenset())
+        self.assertTryCastSuccess(frozenset, frozenset({1}))
+        self.assertTryCastSuccess(frozenset, frozenset({1, 2}))
+
+        # frozenset-like tuples
+        self.assertTryCastFailure(frozenset, ())
+        self.assertTryCastFailure(frozenset, (1,))
+        self.assertTryCastFailure(frozenset, (1, 2))
+
+        # frozenset-like lists
+        self.assertTryCastFailure(frozenset, [])
+        self.assertTryCastFailure(
+            frozenset,
+            [
+                1,
+            ],
+        )
+        self.assertTryCastFailure(frozenset, [1, 2])
+
+        # frozenset-like sets
+        self.assertTryCastFailure(frozenset, {1})
+
+        # non-frozensets
+        self.assertTryCastFailure(frozenset, 0)
+        self.assertTryCastFailure(frozenset, "foo")
+        self.assertTryCastFailure(frozenset, {1: 1})
+        self.assertTryCastFailure(frozenset, object())
+
+    def test_big_frozenset(self) -> None:
+        # Actual frozenset
+        self.assertTryCastSuccess(FrozenSet, frozenset())
+        self.assertTryCastSuccess(FrozenSet, frozenset({1}))
+        self.assertTryCastSuccess(FrozenSet, frozenset({1, 2}))
+
+        # frozenset-like tuples
+        self.assertTryCastFailure(FrozenSet, ())
+        self.assertTryCastFailure(FrozenSet, (1,))
+        self.assertTryCastFailure(FrozenSet, (1, 2))
+
+        # frozenset-like lists
+        self.assertTryCastFailure(FrozenSet, [])
+        self.assertTryCastFailure(
+            FrozenSet,
+            [
+                1,
+            ],
+        )
+        self.assertTryCastFailure(FrozenSet, [1, 2])
+
+        # frozenset-like sets
+        self.assertTryCastFailure(FrozenSet, {1})
+
+        # non-frozensets
+        self.assertTryCastFailure(FrozenSet, 0)
+        self.assertTryCastFailure(FrozenSet, "foo")
+        self.assertTryCastFailure(FrozenSet, {1: 1})
+        self.assertTryCastFailure(FrozenSet, object())
+
     def test_tuple(self) -> None:
         # Actual tuple
         self.assertTryCastSuccess(tuple, ())
@@ -698,6 +759,42 @@ class TestTryCast(TestCase):
         self.assertTryCastFailure(Set[int], {1: 1})
         self.assertTryCastFailure(Set[int], [1])
         self.assertTryCastFailure(Set[int], object())
+
+    if sys.version_info >= (3, 9):
+
+        def test_frozenset_t(self) -> None:
+            # Actual frozenset[T]
+            self.assertTryCastSuccess(frozenset[int], frozenset())
+            self.assertTryCastSuccess(frozenset[int], frozenset({1}))
+            self.assertTryCastSuccess(frozenset[int], frozenset({1, 2}))
+
+            # frozenset-like sets
+            self.assertTryCastFailure(frozenset[int], {1})
+
+            # non-frozenset[T]s
+            self.assertTryCastFailure(frozenset[int], 0)
+            self.assertTryCastFailure(frozenset[int], "foo")
+            self.assertTryCastFailure(frozenset[int], ["1"])
+            self.assertTryCastFailure(frozenset[int], {1: 1})
+            self.assertTryCastFailure(frozenset[int], [1])
+            self.assertTryCastFailure(frozenset[int], object())
+
+    def test_big_frozenset_t(self) -> None:
+        # Actual frozenset[T]
+        self.assertTryCastSuccess(FrozenSet[int], frozenset())
+        self.assertTryCastSuccess(FrozenSet[int], frozenset({1}))
+        self.assertTryCastSuccess(FrozenSet[int], frozenset({1, 2}))
+
+        # frozenset-like sets
+        self.assertTryCastFailure(FrozenSet[int], {1})
+
+        # non-frozenset[T]s
+        self.assertTryCastFailure(FrozenSet[int], 0)
+        self.assertTryCastFailure(FrozenSet[int], "foo")
+        self.assertTryCastFailure(FrozenSet[int], ["1"])
+        self.assertTryCastFailure(FrozenSet[int], {1: 1})
+        self.assertTryCastFailure(FrozenSet[int], [1])
+        self.assertTryCastFailure(FrozenSet[int], object())
 
     if sys.version_info >= (3, 9):
 

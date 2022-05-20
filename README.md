@@ -446,6 +446,7 @@ Raises:
 
 * Extend `trycast()` to recognize more kinds of types:
     * Extend `trycast()` to recognize `set[T]` and `Set[T]` values.
+    * Extend `trycast()` to recognize `frozenset[T]` and `FrozenSet[T]` values.
     * Extend `trycast()` to recognize `NewType` types when strict=False.
     * Extend `trycast()` to explicitly disallow `TypeVar` types.
     * Extend `trycast()` to explicitly disallow unrecognized `Generic` types.

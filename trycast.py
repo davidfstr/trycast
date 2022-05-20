@@ -19,6 +19,7 @@ from typing import (
     Any,
     Callable,
     Dict,
+    FrozenSet,
     List,
     Mapping,
     MutableMapping,
@@ -439,6 +440,11 @@ def _trycast_inner(tp, value, failure, options):
 
     if type_origin is set or type_origin is Set:  # Set, Set[T]
         return _trycast_listlike(tp, value, failure, set, options)
+
+    if type_origin is frozenset or type_origin is FrozenSet:  # FrozenSet, FrozenSet[T]
+        return _trycast_listlike(
+            tp, value, failure, frozenset, options, covariant_t=True
+        )
 
     if type_origin is tuple or type_origin is Tuple:
         if isinstance(value, tuple):
