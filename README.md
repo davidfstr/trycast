@@ -187,13 +187,13 @@ representing data structures in Python such as [dataclasses] (**recommended**),
 
 ## Presentations & Videos
 
-A presentation about using trycast to parse JSON was given at the
+A presentation about **using trycast to parse JSON** was given at the
 2021 PyCon US Typing Summit:
 
 [![2021 PyCon US Typing Summit Presentation](https://raw.githubusercontent.com/davidfstr/trycast/main/README/TypingSummit2021_Presentation_FirstSlide.png)](https://youtu.be/ld9rwCvGdhc?t=1782)
 
-A presentation describing many different tools that use Python type annotations
-at runtime, including trycast, was given at the 2022 PyCon US Typing Summit:
+A presentation describing **tools that use Python type annotations at runtime**,
+including trycast, was given at the 2022 PyCon US Typing Summit:
 
 [![2022 PyCon US Typing Summit Presentation](https://raw.githubusercontent.com/davidfstr/trycast/main/README/TypingSummit2022_Presentation_FirstSlide.png)](https://youtu.be/CmXQOoiMy-g)
 
