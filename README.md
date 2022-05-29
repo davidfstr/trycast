@@ -16,7 +16,7 @@ Here is an example of parsing a `Point2D` object defined as a `TypedDict`
 using `trycast()`:
 
 ```python
-from bottle import HTTPResponse, request, route
+from bottle import HTTPResponse, request, route  # Bottle is a web framework
 from trycast import trycast
 from typing import TypedDict
 
@@ -28,11 +28,10 @@ class Point2D(TypedDict):
 @route('/draw_point')
 def draw_point_endpoint() -> HTTPResponse:
     request_json = request.json  # type: object
-    if (point := trycast(Point2D, request_json)) is not None:
-        draw_point(point)  # type is narrowed to Point2D
-        return HTTPResponse(status=200)
-    else:
+    if (point := trycast(Point2D, request_json)) is None:
         return HTTPResponse(status=400)  # Bad Request
+    draw_point(point)  # type is narrowed to Point2D
+    return HTTPResponse(status=200)
 
 def draw_point(point: Point2D) -> None:
     ...
@@ -71,11 +70,10 @@ Shape = Circle | Rect  # a Tagged Union!
 @route('/draw_shape')
 def draw_shape_endpoint() -> HTTPResponse:
     request_json = request.json  # type: object
-    if (shape := trycast(Shape, request_json)) is not None:
-        draw_shape(shape)  # type is narrowed to Shape
-        return HTTPResponse(status=200)  # OK
-    else:
+    if (shape := trycast(Shape, request_json)) is None:
         return HTTPResponse(status=400)  # Bad Request
+    draw_shape(shape)  # type is narrowed to Shape
+    return HTTPResponse(status=200)  # OK
 ```
 
 > **Important:** Current limitations in the mypy typechecker require that you
@@ -84,7 +82,7 @@ def draw_shape_endpoint() -> HTTPResponse:
 > 
 > ```python
 > shape = cast(Optional[Shape], trycast(Shape, request_json))
-> if shape is not None:
+> if shape is None:
 >     ...
 > ```
 > 
@@ -111,11 +109,10 @@ Shape = Circle | Rect  # a Tagged Union!
 @route('/draw_shape')
 def draw_shape_endpoint() -> HTTPResponse:
     request_json = request.json  # type: object
-    if isassignable(request_json, Shape):
-        draw_shape(request_json)  # type is narrowed to Shape
-        return HTTPResponse(status=200)  # OK
-    else:
+    if not isassignable(request_json, Shape):
         return HTTPResponse(status=400)  # Bad Request
+    draw_shape(request_json)  # type is narrowed to Shape
+    return HTTPResponse(status=200)  # OK
 ```
 
 > **Important:** Current limitations in the mypy typechecker prevent the
@@ -123,9 +120,10 @@ def draw_shape_endpoint() -> HTTPResponse:
 > `Shape`, so you must add an additional `cast()` to narrow the type manually:
 > 
 > ```python
-> if isassignable(request_json, Shape):
->     shape = cast(Shape, request_json)  # type is manually narrowed to Shape
->     draw_shape(shape)
+> if not isassignable(request_json, Shape):
+>     ...
+> shape = cast(Shape, request_json)  # type is manually narrowed to Shape
+> draw_shape(shape)
 > ```
 > 
 > These limitations are in the process of being resolved by
