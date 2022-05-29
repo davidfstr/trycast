@@ -143,6 +143,20 @@ typechecking rules), but at *runtime*.
 
 ## Motivation & Alternatives
 
+### Why use trycast?
+
+The trycast module is primarily designed for **recognizing JSON-like structures**
+that can be described by Python's typing system. Secondarily, it can be used 
+for **recognizing arbitrary structures** that can be described by 
+Python's typing system.
+
+Please see [Philosophy] for more information about how trycast
+differs from similar libraries like pydantic.
+
+[Philosophy]: https://github.com/davidfstr/trycast/wiki/Philosophy
+
+### Why use TypedDict?
+
 Why use typed dictionaries to represent data structures instead of classes,
 named tuples, or other formats?
 
@@ -151,8 +165,10 @@ They can be trivially serialized and deserialized without any additional logic.
 For applications that use a lot of JSON data - such as web applications - 
 using typed dictionaries is very convenient for representing data structures.
 
-Other alternatives for representing data structures in Python include
-[dataclasses], [named tuples], [attrs], and plain classes.
+If you just need a lightweight class structure that doesn't need excellent
+support for JSON-serialization you might consider other alternatives for
+representing data structures in Python such as [dataclasses] (**recommended**),
+[named tuples], [attrs], or plain classes.
 
 [dataclasses]: https://www.python.org/dev/peps/pep-0557/#abstract
 [named tuples]: https://docs.python.org/3/library/typing.html#typing.NamedTuple
