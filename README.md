@@ -175,6 +175,13 @@ representing data structures in Python such as [dataclasses] (**recommended**),
 [attrs]: https://www.attrs.org/en/stable/
 
 
+## Installation
+
+```shell
+python -m pip install trycast
+```
+
+
 ## Recommendations while using trycast
 
 - So that `trycast()` can recognize TypedDicts with mixed required and
