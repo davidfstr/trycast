@@ -36,7 +36,6 @@ from typing import (
     Union,
 )
 from typing import _eval_type as eval_type  # type: ignore[attr-defined]
-from typing import _type_check as type_check  # type: ignore[attr-defined]
 from typing import _type_repr as type_repr  # type: ignore[attr-defined]
 from typing import cast, overload
 
@@ -188,6 +187,69 @@ else:
             # Don't auto-unwrap decorated functions
             follow_wrapped=False,
         )
+
+
+# _type_check
+if sys.version_info >= (3, 11):
+    import types
+    from typing import _GenericAlias  # type: ignore[attr-defined]  # noqa: F811
+    from typing import (  # type: ignore[attr-defined]
+        ClassVar,
+        Final,
+        Generic,
+        ParamSpec,
+        Protocol,
+        _SpecialForm,
+    )
+
+    # Workaround https://github.com/python/cpython/issues/92601
+    # by using Python 3.10's typing._type_check()
+    def _type_check(arg: object, msg: str):
+        """Check that the argument is a type, and return it (internal helper).
+
+        As a special case, accept None and return type(None) instead. Also wrap strings
+        into ForwardRef instances. Consider several corner cases, for example plain
+        special forms like Union are not valid, while Union[int, str] is OK, etc.
+        The msg argument is a human-readable error message, e.g::
+
+            "Union[arg, ...]: arg should be a type."
+
+        We append the repr() of the actual value (truncated to 100 chars).
+        """
+        is_argument = True
+        module = None
+        is_class = False
+
+        invalid_generic_forms = (Generic, Protocol)  # type: tuple[object, ...]
+        if not is_class:
+            invalid_generic_forms += (ClassVar,)
+            if is_argument:
+                invalid_generic_forms += (Final,)
+
+        arg = _type_convert(arg, module=module)
+        if isinstance(arg, _GenericAlias) and arg.__origin__ in invalid_generic_forms:  # type: ignore[reportGeneralTypeIssues]  # pyright
+            raise TypeError(f"{arg} is not valid as type argument")
+        if arg in (Any, NoReturn, Final):
+            return arg
+        if isinstance(arg, _SpecialForm) or arg in (Generic, Protocol):
+            raise TypeError(f"Plain {arg} is not valid as type argument")
+        if isinstance(arg, (type, TypeVar, ForwardRef, types.UnionType, ParamSpec)):
+            return arg
+        if not callable(arg):
+            raise TypeError(f"{msg} Got {arg!r:.100}.")
+        return arg
+
+    # Python 3.10's typing._type_convert()
+    def _type_convert(arg, module=None):
+        """For converting None to type(None), and strings to ForwardRef."""
+        if arg is None:
+            return type(None)
+        if isinstance(arg, str):
+            return ForwardRef(arg, module=module)
+        return arg
+
+else:
+    from typing import _type_check  # type: ignore[attr-defined]
 
 
 __all__ = (
@@ -348,7 +410,7 @@ def trycast(tp, value, failure=None, *, strict=True, eval=True):
             )
     else:
         try:
-            tp = type_check(tp, "trycast() requires a type as its first argument.")
+            tp = _type_check(tp, "trycast() requires a type as its first argument.")
         except TypeError:
             if isinstance(tp, tuple) and len(tp) >= 1 and isinstance(tp[0], type):
                 raise TypeError(
@@ -1011,7 +1073,7 @@ def eval_type_str(tp: str) -> object:
     # 1. Ensure the object is actually a type
     # 2. As a special case, interpret None as type(None)
     try:
-        member = type_check(member, f"Could not resolve type {tp!r}: ")  # type: ignore[16]  # pyre
+        member = _type_check(member, f"Could not resolve type {tp!r}: ")  # type: ignore[16]  # pyre
     except TypeError as e:
         raise UnresolvableTypeError(str(e))
     return member
