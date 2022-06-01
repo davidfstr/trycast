@@ -24,14 +24,29 @@ jobs:
       - name: Display Poetry version
         run: poetry --version
 
-      - name: Install dependencies with Poetry
-        run: poetry install
+      - name: Get Poetry version
+        id: poetry-version
+        run: echo "::set-output name=POETRY_VERSION::$(poetry --version | cut -f 3- -d ' ')"
+      
+      # NOTE: Necessary to cache pip files because the cached pypoetry 
+      #       virtualenv does depend on them.
+      - name: Cache pip files
+        id: cache-pip
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key:      pip--os-${{ runner.os }}-python-${{ matrix.python-version }}-poetry-${{ steps.poetry-version.outputs.POETRY_VERSION }}-lock-${{ hashFiles('poetry.lock') }}
 
       - name: Cache installed dependencies
+        id: cache-pypoetry
         uses: actions/cache@v2
         with:
           path: ~/.cache/pypoetry/virtualenvs
-          key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
+          key: pypoetry--os-${{ runner.os }}-python-${{ matrix.python-version }}-poetry-${{ steps.poetry-version.outputs.POETRY_VERSION }}-lock-${{ hashFiles('poetry.lock') }}
+
+      - name: Install dependencies with Poetry
+        if: steps.cache-pypoetry.outputs.cache-hit != 'true'
+        run: poetry install
 
       - name: Lint
         run: poetry run make lint
