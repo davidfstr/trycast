@@ -18,6 +18,13 @@ jobs:
       - name: Display Python version
         run: python -c "import sys; print(sys.version)"
 
+      - name: Display pip version
+        run: python -m pip --version
+
+      - name: Get pip version
+        id: pip-version
+        run: echo "::set-output name=PIP_VERSION::$(python -m pip --version | cut -f 2 -d ' ')"
+
       - name: Install Poetry
         uses: Gr1N/setup-poetry@v7
 
@@ -27,7 +34,7 @@ jobs:
       - name: Get Poetry version
         id: poetry-version
         run: echo "::set-output name=POETRY_VERSION::$(poetry --version | cut -f 3- -d ' ')"
-      
+
       # NOTE: Necessary to cache pip files because the cached pypoetry 
       #       virtualenv does depend on them.
       - name: Cache pip files
@@ -35,17 +42,17 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.cache/pip
-          key:      pip--os-${{ runner.os }}-python-${{ matrix.python-version }}-poetry-${{ steps.poetry-version.outputs.POETRY_VERSION }}-lock-${{ hashFiles('poetry.lock') }}
+          key:      pip--os-${{ runner.os }}-python-${{ matrix.python-version }}-pip-${{ steps.pip-version.outputs.PIP_VERSION }}-poetry-${{ steps.poetry-version.outputs.POETRY_VERSION }}-lock-${{ hashFiles('poetry.lock') }}
 
       - name: Cache installed dependencies
         id: cache-pypoetry
         uses: actions/cache@v2
         with:
           path: ~/.cache/pypoetry/virtualenvs
-          key: pypoetry--os-${{ runner.os }}-python-${{ matrix.python-version }}-poetry-${{ steps.poetry-version.outputs.POETRY_VERSION }}-lock-${{ hashFiles('poetry.lock') }}
+          key: pypoetry--os-${{ runner.os }}-python-${{ matrix.python-version }}-pip-${{ steps.pip-version.outputs.PIP_VERSION }}-poetry-${{ steps.poetry-version.outputs.POETRY_VERSION }}-lock-${{ hashFiles('poetry.lock') }}
 
       - name: Install dependencies with Poetry
-        if: steps.cache-pypoetry.outputs.cache-hit != 'true'
+        if: ${{ (steps.cache-pip.outputs.cache-hit != 'true') || (steps.cache-pypoetry.outputs.cache-hit != 'true') }}
         run: poetry install
 
       - name: Lint
