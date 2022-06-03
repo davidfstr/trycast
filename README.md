@@ -468,7 +468,7 @@ Raises:
 
 * See the [Roadmap](https://github.com/davidfstr/trycast/wiki/Roadmap).
 
-### main
+### v1.0.0
 
 * Extend `trycast()` to recognize more kinds of types:
     * Extend `trycast()` to recognize `set[T]` and `Set[T]` values.
