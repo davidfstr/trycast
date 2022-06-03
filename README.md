@@ -473,16 +473,21 @@ Raises:
 * Extend `trycast()` to recognize more kinds of types:
     * Extend `trycast()` to recognize `set[T]` and `Set[T]` values.
     * Extend `trycast()` to recognize `frozenset[T]` and `FrozenSet[T]` values.
+    * Extend `trycast()` to recognize `Callable` and `Callable[P, R]` types when `P` and `R` only contain `Any`.
     * Extend `trycast()` to recognize `NewType` types when strict=False.
     * Extend `trycast()` to explicitly disallow `TypeVar` types.
     * Extend `trycast()` to explicitly disallow unrecognized `Generic` types.
-* Fix issues with PEP 484 conformance:
+* Fix issues with PEP 484 conformance: **(Breaking change)**
     * `bool` values are now correctly treated as assignable to `int`.
     * `bool`, `int`, and `float` values are now correctly treated as assignable to `complex`.
+* Add support for Python 3.11.
 * Documentation improvements:
+    * Add installation instructions.
+    * Improve differentiation from similar libraries.
     * Document supported typing features & type checkers.
     * Mention that trycast() and isassignable() accept TypeFormString[T]
       in addition to TypeForm[T].
+    * Add developer documentation.
 
 ### v0.7.3
 
