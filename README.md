@@ -157,9 +157,6 @@ differs from similar libraries like pydantic.
 
 ### Why use TypedDict?
 
-Why use typed dictionaries to represent data structures instead of classes,
-named tuples, or other formats?
-
 Typed dictionaries are the natural form that JSON data comes in over the wire.
 They can be trivially serialized and deserialized without any additional logic.
 For applications that use a lot of JSON data - such as web applications - 
