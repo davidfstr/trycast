@@ -24,6 +24,9 @@ classifiers = [  # https://pypi.org/classifiers/
     "Topic :: Software Development"
 ]
 
+[tool.poetry.urls]
+"Release notes" = "https://github.com/davidfstr/trycast#changelog"
+
 [tool.poetry.dependencies]
 # Python 3.7.4 is the minimum Python with typing.ForwardRef
 python = "^3.7.4"
