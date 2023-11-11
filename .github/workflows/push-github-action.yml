@@ -26,7 +26,7 @@ jobs:
         run: echo "::set-output name=PIP_VERSION::$(python -m pip --version | cut -f 2 -d ' ')"
 
       - name: Install Poetry
-        uses: Gr1N/setup-poetry@v7
+        run: pipx install "poetry>=1.4.0,<1.5.0"
 
       - name: Display Poetry version
         run: poetry --version
