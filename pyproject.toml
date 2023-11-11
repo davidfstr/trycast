@@ -32,7 +32,7 @@ classifiers = [  # https://pypi.org/classifiers/
 python = "^3.7.4"
 
 [tool.poetry.dev-dependencies]
-mypy = "^0.950"
+mypy = "*"
 mypy_extensions = "*"
 pyright = "*"
 pyre-check = "*"
