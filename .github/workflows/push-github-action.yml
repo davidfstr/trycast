@@ -39,14 +39,14 @@ jobs:
       #       virtualenv does depend on them.
       - name: Cache pip files
         id: cache-pip
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.cache/pip
           key:      pip--os-${{ runner.os }}-python-${{ matrix.python-version }}-pip-${{ steps.pip-version.outputs.PIP_VERSION }}-poetry-${{ steps.poetry-version.outputs.POETRY_VERSION }}-lock-${{ hashFiles('poetry.lock') }}
 
       - name: Cache installed dependencies
         id: cache-pypoetry
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.cache/pypoetry/virtualenvs
           key: pypoetry--os-${{ runner.os }}-python-${{ matrix.python-version }}-pip-${{ steps.pip-version.outputs.PIP_VERSION }}-poetry-${{ steps.poetry-version.outputs.POETRY_VERSION }}-lock-${{ hashFiles('poetry.lock') }}
