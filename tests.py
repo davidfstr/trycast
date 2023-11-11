@@ -1467,7 +1467,7 @@ class TestTryCast(TestCase):
         self.assertRaisesRegex(
             TypeNotSupportedError,
             "trycast cannot reliably determine whether value matches a TypeVar",
-            lambda: trycast(Tuple[_T, _T], ("str", 123)),
+            lambda: trycast(Tuple[_T, _T], ("str", 123)),  # type: ignore[reportGeneralTypeIssues]  # pyright
         )
 
     # === Special Types: Any, NoReturn ===

@@ -34,7 +34,7 @@ python = "^3.7.4"
 [tool.poetry.dev-dependencies]
 mypy = "^0.950"
 mypy_extensions = "*"
-pyright = "^1.1.245"
+pyright = "*"
 pyre-check = "*"
 pytype = { version = "==2022.3.21", python = ">=3.7.4,<3.10" }
 tox = "^3.23.1"

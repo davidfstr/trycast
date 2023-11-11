@@ -473,14 +473,14 @@ def _trycast_inner(tp, value, failure, options):
     if tp is int:
         # Also accept bools as valid int values
         if isinstance(value, int):
-            return cast(_T, value)
+            return cast(_T, value)  # type: ignore[reportGeneralTypeIssues]  # pyright
         else:
             return failure
 
     if tp is float:
         # Also accept ints and bools as valid float values
         if isinstance(value, float) or isinstance(value, int):
-            return cast(_T, value)
+            return cast(_T, value)  # type: ignore[reportGeneralTypeIssues]  # pyright
         else:
             return failure
 
@@ -491,7 +491,7 @@ def _trycast_inner(tp, value, failure, options):
             or isinstance(value, float)
             or isinstance(value, int)
         ):
-            return cast(_T, value)
+            return cast(_T, value)  # type: ignore[reportGeneralTypeIssues]  # pyright
         else:
             return failure
 
@@ -533,7 +533,7 @@ def _trycast_inner(tp, value, failure, options):
                     if _trycast_inner(T, t, _FAILURE, options) is _FAILURE:
                         return failure
 
-                return cast(_T, value)
+                return cast(_T, value)  # type: ignore[reportGeneralTypeIssues]  # pyright
         else:
             return failure
 
@@ -564,7 +564,7 @@ def _trycast_inner(tp, value, failure, options):
         for T in get_args(tp):
             if _trycast_inner(T, value, _FAILURE, options) is not _FAILURE:  # type: ignore[wrong-arg-types]  # pytype
                 if isinstance(tp, type):
-                    return cast(_T, value)
+                    return cast(_T, value)  # type: ignore[reportGeneralTypeIssues]  # pyright
                 else:
                     return value
         return failure
@@ -573,7 +573,7 @@ def _trycast_inner(tp, value, failure, options):
         for literal in get_args(tp):
             if value == literal:
                 if isinstance(tp, type):
-                    return cast(_T, value)
+                    return cast(_T, value)  # type: ignore[reportGeneralTypeIssues]  # pyright
                 else:
                     return value
         return failure
@@ -583,7 +583,7 @@ def _trycast_inner(tp, value, failure, options):
         if callable_args == ():
             # Callable
             if callable(value):
-                return cast(_T, value)
+                return cast(_T, value)  # type: ignore[reportGeneralTypeIssues]  # pyright
             else:
                 return failure
         else:
@@ -654,7 +654,7 @@ def _trycast_inner(tp, value, failure, options):
                             sig_max_param_count = math.inf
 
                     if sig_min_param_count <= len(param_types) <= sig_max_param_count:
-                        return cast(_T, value)
+                        return cast(_T, value)  # type: ignore[reportGeneralTypeIssues]  # pyright
                     else:
                         return failure
             else:
@@ -706,7 +706,7 @@ def _trycast_inner(tp, value, failure, options):
                 if k not in value:  # type: ignore[unsupported-operands]  # pytype
                     return failure
             if isinstance(tp, type):
-                return cast(_T, value)
+                return cast(_T, value)  # type: ignore[reportGeneralTypeIssues]  # pyright
             else:
                 return value
         else:
@@ -735,7 +735,7 @@ def _trycast_inner(tp, value, failure, options):
 
     if tp is Any:
         if isinstance(tp, type):
-            return cast(_T, value)
+            return cast(_T, value)  # type: ignore[reportGeneralTypeIssues]  # pyright
         else:
             return value
 
@@ -813,7 +813,7 @@ def _trycast_listlike(
                     return failure
 
         if isinstance(tp, type):
-            return cast(_T, value)
+            return cast(_T, value)  # type: ignore[reportGeneralTypeIssues]  # pyright
         else:
             return value
     else:
@@ -868,7 +868,7 @@ def _trycast_dictlike(tp, value, failure, dictlike_type, options, *, covariant_v
                 ):
                     return failure
         if isinstance(tp, type):
-            return cast(_T, value)
+            return cast(_T, value)  # type: ignore[reportGeneralTypeIssues]  # pyright
         else:
             return value
     else:
