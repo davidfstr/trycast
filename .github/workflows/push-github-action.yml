@@ -23,7 +23,7 @@ jobs:
 
       - name: Get pip version
         id: pip-version
-        run: echo "::set-output name=PIP_VERSION::$(python -m pip --version | cut -f 2 -d ' ')"
+        run: echo "PIP_VERSION=$(python -m pip --version | cut -f 2 -d ' ')" >> $GITHUB_OUTPUT
 
       - name: Install Poetry
         run: pipx install "poetry>=1.4.0,<1.5.0"
@@ -33,7 +33,7 @@ jobs:
 
       - name: Get Poetry version
         id: poetry-version
-        run: echo "::set-output name=POETRY_VERSION::$(poetry --version | cut -f 3- -d ' ')"
+        run: echo "POETRY_VERSION=$(poetry --version | cut -f 3- -d ' ')" >> $GITHUB_OUTPUT
 
       # NOTE: Necessary to cache pip files because the cached pypoetry 
       #       virtualenv does depend on them.
