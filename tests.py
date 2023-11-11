@@ -940,19 +940,38 @@ class TestTryCast(TestCase):
             z: int
 
         # Point2D
+        self.assertTryCastFailure(Point2D, {"x": 1})
         self.assertTryCastSuccess(Point2D, {"x": 1, "y": 1})
-        self.assertTryCastFailure(Point2D, {"x": 1, "y": 1, "z": 1})
+        self.assertTryCastFailure(Point2D, {"x": 1, "y": "string"})
+        self.assertTryCastSuccess(Point2D, {"x": 1, "y": 1, "z": 1})
+        self.assertTryCastSuccess(Point2D, {"x": 1, "y": 1, "z": "string"})
 
         # PartialPoint2D
         self.assertTryCastSuccess(PartialPoint2D, {"x": 1, "y": 1})
+        self.assertTryCastFailure(PartialPoint2D, {"x": 1, "y": "string"})
         self.assertTryCastSuccess(PartialPoint2D, {"y": 1})
         self.assertTryCastSuccess(PartialPoint2D, {"x": 1})
         self.assertTryCastSuccess(PartialPoint2D, {})
-        self.assertTryCastFailure(PartialPoint2D, {"x": 1, "y": 1, "z": 1})
+        self.assertTryCastSuccess(PartialPoint2D, {"x": 1, "y": 1, "z": 1})
+        self.assertTryCastSuccess(PartialPoint2D, {"x": 1, "y": 1, "z": "string"})
 
         # Point3D
         self.assertTryCastFailure(Point3D, {"x": 1, "y": 1})
         self.assertTryCastSuccess(Point3D, {"x": 1, "y": 1, "z": 1})
+
+    def test_typeddict_with_extra_keys(self) -> None:
+        class Packet(NativeTypedDict):
+            type: str
+            payload: str
+
+        class PacketWithExtra(Packet):
+            extra: str
+
+        p = PacketWithExtra(type="hello", payload="v1", extra="english")  # type: ignore[28]  # pyre
+        p2: Packet = p
+
+        self.assertTryCastSuccess(PacketWithExtra, p)
+        self.assertTryCastSuccess(Packet, p2)
 
     def test_typeddict_single_inheritance(self) -> None:
         _1 = _BookBasedMovie(
@@ -1182,7 +1201,7 @@ class TestTryCast(TestCase):
                 if key == "name":
                     return self._name
                 else:
-                    raise AttributeError  # pragma: no cover
+                    raise KeyError  # pragma: no cover
 
             def __len__(self) -> int:
                 return 1  # pragma: no cover
@@ -1828,16 +1847,21 @@ class TestTryCast(TestCase):
             name: str
 
         self.assertTryCastSuccess(Point2D, {"x": 1, "y": 2}, strict=False)
+        self.assertTryCastFailure(Point2D, {"x": 1, "y": "string"}, strict=False)
         self.assertTryCastFailure(Point2D, {"x": 1}, strict=False)
 
         self.assertTryCastSuccess(Point3D, {"x": 1, "y": 2, "z": 3}, strict=False)
+        self.assertTryCastFailure(
+            Point3D, {"x": 1, "y": 2, "z": "string"}, strict=False
+        )
         self.assertTryCastSuccess(Point3D, {"x": 1, "y": 2}, strict=False)
         self.assertTryCastSuccess(Point3D, {"x": 1}, strict=False)  # surprise!
-        self.assertTryCastFailure(Point3D, {"q": 1}, strict=False)
+        self.assertTryCastSuccess(Point3D, {"q": 1}, strict=False)  # surprise!
 
         self.assertTryCastSuccess(MaybePoint1D, {"x": 1}, strict=False)
+        self.assertTryCastFailure(MaybePoint1D, {"x": "string"}, strict=False)
         self.assertTryCastSuccess(MaybePoint1D, {}, strict=False)
-        self.assertTryCastFailure(MaybePoint1D, {"q": 1}, strict=False)
+        self.assertTryCastSuccess(MaybePoint1D, {"q": 1}, strict=False)  # surprise!
 
         self.assertTryCastSuccess(
             TaggedMaybePoint1D, {"x": 1, "name": "one"}, strict=False

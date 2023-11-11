@@ -699,7 +699,10 @@ def _trycast_inner(tp, value, failure, options):
 
             for (k, v) in value.items():  # type: ignore[attribute-error]  # pytype
                 V = resolved_annotations.get(k, _MISSING)
-                if V is _MISSING or _trycast_inner(V, v, _FAILURE, options) is _FAILURE:
+                if (
+                    V is not _MISSING
+                    and _trycast_inner(V, v, _FAILURE, options) is _FAILURE
+                ):
                     return failure
 
             for k in required_keys:

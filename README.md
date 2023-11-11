@@ -465,6 +465,12 @@ Raises:
 
 * See the [Roadmap](https://github.com/davidfstr/trycast/wiki/Roadmap).
 
+### v1.1.0
+
+* Fix `trycast()` to recognize TypedDicts with extra keys. ([#19](https://github.com/davidfstr/trycast/issues/19))
+    * This new behavior helps recognize JSON structures with arbitrary additional keys
+      and is consistent with how static typecheckers treat additional keys.
+
 ### v1.0.0
 
 * Extend `trycast()` to recognize more kinds of types:
