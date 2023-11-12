@@ -1,6 +1,6 @@
 # trycast
 
-<img src="https://raw.githubusercontent.com/davidfstr/trycast/main/README/trycast-logo.png" title="trycast logo" align="right" />
+<img src="https://raw.githubusercontent.com/davidfstr/trycast/main/README/trycast-logo.svg" title="trycast logo" align="right" />
 
 Trycast helps parses JSON-like values whose shape is defined by
 [typed dictionaries](https://www.python.org/dev/peps/pep-0589/#abstract)
@@ -470,6 +470,7 @@ Raises:
 * Fix `trycast()` to recognize TypedDicts with extra keys. ([#19](https://github.com/davidfstr/trycast/issues/19))
     * This new behavior helps recognize JSON structures with arbitrary additional keys
       and is consistent with how static typecheckers treat additional keys.
+* Fix magic wand in logo to look more like a magic wand. ([#20](https://github.com/davidfstr/trycast/issues/20))
 
 ### v1.0.0
 
