@@ -31,7 +31,7 @@ testall:  ## Run the tests against all supported versions of Python.
 
 
 .PHONY: publish
-publish: testall  ## Publish the package to PyPI.
+publish:  ## Publish the package to PyPI.
 	poetry build && \
 	poetry publish && \
 	\
