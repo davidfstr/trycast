@@ -16,6 +16,7 @@ from typing import (
     Generic,
     Iterator,
     List,
+    Literal,
     Mapping,
     MutableMapping,
     MutableSequence,
@@ -25,19 +26,17 @@ from typing import (
     Sequence,
     Set,
     Tuple,
-    TypeVar,
-    Union,
-    cast,
 )
+from typing import (
+    TypedDict as NativeTypedDict,  # type: ignore[not-supported-yet]  # pytype
+)
+from typing import TypeVar, Union, cast
 from unittest import TestCase
 
 import mypy_extensions
 
 import test_data.forwardrefs_example
-
-if sys.version_info >= (3, 7):
-    import test_data.forwardrefs_example_with_import_annotations
-
+import test_data.forwardrefs_example_with_import_annotations
 from tests_shape_example import HTTP_400_BAD_REQUEST, draw_shape_endpoint, shapes_drawn
 from trycast import (
     TypeNotSupportedError,
@@ -47,24 +46,6 @@ from trycast import (
 from trycast import __all__ as trycast_all
 from trycast import isassignable, trycast
 
-# Literal
-if sys.version_info >= (3, 8):
-    from typing import Literal  # Python 3.8+
-else:
-    from typing_extensions import Literal  # Python 3.5+
-
-# NativeTypedDict
-if sys.version_info >= (3, 8):
-    # Python 3.8+
-    from typing import (
-        TypedDict as NativeTypedDict,  # type: ignore[not-supported-yet]  # pytype
-    )
-else:
-    # Python 3.5+
-    from typing_extensions import (
-        TypedDict as NativeTypedDict,  # type: ignore[not-supported-yet]  # pytype
-    )
-
 # RichTypedDict
 if sys.version_info >= (3, 9):
     # Python 3.9+
@@ -72,7 +53,7 @@ if sys.version_info >= (3, 9):
         TypedDict as RichTypedDict,  # type: ignore[not-supported-yet]  # pytype
     )
 else:
-    # Python 3.5+
+    # Python 3.8+
     from typing_extensions import TypedDict as RichTypedDict  # type: ignore[not-supported-yet]  # pytype
 
 from typing import _eval_type as eval_type  # type: ignore[attr-defined]
@@ -1694,91 +1675,89 @@ class TestTryCast(TestCase):
 
     # === from __future__ import annotations ===
 
-    if sys.version_info >= (3, 7):
+    def test_types_defined_in_module_with_import_annotations(self) -> None:
+        self.assertTryCastSuccess(
+            test_data.forwardrefs_example_with_import_annotations.Circle,
+            dict(type="circle", center=dict(x=50, y=50), radius=25),
+        )
 
-        def test_types_defined_in_module_with_import_annotations(self) -> None:
-            self.assertTryCastSuccess(
-                test_data.forwardrefs_example_with_import_annotations.Circle,
+        # Top-level stringified Union that has been resolved
+        self.assertTryCastSuccess(
+            eval(
+                test_data.forwardrefs_example_with_import_annotations.Shape,
+                test_data.forwardrefs_example_with_import_annotations.__dict__,
+                None,
+            ),
+            dict(type="circle", center=dict(x=50, y=50), radius=25),
+        )
+
+        # Top-level stringified Union that has NOT been resolved
+        self.assertRaisesRegex(
+            UnresolvableTypeError,
+            "inside module 'builtins'.*?Try altering the type argument to be a string reference",
+            lambda: trycast(
+                test_data.forwardrefs_example_with_import_annotations.Shape,
                 dict(type="circle", center=dict(x=50, y=50), radius=25),
-            )
+            ),
+        )
 
-            # Top-level stringified Union that has been resolved
-            self.assertTryCastSuccess(
-                eval(
-                    test_data.forwardrefs_example_with_import_annotations.Shape,
-                    test_data.forwardrefs_example_with_import_annotations.__dict__,
-                    None,
-                ),
-                dict(type="circle", center=dict(x=50, y=50), radius=25),
-            )
+        # Stringified reference to: Top-level stringified Union
+        self.assertTryCastSuccess(
+            "test_data.forwardrefs_example_with_import_annotations.Shape",
+            dict(type="circle", center=dict(x=50, y=50), radius=25),
+        )
 
-            # Top-level stringified Union that has NOT been resolved
-            self.assertRaisesRegex(
-                UnresolvableTypeError,
-                "inside module 'builtins'.*?Try altering the type argument to be a string reference",
-                lambda: trycast(
-                    test_data.forwardrefs_example_with_import_annotations.Shape,
-                    dict(type="circle", center=dict(x=50, y=50), radius=25),
-                ),
-            )
+        # Top-level stringified List that has been resolved
+        self.assertTryCastSuccess(
+            eval(
+                test_data.forwardrefs_example_with_import_annotations.Scatterplot,
+                test_data.forwardrefs_example_with_import_annotations.__dict__,
+                None,
+            ),
+            [dict(x=50, y=50)],
+        )
 
-            # Stringified reference to: Top-level stringified Union
-            self.assertTryCastSuccess(
-                "test_data.forwardrefs_example_with_import_annotations.Shape",
-                dict(type="circle", center=dict(x=50, y=50), radius=25),
-            )
-
-            # Top-level stringified List that has been resolved
-            self.assertTryCastSuccess(
-                eval(
-                    test_data.forwardrefs_example_with_import_annotations.Scatterplot,
-                    test_data.forwardrefs_example_with_import_annotations.__dict__,
-                    None,
-                ),
+        # Top-level stringified List that has NOT been resolved
+        self.assertRaisesRegex(
+            UnresolvableTypeError,
+            "inside module 'builtins'.*?Try altering the type argument to be a string reference",
+            lambda: trycast(
+                test_data.forwardrefs_example_with_import_annotations.Scatterplot,
                 [dict(x=50, y=50)],
-            )
+            ),
+        )
 
-            # Top-level stringified List that has NOT been resolved
-            self.assertRaisesRegex(
-                UnresolvableTypeError,
-                "inside module 'builtins'.*?Try altering the type argument to be a string reference",
-                lambda: trycast(
-                    test_data.forwardrefs_example_with_import_annotations.Scatterplot,
-                    [dict(x=50, y=50)],
-                ),
-            )
+        # Stringified reference to: Top-level stringified List
+        self.assertTryCastSuccess(
+            "test_data.forwardrefs_example_with_import_annotations.Scatterplot",
+            [dict(x=50, y=50)],
+        )
 
-            # Stringified reference to: Top-level stringified List
-            self.assertTryCastSuccess(
-                "test_data.forwardrefs_example_with_import_annotations.Scatterplot",
-                [dict(x=50, y=50)],
-            )
+        # Top-level stringified Dict that has been resolved
+        self.assertTryCastSuccess(
+            eval(
+                test_data.forwardrefs_example_with_import_annotations.PointForLabel,
+                test_data.forwardrefs_example_with_import_annotations.__dict__,
+                None,
+            ),
+            {"Target": dict(x=50, y=50)},
+        )
 
-            # Top-level stringified Dict that has been resolved
-            self.assertTryCastSuccess(
-                eval(
-                    test_data.forwardrefs_example_with_import_annotations.PointForLabel,
-                    test_data.forwardrefs_example_with_import_annotations.__dict__,
-                    None,
-                ),
+        # Top-level stringified Dict that has NOT been resolved
+        self.assertRaisesRegex(
+            UnresolvableTypeError,
+            "inside module 'builtins'.*?Try altering the type argument to be a string reference",
+            lambda: trycast(
+                test_data.forwardrefs_example_with_import_annotations.PointForLabel,
                 {"Target": dict(x=50, y=50)},
-            )
+            ),
+        )
 
-            # Top-level stringified Dict that has NOT been resolved
-            self.assertRaisesRegex(
-                UnresolvableTypeError,
-                "inside module 'builtins'.*?Try altering the type argument to be a string reference",
-                lambda: trycast(
-                    test_data.forwardrefs_example_with_import_annotations.PointForLabel,
-                    {"Target": dict(x=50, y=50)},
-                ),
-            )
-
-            # Stringified reference to: Top-level stringified Dict
-            self.assertTryCastSuccess(
-                "test_data.forwardrefs_example_with_import_annotations.PointForLabel",
-                {"Target": dict(x=50, y=50)},
-            )
+        # Stringified reference to: Top-level stringified Dict
+        self.assertTryCastSuccess(
+            "test_data.forwardrefs_example_with_import_annotations.PointForLabel",
+            {"Target": dict(x=50, y=50)},
+        )
 
     # === strict=True mode ===
 
@@ -2056,16 +2035,16 @@ class _TypingExtensionsGoneLoader(MetaPathFinder):
 # ------------------------------------------------------------------------------
 # TestIsTypedDict
 
+from typing import (
+    TypedDict as TypingTypedDict,  # type: ignore[not-supported-yet]  # pytype
+)
+
 from trycast import _is_typed_dict
 
-if sys.version_info >= (3, 8):
-    from typing import (
-        TypedDict as TypingTypedDict,  # type: ignore[not-supported-yet]  # pytype
-    )
 
-    class TypingPoint(TypingTypedDict):
-        x: int
-        y: int
+class TypingPoint(TypingTypedDict):
+    x: int
+    y: int
 
 
 from typing_extensions import (
@@ -2084,10 +2063,8 @@ class MypyExtensionsPoint(mypy_extensions.TypedDict):  # type: ignore[reportGene
 
 
 class TestIsTypedDict(TestCase):
-    if sys.version_info >= (3, 8):
-
-        def test_recognizes_typed_dict_from_typing(self) -> None:
-            self.assertTrue(_is_typed_dict(TypingPoint))
+    def test_recognizes_typed_dict_from_typing(self) -> None:
+        self.assertTrue(_is_typed_dict(TypingPoint))
 
     def test_recognizes_typed_dict_from_typing_extensions(self) -> None:
         self.assertTrue(_is_typed_dict(TypingExtensionsPoint))
