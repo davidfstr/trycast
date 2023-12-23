@@ -55,7 +55,9 @@ try:
     from typing_extensions import get_type_hints  # type: ignore[attr-defined]
 except ImportError:
     # If typing_extensions not available
-    from typing import get_type_hints  # type: ignore[misc, assignment]  # incompatible import
+    from typing import (  # type: ignore[misc, assignment]  # incompatible import
+        get_type_hints,
+    )
 
 
 # TypeGuard
@@ -248,36 +250,46 @@ _FAILURE = object()
 # def trycast(tp: TypeForm[_T], value: object) -> Optional[_T]: ...
 
 
+# Overload: (tp: str, eval: Literal[False]) -> NoReturn
+
+
 @overload
 def trycast(  # type: ignore[43]  # pyre
-    tp: str, value: object, *, strict: bool = True, eval: Literal[False]
+    tp: str, value: object, /, *, strict: bool = True, eval: Literal[False]
 ) -> NoReturn:
     ...  # pragma: no cover
 
 
+# Overload Group: (tp: str|Type[_T]|object, value: object) -> ...
+
+
 @overload
-def trycast(tp: str, value: object, *, strict: bool = True, eval: bool = True) -> bool:  # type: ignore[43]  # pyre
+def trycast(tp: str, value: object, /, *, strict: bool = True, eval: bool = True) -> bool:  # type: ignore[43]  # pyre
     ...  # pragma: no cover
 
 
 @overload
 def trycast(  # type: ignore[43]  # pyre
-    tp: Type[_T], value: object, *, strict: bool = True, eval: bool = True
+    tp: Type[_T], value: object, /, *, strict: bool = True, eval: bool = True
 ) -> Optional[_T]:
     ...  # pragma: no cover
 
 
 @overload
 def trycast(  # type: ignore[43]  # pyre
-    tp: object, value: object, *, strict: bool = True, eval: bool = True
+    tp: object, value: object, /, *, strict: bool = True, eval: bool = True
 ) -> Optional[object]:
     ...  # pragma: no cover
+
+
+# Overload Group: (tp: str|Type[_T]|object, value: object, failure: object) -> ...
 
 
 @overload
 def trycast(
     tp: str,
     value: object,
+    /,
     failure: object,
     *,
     strict: bool = True,
@@ -288,19 +300,28 @@ def trycast(
 
 @overload
 def trycast(
-    tp: Type[_T], value: object, failure: _F, *, strict: bool = True, eval: bool = True
+    tp: Type[_T],
+    value: object,
+    /,
+    failure: _F,
+    *,
+    strict: bool = True,
+    eval: bool = True,
 ) -> Union[_T, _F]:
     ...  # pragma: no cover
 
 
 @overload
 def trycast(
-    tp: object, value: object, failure: _F, *, strict: bool = True, eval: bool = True
+    tp: object, value: object, /, failure: _F, *, strict: bool = True, eval: bool = True
 ) -> Union[object, _F]:
     ...  # pragma: no cover
 
 
-def trycast(tp, value, failure=None, *, strict=True, eval=True):
+# Implementation
+
+
+def trycast(tp, value, /, failure=None, *, strict=True, eval=True):
     """
     If `value` is in the shape of `tp` (as accepted by a Python typechecker
     conforming to PEP 484 "Type Hints") then returns it, otherwise returns

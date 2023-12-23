@@ -467,8 +467,11 @@ Raises:
 
 ### main
 
-* Drop support for Python 3.7.
 * Add support for Python 3.12.
+* Drop support for Python 3.7. ([#21](https://github.com/davidfstr/trycast/issues/21))
+* Enforce that calls to `trycast()` pass the first 2 arguments in
+  positional fashion like `trycast(T, value)` and not in a named fashion
+  like `trycast(tp=T, value=value)`. ([#18](https://github.com/davidfstr/trycast/issues/18))
 
 ### v1.1.0
 
