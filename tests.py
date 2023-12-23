@@ -1766,7 +1766,7 @@ class TestTryCast(TestCase):
             x: int
             y: int
 
-        class Point3D(Point2D, total=False):
+        class Point3D(Point2D, total=False):  # type: ignore[reportGeneralTypeIssues]  # pyright
             z: int
 
         self.assertRaisesRegex(
@@ -1816,7 +1816,7 @@ class TestTryCast(TestCase):
         #       which of Point3D's inherited fields from Point2D are required.
         #       So trycast() guesses (incorrectly) that ALL fields of Point3D
         #       are not-required because Point3D is declared as total=False.
-        class Point3D(Point2D, total=False):
+        class Point3D(Point2D, total=False):  # type: ignore[reportGeneralTypeIssues]  # pyright
             z: int
 
         class MaybePoint1D(mypy_extensions.TypedDict, total=False):  # type: ignore[reportGeneralTypeIssues]  # pyright
