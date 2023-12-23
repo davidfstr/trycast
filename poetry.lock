@@ -57,7 +57,6 @@ mypy-extensions = ">=0.4.3"
 pathspec = ">=0.9.0"
 platformdirs = ">=2"
 tomli = {version = ">=1.1.0", markers = "python_version < \"3.11\""}
-typed-ast = {version = ">=1.4.2", markers = "python_version < \"3.8\" and implementation_name == \"cpython\""}
 typing-extensions = {version = ">=3.10.0.0", markers = "python_version < \"3.10\""}
 
 [package.extras]
@@ -80,7 +79,6 @@ files = [
 
 [package.dependencies]
 colorama = {version = "*", markers = "platform_system == \"Windows\""}
-importlib-metadata = {version = "*", markers = "python_version < \"3.8\""}
 
 [[package]]
 name = "colorama"
@@ -209,7 +207,6 @@ files = [
 ]
 
 [package.dependencies]
-importlib-metadata = {version = "*", markers = "python_version < \"3.8\""}
 mccabe = ">=0.6.0,<0.7.0"
 pycodestyle = ">=2.7.0,<2.8.0"
 pyflakes = ">=2.3.0,<2.4.0"
@@ -229,27 +226,6 @@ files = [
 networkx = ">=2"
 
 [[package]]
-name = "importlib-metadata"
-version = "4.11.3"
-description = "Read metadata from Python packages"
-category = "dev"
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "importlib_metadata-4.11.3-py3-none-any.whl", hash = "sha256:1208431ca90a8cca1a6b8af391bb53c1a2db74e5d1cef6ddced95d4b2062edc6"},
-    {file = "importlib_metadata-4.11.3.tar.gz", hash = "sha256:ea4c597ebf37142f827b8f39299579e31685c31d3a438b59f469406afd0f2539"},
-]
-
-[package.dependencies]
-typing-extensions = {version = ">=3.6.4", markers = "python_version < \"3.8\""}
-zipp = ">=0.5"
-
-[package.extras]
-docs = ["jaraco.packaging (>=9)", "rst.linker (>=1.9)", "sphinx"]
-perf = ["ipython"]
-testing = ["flufl.flake8", "importlib-resources (>=1.3)", "packaging", "pyfakefs", "pytest (>=6)", "pytest-black (>=0.3.7)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=1.0.1)", "pytest-flake8", "pytest-mypy (>=0.9.1)", "pytest-perf (>=0.9.2)"]
-
-[[package]]
 name = "intervaltree"
 version = "3.1.0"
 description = "Editable interval tree data structure for Python 2 and 3"
@@ -265,21 +241,18 @@ sortedcontainers = ">=2.0,<3.0"
 
 [[package]]
 name = "isort"
-version = "5.10.1"
+version = "5.13.2"
 description = "A Python utility / library to sort Python imports."
 category = "dev"
 optional = false
-python-versions = ">=3.6.1,<4.0"
+python-versions = ">=3.8.0"
 files = [
-    {file = "isort-5.10.1-py3-none-any.whl", hash = "sha256:6f62d78e2f89b4500b080fe3a81690850cd254227f27f75c3a0c491a1f351ba7"},
-    {file = "isort-5.10.1.tar.gz", hash = "sha256:e8443a5e7a020e9d7f97f1d7d9cd17c88bcb3bc7e218bf9cf5095fe550be2951"},
+    {file = "isort-5.13.2-py3-none-any.whl", hash = "sha256:8ca5e72a8d85860d5a3fa69b8745237f2939afe12dbf656afbcb47fe72d947a6"},
+    {file = "isort-5.13.2.tar.gz", hash = "sha256:48fdfcb9face5d58a4f6dde2e72a1fb8dcaf8ab26f95ab49fab84c2ddefb0109"},
 ]
 
 [package.extras]
-colors = ["colorama (>=0.4.3,<0.5.0)"]
-pipfile-deprecated-finder = ["pipreqs", "requirementslib"]
-plugins = ["setuptools"]
-requirements-deprecated-finder = ["pip-api", "pipreqs"]
+colors = ["colorama (>=0.4.6)"]
 
 [[package]]
 name = "libcst"
@@ -410,7 +383,6 @@ files = [
 [package.dependencies]
 mypy-extensions = ">=1.0.0"
 tomli = {version = ">=1.1.0", markers = "python_version < \"3.11\""}
-typed-ast = {version = ">=1.4.0,<2", markers = "python_version < \"3.8\""}
 typing-extensions = ">=4.1.0"
 
 [package.extras]
@@ -543,9 +515,6 @@ files = [
     {file = "pluggy-1.0.0-py2.py3-none-any.whl", hash = "sha256:74134bbf457f031a36d68416e1509f34bd5ccc019f0bcc952c7b909d06b37bd3"},
     {file = "pluggy-1.0.0.tar.gz", hash = "sha256:4224373bacce55f955a878bf9cfa763c1e360858e330072059e10bad68531159"},
 ]
-
-[package.dependencies]
-importlib-metadata = {version = ">=0.12", markers = "python_version < \"3.8\""}
 
 [package.extras]
 dev = ["pre-commit", "tox"]
@@ -713,7 +682,6 @@ files = [
 
 [package.dependencies]
 nodeenv = ">=1.6.0"
-typing-extensions = {version = ">=3.7", markers = "python_version < \"3.8\""}
 
 [package.extras]
 all = ["twine (>=3.4.1)"]
@@ -746,7 +714,6 @@ libcst = "*"
 ninja = ">=1.10.0.post2"
 tabulate = "*"
 toml = "*"
-typed-ast = {version = ">=1.5.0", markers = "python_version < \"3.8\""}
 
 [[package]]
 name = "pyyaml"
@@ -895,7 +862,6 @@ files = [
 [package.dependencies]
 colorama = {version = ">=0.4.1", markers = "platform_system == \"Windows\""}
 filelock = ">=3.0.0"
-importlib-metadata = {version = ">=0.12", markers = "python_version < \"3.8\""}
 packaging = ">=14"
 pluggy = ">=0.12.0"
 py = ">=1.4.17"
@@ -906,40 +872,6 @@ virtualenv = ">=16.0.0,<20.0.0 || >20.0.0,<20.0.1 || >20.0.1,<20.0.2 || >20.0.2,
 [package.extras]
 docs = ["pygments-github-lexers (>=0.0.5)", "sphinx (>=2.0.0)", "sphinxcontrib-autoprogram (>=0.1.5)", "towncrier (>=18.5.0)"]
 testing = ["flaky (>=3.4.0)", "freezegun (>=0.3.11)", "pathlib2 (>=2.3.3)", "psutil (>=5.6.1)", "pytest (>=4.0.0)", "pytest-cov (>=2.5.1)", "pytest-mock (>=1.10.0)", "pytest-randomly (>=1.0.0)"]
-
-[[package]]
-name = "typed-ast"
-version = "1.5.3"
-description = "a fork of Python 2 and 3 ast modules with type comment support"
-category = "dev"
-optional = false
-python-versions = ">=3.6"
-files = [
-    {file = "typed_ast-1.5.3-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:9ad3b48cf2b487be140072fb86feff36801487d4abb7382bb1929aaac80638ea"},
-    {file = "typed_ast-1.5.3-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:542cd732351ba8235f20faa0fc7398946fe1a57f2cdb289e5497e1e7f48cfedb"},
-    {file = "typed_ast-1.5.3-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:5dc2c11ae59003d4a26dda637222d9ae924387f96acae9492df663843aefad55"},
-    {file = "typed_ast-1.5.3-cp310-cp310-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:fd5df1313915dbd70eaaa88c19030b441742e8b05e6103c631c83b75e0435ccc"},
-    {file = "typed_ast-1.5.3-cp310-cp310-win_amd64.whl", hash = "sha256:e34f9b9e61333ecb0f7d79c21c28aa5cd63bec15cb7e1310d7d3da6ce886bc9b"},
-    {file = "typed_ast-1.5.3-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:f818c5b81966d4728fec14caa338e30a70dfc3da577984d38f97816c4b3071ec"},
-    {file = "typed_ast-1.5.3-cp36-cp36m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:3042bfc9ca118712c9809201f55355479cfcdc17449f9f8db5e744e9625c6805"},
-    {file = "typed_ast-1.5.3-cp36-cp36m-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:4fff9fdcce59dc61ec1b317bdb319f8f4e6b69ebbe61193ae0a60c5f9333dc49"},
-    {file = "typed_ast-1.5.3-cp36-cp36m-win_amd64.whl", hash = "sha256:8e0b8528838ffd426fea8d18bde4c73bcb4167218998cc8b9ee0a0f2bfe678a6"},
-    {file = "typed_ast-1.5.3-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:8ef1d96ad05a291f5c36895d86d1375c0ee70595b90f6bb5f5fdbee749b146db"},
-    {file = "typed_ast-1.5.3-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:ed44e81517364cb5ba367e4f68fca01fba42a7a4690d40c07886586ac267d9b9"},
-    {file = "typed_ast-1.5.3-cp37-cp37m-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:f60d9de0d087454c91b3999a296d0c4558c1666771e3460621875021bf899af9"},
-    {file = "typed_ast-1.5.3-cp37-cp37m-win_amd64.whl", hash = "sha256:9e237e74fd321a55c90eee9bc5d44be976979ad38a29bbd734148295c1ce7617"},
-    {file = "typed_ast-1.5.3-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:ee852185964744987609b40aee1d2eb81502ae63ee8eef614558f96a56c1902d"},
-    {file = "typed_ast-1.5.3-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:27e46cdd01d6c3a0dd8f728b6a938a6751f7bd324817501c15fb056307f918c6"},
-    {file = "typed_ast-1.5.3-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:d64dabc6336ddc10373922a146fa2256043b3b43e61f28961caec2a5207c56d5"},
-    {file = "typed_ast-1.5.3-cp38-cp38-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:8cdf91b0c466a6c43f36c1964772918a2c04cfa83df8001ff32a89e357f8eb06"},
-    {file = "typed_ast-1.5.3-cp38-cp38-win_amd64.whl", hash = "sha256:9cc9e1457e1feb06b075c8ef8aeb046a28ec351b1958b42c7c31c989c841403a"},
-    {file = "typed_ast-1.5.3-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:e20d196815eeffb3d76b75223e8ffed124e65ee62097e4e73afb5fec6b993e7a"},
-    {file = "typed_ast-1.5.3-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:37e5349d1d5de2f4763d534ccb26809d1c24b180a477659a12c4bde9dd677d74"},
-    {file = "typed_ast-1.5.3-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:c9f1a27592fac87daa4e3f16538713d705599b0a27dfe25518b80b6b017f0a6d"},
-    {file = "typed_ast-1.5.3-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:8831479695eadc8b5ffed06fdfb3e424adc37962a75925668deeb503f446c0a3"},
-    {file = "typed_ast-1.5.3-cp39-cp39-win_amd64.whl", hash = "sha256:20d5118e494478ef2d3a2702d964dae830aedd7b4d3b626d003eea526be18718"},
-    {file = "typed_ast-1.5.3.tar.gz", hash = "sha256:27f25232e2dd0edfe1f019d6bfaaf11e86e657d9bdb7b0956db95f560cceb2b3"},
-]
 
 [[package]]
 name = "typeguard"
@@ -1001,7 +933,6 @@ files = [
 [package.dependencies]
 distlib = ">=0.3.1,<1"
 filelock = ">=3.2,<4"
-importlib-metadata = {version = ">=0.12", markers = "python_version < \"3.8\""}
 platformdirs = ">=2,<3"
 six = ">=1.9.0,<2"
 
@@ -1009,23 +940,7 @@ six = ">=1.9.0,<2"
 docs = ["proselint (>=0.10.2)", "sphinx (>=3)", "sphinx-argparse (>=0.2.5)", "sphinx-rtd-theme (>=0.4.3)", "towncrier (>=21.3)"]
 testing = ["coverage (>=4)", "coverage-enable-subprocess (>=1)", "flaky (>=3)", "packaging (>=20.0)", "pytest (>=4)", "pytest-env (>=0.6.2)", "pytest-freezegun (>=0.4.1)", "pytest-mock (>=2)", "pytest-randomly (>=1)", "pytest-timeout (>=1)"]
 
-[[package]]
-name = "zipp"
-version = "3.8.0"
-description = "Backport of pathlib-compatible object wrapper for zip files"
-category = "dev"
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "zipp-3.8.0-py3-none-any.whl", hash = "sha256:c4f6e5bbf48e74f7a38e7cc5b0480ff42b0ae5178957d564d18932525d5cf099"},
-    {file = "zipp-3.8.0.tar.gz", hash = "sha256:56bf8aadb83c24db6c4b577e13de374ccfb67da2078beba1d037c17980bf43ad"},
-]
-
-[package.extras]
-docs = ["jaraco.packaging (>=9)", "rst.linker (>=1.9)", "sphinx"]
-testing = ["func-timeout", "jaraco.itertools", "pytest (>=6)", "pytest-black (>=0.3.7)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=1.0.1)", "pytest-flake8", "pytest-mypy (>=0.9.1)"]
-
 [metadata]
 lock-version = "2.0"
-python-versions = "^3.7.4"
-content-hash = "ced1a90e4102ba09d5f3cbad226f14fb770d5bcf2519d330dd401fbfa1ebb280"
+python-versions = ">=3.8"
+content-hash = "4a829f0a62eadfab499a3feecad63d0d501f326b1e2b959c3c2ed408b0134770"
