@@ -55,7 +55,7 @@ try:
     from typing_extensions import get_type_hints  # type: ignore[attr-defined]
 except ImportError:
     # If typing_extensions not available
-    from typing import get_type_hints  # type: ignore[misc]  # incompatible import
+    from typing import get_type_hints  # type: ignore[misc, assignment]  # incompatible import
 
 
 # TypeGuard
