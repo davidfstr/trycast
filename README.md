@@ -468,6 +468,7 @@ Raises:
 ### main
 
 * Drop support for Python 3.7.
+* Add support for Python 3.12.
 
 ### v1.1.0
 
