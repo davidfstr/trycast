@@ -16,7 +16,6 @@ classifiers = [  # https://pypi.org/classifiers/
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
@@ -28,8 +27,7 @@ classifiers = [  # https://pypi.org/classifiers/
 "Release notes" = "https://github.com/davidfstr/trycast#changelog"
 
 [tool.poetry.dependencies]
-# Python 3.7.4 is the minimum Python with typing.ForwardRef
-python = "^3.7.4"
+python = ">=3.8"
 
 [tool.poetry.dev-dependencies]
 mypy = "*"
@@ -80,7 +78,7 @@ line_length = 88
 legacy_tox_ini = """
 
 [tox]
-envlist = py37,py38,py39,py310
+envlist = py38,py39,py310
 isolated_build = True
 
 [testenv]

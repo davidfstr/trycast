@@ -21,6 +21,7 @@ from typing import (
     Dict,
     FrozenSet,
     List,
+    Literal,
     Mapping,
     MutableMapping,
     MutableSequence,
@@ -37,7 +38,7 @@ from typing import (
 )
 from typing import _eval_type as eval_type  # type: ignore[attr-defined]
 from typing import _type_repr as type_repr  # type: ignore[attr-defined]
-from typing import cast, overload
+from typing import cast, get_args, get_origin, overload
 
 try:
     from types import UnionType  # type: ignore[attr-defined]
@@ -49,24 +50,12 @@ except ImportError:
 
 # get_type_hints
 try:
-    # Python 3.7+
+    # If typing_extensions available,
+    # understands both typing.* and typing_extensions.* types
     from typing_extensions import get_type_hints  # type: ignore[attr-defined]
 except ImportError:
-    # Python 3.6
+    # If typing_extensions not available
     from typing import get_type_hints  # type: ignore[misc]  # incompatible import
-
-# Literal
-if sys.version_info >= (3, 8):
-    from typing import Literal  # Python 3.8+
-else:
-    try:
-        from typing_extensions import Literal  # Python 3.5+
-    except ImportError:
-        if not TYPE_CHECKING:
-
-            class Literal:
-                def __class_getitem__(cls, key):
-                    pass
 
 
 # TypeGuard
@@ -83,28 +72,6 @@ else:
             class TypeGuard:
                 def __class_getitem__(cls, key):
                     return bool
-
-
-# get_origin, get_args
-if sys.version_info >= (3, 8):
-    from typing import get_args, get_origin  # Python 3.8+
-
-elif sys.version_info >= (3, 7):
-
-    def get_origin(tp: object) -> Optional[object]:
-        if isinstance(tp, _GenericAlias):  # type: ignore[16]  # pyre
-            return tp.__origin__  # type: ignore[reportGeneralTypeIssues]  # pyright
-        else:
-            return None
-
-    def get_args(tp: object) -> Tuple[object, ...]:
-        if isinstance(tp, _GenericAlias):  # type: ignore[16]  # pyre
-            return tp.__args__  # type: ignore[reportGeneralTypeIssues]  # pyright
-        else:
-            return ()
-
-else:  # pragma: no cover
-    raise ImportError("Expected Python 3.7 or later.")
 
 
 # _is_typed_dict
@@ -145,7 +112,7 @@ def _is_typed_dict(tp: object) -> bool:
 
 # _is_newtype
 if NewType.__class__.__name__ == "function":  # type: ignore[reportGeneralTypeIssues]  # pyright
-    # Python 3.7 - 3.9
+    # Python 3.8 - 3.9
     def _is_newtype(tp: object) -> bool:
         return (
             hasattr(tp, "__class__")
@@ -587,16 +554,6 @@ def _trycast_inner(tp, value, failure, options):
             else:
                 return failure
         else:
-            if len(callable_args) != 2 or (
-                callable_args[0] is not Ellipsis
-                and not isinstance(callable_args[0], list)
-            ):
-                # Python 3.7
-                callable_args = (
-                    list(callable_args[: len(callable_args) - 1]),
-                    callable_args[len(callable_args) - 1],
-                )
-
             assert len(callable_args) == 2
             (param_types, return_type) = callable_args
 

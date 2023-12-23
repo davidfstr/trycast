@@ -465,6 +465,10 @@ Raises:
 
 * See the [Roadmap](https://github.com/davidfstr/trycast/wiki/Roadmap).
 
+### main
+
+* Drop support for Python 3.7.
+
 ### v1.1.0
 
 * Fix `trycast()` to recognize TypedDicts with extra keys. ([#19](https://github.com/davidfstr/trycast/issues/19))
