@@ -880,26 +880,26 @@ def _is_simple_typevar(T: object, covariant: bool = False) -> bool:
 
 
 @overload
-def isassignable(value: object, tp: str, *, eval: Literal[False]) -> NoReturn:
+def isassignable(value: object, tp: str, /, *, eval: Literal[False]) -> NoReturn:
     ...  # pragma: no cover
 
 
 @overload
-def isassignable(value: object, tp: str, *, eval: bool = True) -> bool:
+def isassignable(value: object, tp: str, /, *, eval: bool = True) -> bool:
     ...  # pragma: no cover
 
 
 @overload
-def isassignable(value: object, tp: Type[_T], *, eval: bool = True) -> TypeGuard[_T]:  # type: ignore[invalid-annotation]  # pytype
+def isassignable(value: object, tp: Type[_T], /, *, eval: bool = True) -> TypeGuard[_T]:  # type: ignore[invalid-annotation]  # pytype
     ...  # pragma: no cover
 
 
 @overload
-def isassignable(value: object, tp: object, *, eval: bool = True) -> bool:
+def isassignable(value: object, tp: object, /, *, eval: bool = True) -> bool:
     ...  # pragma: no cover
 
 
-def isassignable(value, tp, *, eval=True):
+def isassignable(value, tp, /, *, eval=True):
     """
     Returns whether `value` is in the shape of `tp`
     (as accepted by a Python typechecker conforming to PEP 484 "Type Hints").
@@ -981,7 +981,7 @@ _EXTRA_ADVISE_IF_MOD_IS_BUILTINS = (
 
 
 @functools.lru_cache()
-def eval_type_str(tp: str) -> object:
+def eval_type_str(tp: str, /) -> object:
     """
     Resolves a string-reference to a type that can be imported,
     such as `'typing.List'`.

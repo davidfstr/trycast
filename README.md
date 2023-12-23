@@ -406,7 +406,7 @@ Footnotes:
 def isassignable(
     value: object,
     tp: TypeForm[T]† | TypeFormString[T]‡,
-    *, eval: bool = True
+    /, *, eval: bool = True
 ) -> TypeGuard[T]: ...
 ```
 
@@ -472,6 +472,9 @@ Raises:
 * Enforce that calls to `trycast()` pass the first 2 arguments in
   positional fashion like `trycast(T, value)` and not in a named fashion
   like `trycast(tp=T, value=value)`. ([#18](https://github.com/davidfstr/trycast/issues/18))
+* Enforce that calls to `isassignable()` pass the first 2 arguments in
+  positional fashion like `isassignable(value, T)` and not in a named fashion
+  like `isassignable(value=value, tp=T)`. **(Breaking change)**
 
 ### v1.1.0
 
