@@ -5,7 +5,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        # All available versions of Python:
+        # https://github.com/actions/python-versions/blob/main/versions-manifest.json
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13.0-alpha.5"]
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
