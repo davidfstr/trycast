@@ -31,7 +31,7 @@ from typing import (
     TypedDict as NativeTypedDict,  # type: ignore[not-supported-yet]  # pytype
 )
 from typing import TypeVar, Union, cast
-from unittest import TestCase
+from unittest import SkipTest, TestCase
 
 import mypy_extensions
 
@@ -57,6 +57,8 @@ else:
     from typing_extensions import TypedDict as RichTypedDict  # type: ignore[not-supported-yet]  # pytype
 
 from typing import _eval_type as eval_type  # type: ignore[attr-defined]
+
+from typing_extensions import ParamSpec
 
 _FAILURE = object()
 
@@ -2132,8 +2134,33 @@ class TestIsAssignable(TestCase):
 # ------------------------------------------------------------------------------
 # TestTypechecks
 
+_P = ParamSpec("_P")
+
+
+def _tag(tag_name: str) -> Callable[[Callable[_P, _R]], Callable[_P, _R]]:  # type: ignore[34]  # pyre
+    """
+    Adds a tag to a test method, so that it can be skipped using the
+    TRYCAST_SKIP_TEST_TAGS environment variable.
+
+    Examples:
+        $ TRYCAST_SKIP_TEST_TAGS=pyright,pyre make test
+    or
+        $ TRYCAST_SKIP_TEST_TAGS=pyright,pyre python -m unittest
+    """
+
+    def decorate(f: Callable[_P, _R]) -> Callable[_P, _R]:
+        def decorated(*args: _P.args, **kwargs: _P.kwargs) -> _R:
+            if tag_name in os.environ.get("TRYCAST_SKIP_TEST_TAGS", "").split(","):
+                raise SkipTest(f"skipping test tagged {tag_name}")
+            return f(*args, **kwargs)
+
+        return decorated
+
+    return decorate
+
 
 class TestTypechecks(TestCase):
+    @_tag("mypy")
     def test_no_mypy_typechecker_errors_exist(self) -> None:
         try:
             subprocess.check_output(
@@ -2148,6 +2175,7 @@ class TestTypechecks(TestCase):
 
     # TODO: This test runs very slowly (4.8 seconds on @davidfstr's laptop).
     #       Investigate way to configure pyright to have a faster startup time.
+    @_tag("pyright")
     def test_no_pyright_typechecker_errors_exist(self) -> None:
         try:
             subprocess.check_output(
@@ -2160,6 +2188,7 @@ class TestTypechecks(TestCase):
                 f'pyright typechecking failed:\n\n{e.output.decode("utf-8").strip()}'
             )
 
+    @_tag("pyre")
     def test_no_pyre_typechecker_errors_exist(self) -> None:
         try:
             subprocess.check_output(
@@ -2181,6 +2210,7 @@ class TestTypechecks(TestCase):
 
             self.fail(f"pyre typechecking failed:\n\n{output_str}")
 
+    @_tag("pytype")
     def test_no_pytype_typechecker_errors_exist(self) -> None:
         try:
             subprocess.check_output(
