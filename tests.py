@@ -1354,9 +1354,12 @@ class TestTryCast(TestCase):
             self.assertTryCastFailure(Callable[[], Any], _CallableObjectWithOneArg())  # type: ignore[6]  # pyre
             self.assertTryCastFailure(Callable[[], Any], _TypeWithOneArgConstructor)  # type: ignore[6]  # pyre
 
-            # NOTE: Cannot introspect constructor for certain built-in types
-            # TODO: Define __signature__ for failing internal types
-            self.assertTryCastFailure(Callable[[], Any], bool)  # type: ignore[6]  # pyre
+            # NOTE: Cannot introspect constructor for certain built-in types lacking __signature__.
+            #       See: https://github.com/davidfstr/trycast/issues/15
+            if sys.version_info >= (3, 13):
+                self.assertTryCastSuccess(Callable[[], Any], bool)  # type: ignore[6]  # pyre
+            else:
+                self.assertTryCastFailure(Callable[[], Any], bool)  # type: ignore[6]  # pyre
             self.assertTryCastFailure(Callable[[], Any], int)  # type: ignore[6]  # pyre
             self.assertTryCastSuccess(Callable[[], Any], float)  # type: ignore[6]  # pyre
             self.assertTryCastSuccess(Callable[[], Any], complex)  # type: ignore[6]  # pyre
@@ -1380,9 +1383,12 @@ class TestTryCast(TestCase):
             )
             self.assertTryCastFailure(Callable[[Any], Any], _TypeWithZeroArgConstructor)  # type: ignore[6]  # pyre
 
-            # NOTE: Cannot introspect constructor for certain built-in types
-            # TODO: Define __signature__ for failing internal types
-            self.assertTryCastFailure(Callable[[Any], Any], bool)  # type: ignore[6]  # pyre
+            # NOTE: Cannot introspect constructor for certain built-in types lacking __signature__.
+            #       See: https://github.com/davidfstr/trycast/issues/15
+            if sys.version_info >= (3, 13):
+                self.assertTryCastSuccess(Callable[[Any], Any], bool)  # type: ignore[6]  # pyre
+            else:
+                self.assertTryCastFailure(Callable[[Any], Any], bool)  # type: ignore[6]  # pyre
             self.assertTryCastFailure(Callable[[Any], Any], int)  # type: ignore[6]  # pyre
             self.assertTryCastSuccess(Callable[[Any], Any], float)  # type: ignore[6]  # pyre
             self.assertTryCastSuccess(Callable[[Any], Any], complex)  # type: ignore[6]  # pyre
