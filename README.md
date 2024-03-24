@@ -416,7 +416,7 @@ Returns whether `value` is in the shape of `tp`
 This method logically performs an operation similar to:
 
 ```
-return isinstance(tp, value)
+return isinstance(value, tp)
 ```
 
 except that it supports many more types than `isinstance`, including:
@@ -428,17 +428,25 @@ except that it supports many more types than `isinstance`, including:
 * Literal[...]
 * T extends TypedDict
 
-Note that unlike isinstance(), this method does NOT consider bool values
-to be valid int values, as consistent with Python typecheckers:
+Similar to isinstance(), this method considers every bool value to
+also be a valid int value, as consistent with Python typecheckers:
 
-> isassignable(False, int) -> False
+> isassignable(False, int) -> True
 > isinstance(False, int) -> True
 
 Note that unlike isinstance(), this method considers every int value to
-also be a valid float value, as consistent with Python typecheckers:
+also be a valid float or complex value, as consistent with Python typecheckers:
 
 > isassignable(1, float) -> True
+> isassignable(1, complex) -> True
 > isinstance(1, float) -> False
+> isinstance(1, complex) -> False
+
+Note that unlike isinstance(), this method considers every float value to
+also be a valid complex value, as consistent with Python typecheckers:
+
+> isassignable(1.0, complex) -> True
+> isinstance(1.0, complex) -> False
 
 Parameters:
 * **eval** --
