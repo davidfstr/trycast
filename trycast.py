@@ -223,6 +223,7 @@ else:
 
 __all__ = (
     "trycast",
+    "checkcast",
     "isassignable",
     # NOTE: May be part of the API in the future
     # "eval_type_str",
@@ -235,10 +236,24 @@ _SimpleTypeVar = TypeVar("_SimpleTypeVar")
 _SimpleTypeVarCo = TypeVar("_SimpleTypeVarCo", covariant=True)  # type: ignore[not-supported-yet]  # pytest
 
 _MISSING = object()
-_FAILURE = object()
 
 # ------------------------------------------------------------------------------
 # trycast
+
+# TODO: Add type annotations
+
+
+def trycast(tp, value, /, failure=None, *, strict=True, eval=True):
+    try:
+        checkcast(tp, value, strict=strict, eval=eval, _funcname="trycast")
+    except ValidationError:
+        return failure
+    else:
+        return value
+
+
+# ------------------------------------------------------------------------------
+# checkcast
 
 # TODO: Once support for TypeForm is implemented in mypy,
 #       replace the   `(Type[T]) -> Optional[T]` overload
@@ -247,15 +262,21 @@ _FAILURE = object()
 #
 #       See: https://github.com/python/mypy/issues/9773
 # @overload
-# def trycast(tp: TypeForm[_T], value: object) -> Optional[_T]: ...
+# def checkcast(tp: TypeForm[_T], value: object) -> Optional[_T]: ...
 
 
 # Overload: (tp: str, eval: Literal[False]) -> NoReturn
 
 
 @overload
-def trycast(  # type: ignore[43]  # pyre
-    tp: str, value: object, /, *, strict: bool = True, eval: Literal[False]
+def checkcast(  # type: ignore[43]  # pyre
+    tp: str,
+    value: object,
+    /,
+    *,
+    strict: bool = True,
+    eval: Literal[False],
+    _funcname: str = "checkcast",
 ) -> NoReturn:
     ...  # pragma: no cover
 
@@ -264,72 +285,51 @@ def trycast(  # type: ignore[43]  # pyre
 
 
 @overload
-def trycast(tp: str, value: object, /, *, strict: bool = True, eval: bool = True) -> bool:  # type: ignore[43]  # pyre
+def checkcast(tp: str, value: object, /, *, strict: bool = True, eval: bool = True, _funcname: str = "checkcast") -> bool:  # type: ignore[43]  # pyre
     ...  # pragma: no cover
 
 
 @overload
-def trycast(  # type: ignore[43]  # pyre
-    tp: Type[_T], value: object, /, *, strict: bool = True, eval: bool = True
+def checkcast(  # type: ignore[43]  # pyre
+    tp: Type[_T],
+    value: object,
+    /,
+    *,
+    strict: bool = True,
+    eval: bool = True,
+    _funcname: str = "checkcast",
 ) -> Optional[_T]:
     ...  # pragma: no cover
 
 
 @overload
-def trycast(  # type: ignore[43]  # pyre
-    tp: object, value: object, /, *, strict: bool = True, eval: bool = True
-) -> Optional[object]:
-    ...  # pragma: no cover
-
-
-# Overload Group: (tp: str|Type[_T]|object, value: object, failure: object) -> ...
-
-
-@overload
-def trycast(
-    tp: str,
+def checkcast(  # type: ignore[43]  # pyre
+    tp: object,
     value: object,
     /,
-    failure: object,
-    *,
-    strict: bool = True,
-    eval: Literal[False],
-) -> NoReturn:
-    ...  # pragma: no cover
-
-
-@overload
-def trycast(
-    tp: Type[_T],
-    value: object,
-    /,
-    failure: _F,
     *,
     strict: bool = True,
     eval: bool = True,
-) -> Union[_T, _F]:
-    ...  # pragma: no cover
-
-
-@overload
-def trycast(
-    tp: object, value: object, /, failure: _F, *, strict: bool = True, eval: bool = True
-) -> Union[object, _F]:
+    _funcname: str = "checkcast",
+) -> Optional[object]:
     ...  # pragma: no cover
 
 
 # Implementation
 
 
-def trycast(tp, value, /, failure=None, *, strict=True, eval=True):
+def checkcast(tp, value, /, *, strict=True, eval=True, _funcname="checkcast"):
     """
     If `value` is in the shape of `tp` (as accepted by a Python typechecker
-    conforming to PEP 484 "Type Hints") then returns it, otherwise returns
-    `failure` (which is None by default).
+    conforming to PEP 484 "Type Hints") then returns it, otherwise
+    raises ValidationError
 
     This method logically performs an operation similar to:
 
-        return value if isinstance(tp, value) else failure
+        if isinstance(tp, value):
+            return value
+        else:
+            raise ValidationError(tp, value)
 
     except that it supports many more types than `isinstance`, including:
         * List[T]
@@ -341,39 +341,40 @@ def trycast(tp, value, /, failure=None, *, strict=True, eval=True):
 
     Similar to isinstance(), this method considers every bool value to
     also be a valid int value, as consistent with Python typecheckers:
-        > trycast(int, True) -> True
+        > checkcast(int, True) -> True
         > isinstance(True, int) -> True
 
     Note that unlike isinstance(), this method considers every int value to
     also be a valid float or complex value, as consistent with Python typecheckers:
-        > trycast(float, 1) -> 1
-        > trycast(complex, 1) -> 1
+        > checkcast(float, 1) -> 1
+        > checkcast(complex, 1) -> 1
         > isinstance(1, float) -> False
         > isinstance(1, complex) -> False
 
     Note that unlike isinstance(), this method considers every float value to
     also be a valid complex value, as consistent with Python typecheckers:
-        > trycast(complex, 1.0) -> 1
+        > checkcast(complex, 1.0) -> 1
         > isinstance(1.0, complex) -> False
 
     Parameters:
     * strict --
-        * If strict=False then trycast will additionally accept
+        * If strict=False then this function will additionally accept
           mypy_extensions.TypedDict instances and Python 3.8 typing.TypedDict
           instances for the `tp` parameter. Normally these kinds of types are
-          rejected by trycast with a TypeNotSupportedError because these
+          rejected with a TypeNotSupportedError because these
           types do not preserve enough information at runtime to reliably
           determine which keys are required and which are potentially-missing.
-        * If strict=False then trycast will treat `NewType("Foo", T)`
-          the same as `T`. Normally NewTypes are rejected by trycast with a
+        * If strict=False then `NewType("Foo", T)` will be treated
+          the same as `T`. Normally NewTypes are rejected with a
           TypeNotSupportedError because values of NewTypes at runtime
           are indistinguishable from their wrapped supertype.
     * eval --
-        If eval=False then trycast will not attempt to resolve string
+        If eval=False then this function will not attempt to resolve string
         type references, which requires the use of the eval() function.
         Otherwise string type references will be accepted.
 
     Raises:
+    * ValidationError
     * TypeNotSupportedError --
         * If strict=True and either mypy_extensions.TypedDict or a
           Python 3.8 typing.TypedDict is found within the `tp` argument.
@@ -385,7 +386,7 @@ def trycast(tp, value, /, failure=None, *, strict=True, eval=True):
     * UnresolvableTypeError --
         If `tp` is a string that could not be resolved to a type.
     """
-    options = _TrycastOptions(strict, eval)
+    options = _TrycastOptions(strict, eval, _funcname)
     if isinstance(tp, str):
         if eval:  # == options.eval (for pytype)
             tp = eval_type_str(tp)  # does use eval()
@@ -393,22 +394,24 @@ def trycast(tp, value, /, failure=None, *, strict=True, eval=True):
             raise UnresolvableTypeError(
                 f"Could not resolve type {tp!r}: "
                 f"Type appears to be a string reference "
-                f"and trycast() was called with eval=False, "
+                f"and {_funcname}() was called with eval=False, "
                 f"disabling eval of string type references."
             )
     else:
         try:
-            tp = _type_check(tp, "trycast() requires a type as its first argument.")
+            tp = _type_check(
+                tp, f"{_funcname}() requires a type as its first argument."
+            )
         except TypeError:
             if isinstance(tp, tuple) and len(tp) >= 1 and isinstance(tp[0], type):
                 raise TypeError(
-                    "trycast does not support checking against a tuple of types. "
+                    f"{_funcname} does not support checking against a tuple of types. "
                     "Try checking against a Union[T1, T2, ...] instead."
                 )
             else:
                 raise
     try:
-        return _trycast_inner(tp, value, failure, options)  # type: ignore[bad-return-type]  # pytype
+        return _checkcast_inner(tp, value, options)  # type: ignore[bad-return-type]  # pytype
     except UnresolvedForwardRefError:
         if options.eval:
             advise = (
@@ -417,11 +420,11 @@ def trycast(tp, value, /, failure=None, *, strict=True, eval=True):
             )
         else:
             advise = (
-                "trycast() cannot resolve string type references "
+                f"{_funcname}() cannot resolve string type references "
                 "because it was called with eval=False."
             )
         raise UnresolvedForwardRefError(
-            f"trycast does not support checking against type form {tp!r} "
+            f"{_funcname} does not support checking against type form {tp!r} "
             "which contains a string-based forward reference. "
             f"{advise}"
         )
@@ -430,29 +433,26 @@ def trycast(tp, value, /, failure=None, *, strict=True, eval=True):
 class _TrycastOptions(NamedTuple):
     strict: bool
     eval: bool
+    funcname: str
 
 
-# TODO: Use this signature for _trycast_inner once support for TypeForm is
+# TODO: Use this signature for _checkcast_inner once support for TypeForm is
 #       implemented in mypy. See: https://github.com/python/mypy/issues/9773
 # @overload
-# def _trycast_inner(tp: TypeForm[_T], value: object, failure: _F) -> Union[_T, _F]: ...
+# def _checkcast_inner(tp: TypeForm[_T], value: object) -> _T: ...
 
 
 @overload
-def _trycast_inner(
-    tp: Type[_T], value: object, failure: _F, options: _TrycastOptions
-) -> Union[_T, _F]:
+def _checkcast_inner(tp: Type[_T], value: object, options: _TrycastOptions) -> _T:
     ...  # pragma: no cover
 
 
 @overload
-def _trycast_inner(
-    tp: object, value: object, failure: _F, options: _TrycastOptions
-) -> Union[object, _F]:
+def _checkcast_inner(tp: object, value: object, options: _TrycastOptions) -> object:
     ...  # pragma: no cover
 
 
-def _trycast_inner(tp, value, failure, options):
+def _checkcast_inner(tp, value, options):
     """
     Raises:
     * TypeNotSupportedError
@@ -463,14 +463,14 @@ def _trycast_inner(tp, value, failure, options):
         if isinstance(value, int):
             return cast(_T, value)  # type: ignore[reportGeneralTypeIssues]  # pyright
         else:
-            return failure
+            raise ValidationError(tp, value) from None
 
     if tp is float:
         # Also accept ints and bools as valid float values
         if isinstance(value, float) or isinstance(value, int):
             return cast(_T, value)  # type: ignore[reportGeneralTypeIssues]  # pyright
         else:
-            return failure
+            raise ValidationError(tp, value) from None
 
     if tp is complex:
         # Also accept floats, ints, and bools as valid complex values
@@ -481,20 +481,18 @@ def _trycast_inner(tp, value, failure, options):
         ):
             return cast(_T, value)  # type: ignore[reportGeneralTypeIssues]  # pyright
         else:
-            return failure
+            raise ValidationError(tp, value) from None
 
     type_origin = get_origin(tp)
 
     if type_origin is list or type_origin is List:  # List, List[T]
-        return _trycast_listlike(tp, value, failure, list, options)
+        return _checkcast_listlike(tp, value, list, options)
 
     if type_origin is set or type_origin is Set:  # Set, Set[T]
-        return _trycast_listlike(tp, value, failure, set, options)
+        return _checkcast_listlike(tp, value, set, options)
 
     if type_origin is frozenset or type_origin is FrozenSet:  # FrozenSet, FrozenSet[T]
-        return _trycast_listlike(
-            tp, value, failure, frozenset, options, covariant_t=True
-        )
+        return _checkcast_listlike(tp, value, frozenset, options, covariant_t=True)
 
     if type_origin is tuple or type_origin is Tuple:
         if isinstance(value, tuple):
@@ -504,10 +502,9 @@ def _trycast_inner(tp, value, failure, options):
                 len(type_args) == 2 and type_args[1] is Ellipsis
             ):  # Tuple, Tuple[T, ...]
 
-                return _trycast_listlike(
+                return _checkcast_listlike(
                     tp,
                     value,
-                    failure,
                     tuple,
                     options,
                     covariant_t=True,
@@ -515,47 +512,52 @@ def _trycast_inner(tp, value, failure, options):
                 )
             else:  # Tuple[Ts]
                 if len(value) != len(type_args):
-                    return failure
+                    raise ValidationError(tp, value) from None
 
-                for (T, t) in zip(type_args, value):
-                    if _trycast_inner(T, t, _FAILURE, options) is _FAILURE:
-                        return failure
+                for (i, T, t) in zip(range(len(type_args)), type_args, value):
+                    try:
+                        _checkcast_inner(T, t, options)
+                    except ValidationError as e:
+                        raise ValidationError(
+                            tp, value, causes=[e.with_prefix(f"At index {i}")]
+                        ) from None
 
                 return cast(_T, value)  # type: ignore[reportGeneralTypeIssues]  # pyright
         else:
-            return failure
+            raise ValidationError(tp, value) from None
 
     if type_origin is Sequence or type_origin is CSequence:  # Sequence, Sequence[T]
-        return _trycast_listlike(
-            tp, value, failure, CSequence, options, covariant_t=True
-        )
+        return _checkcast_listlike(tp, value, CSequence, options, covariant_t=True)
 
     if (
         type_origin is MutableSequence or type_origin is CMutableSequence
     ):  # MutableSequence, MutableSequence[T]
-        return _trycast_listlike(tp, value, failure, CMutableSequence, options)
+        return _checkcast_listlike(tp, value, CMutableSequence, options)
 
     if type_origin is dict or type_origin is Dict:  # Dict, Dict[K, V]
-        return _trycast_dictlike(tp, value, failure, dict, options)
+        return _checkcast_dictlike(tp, value, dict, options)
 
     if type_origin is Mapping or type_origin is CMapping:  # Mapping, Mapping[K, V]
-        return _trycast_dictlike(
-            tp, value, failure, CMapping, options, covariant_v=True
-        )
+        return _checkcast_dictlike(tp, value, CMapping, options, covariant_v=True)
 
     if (
         type_origin is MutableMapping or type_origin is CMutableMapping
     ):  # MutableMapping, MutableMapping[K, V]
-        return _trycast_dictlike(tp, value, failure, CMutableMapping, options)
+        return _checkcast_dictlike(tp, value, CMutableMapping, options)
 
     if type_origin is Union or type_origin is UnionType:  # Union[T1, T2, ...]
+        causes = []
         for T in get_args(tp):
-            if _trycast_inner(T, value, _FAILURE, options) is not _FAILURE:  # type: ignore[wrong-arg-types]  # pytype
+            try:
+                _checkcast_inner(T, value, options)
+            except ValidationError as e:
+                causes.append(e)
+            else:
                 if isinstance(tp, type):
                     return cast(_T, value)  # type: ignore[reportGeneralTypeIssues]  # pyright
                 else:
                     return value
-        return failure
+        raise ValidationError(tp, value, causes=causes) from None
 
     if type_origin is Literal:  # Literal[...]
         for literal in get_args(tp):
@@ -564,7 +566,7 @@ def _trycast_inner(tp, value, failure, options):
                     return cast(_T, value)  # type: ignore[reportGeneralTypeIssues]  # pyright
                 else:
                     return value
-        return failure
+        raise ValidationError(tp, value) from None
 
     if type_origin is CCallable:
         callable_args = get_args(tp)
@@ -573,7 +575,7 @@ def _trycast_inner(tp, value, failure, options):
             if callable(value):
                 return cast(_T, value)  # type: ignore[reportGeneralTypeIssues]  # pyright
             else:
-                return failure
+                raise ValidationError(tp, value) from None
         else:
             assert len(callable_args) == 2
             (param_types, return_type) = callable_args
@@ -581,26 +583,26 @@ def _trycast_inner(tp, value, failure, options):
             if return_type is not Any:
                 # Callable[..., T]
                 raise TypeNotSupportedError(
-                    f"trycast cannot reliably determine whether value is "
+                    f"{options.funcname} cannot reliably determine whether value is "
                     f"a {type_repr(tp)} because "
                     f"callables at runtime do not always have a "
                     f"declared return type. "
-                    f"Consider using trycast(Callable, value) instead."
+                    f"Consider using {options.funcname}(Callable, value) instead."
                 )
 
             if param_types is Ellipsis:
                 # Callable[..., Any]
-                return _trycast_inner(Callable, value, failure, options)
+                return _checkcast_inner(Callable, value, options)
 
             assert isinstance(param_types, list)
             for param_type in param_types:
                 if param_type is not Any:
                     raise TypeNotSupportedError(
-                        f"trycast cannot reliably determine whether value is "
+                        f"{options.funcname} cannot reliably determine whether value is "
                         f"a {type_repr(tp)} because "
                         f"callables at runtime do not always have "
                         f"declared parameter types. "
-                        f"Consider using trycast("
+                        f"Consider using {options.funcname}("
                         f"Callable[{','.join('Any' * len(param_types))}, Any], value) "
                         f"instead."
                     )
@@ -611,12 +613,12 @@ def _trycast_inner(tp, value, failure, options):
                     sig = _inspect_signature(value)
                 except TypeError:
                     # Not a callable
-                    return failure
-                except ValueError:
+                    raise ValidationError(tp, value) from None
+                except ValueError as e:
                     # Unable to introspect signature for value.
                     # It might be a built-in function that lacks signature support.
                     # Assume conservatively that value does NOT match the requested type.
-                    return failure
+                    raise ValidationError(tp, value) from e
                 else:
                     sig_min_param_count = 0
                     sig_max_param_count = 0
@@ -634,13 +636,13 @@ def _trycast_inner(tp, value, failure, options):
                     if sig_min_param_count <= len(param_types) <= sig_max_param_count:
                         return cast(_T, value)  # type: ignore[reportGeneralTypeIssues]  # pyright
                     else:
-                        return failure
+                        raise ValidationError(tp, value) from None
             else:
-                return failure
+                raise ValidationError(tp, value) from None
 
     if isinstance(tp, _GenericAlias):
         raise TypeNotSupportedError(
-            f"trycast does not know how to recognize generic type "
+            f"{options.funcname} does not know how to recognize generic type "
             f"{type_repr(type_origin)}."
         )
 
@@ -663,9 +665,9 @@ def _trycast_inner(tp, value, failure, options):
                         advise = "Suggest use a typing.TypedDict instead."
                     else:
                         advise = "Suggest use a typing_extensions.TypedDict instead."
-                    advise2 = "Or use trycast(..., strict=False)."
+                    advise2 = f"Or use {options.funcname}(..., strict=False)."
                     raise TypeNotSupportedError(
-                        f"trycast cannot determine which keys are required "
+                        f"{options.funcname} cannot determine which keys are required "
                         f"and which are potentially-missing for the "
                         f"specified kind of TypedDict. {advise} {advise2}"
                     )
@@ -677,41 +679,51 @@ def _trycast_inner(tp, value, failure, options):
 
             for (k, v) in value.items():  # type: ignore[attribute-error]  # pytype
                 V = resolved_annotations.get(k, _MISSING)
-                if (
-                    V is not _MISSING
-                    and _trycast_inner(V, v, _FAILURE, options) is _FAILURE
-                ):
-                    return failure
+                if V is not _MISSING:
+                    try:
+                        _checkcast_inner(V, v, options)
+                    except ValidationError as e:
+                        raise ValidationError(
+                            tp, value, causes=[e.with_prefix(f"At key {k!r}")]
+                        ) from None
 
             for k in required_keys:
                 if k not in value:  # type: ignore[unsupported-operands]  # pytype
-                    return failure
+                    raise ValidationError(
+                        tp,
+                        value,
+                        causes=[
+                            ValidationError.from_message(
+                                f"Required key {k!r} is missing"
+                            )
+                        ],
+                    ) from None
             if isinstance(tp, type):
                 return cast(_T, value)  # type: ignore[reportGeneralTypeIssues]  # pyright
             else:
                 return value
         else:
-            return failure
+            raise ValidationError(tp, value) from None
 
     if _is_newtype(tp):
         if options.strict:
             supertype_repr = type_repr(tp.__supertype__)  # type: ignore[attribute-error]  # pytype
             raise TypeNotSupportedError(
-                f"trycast cannot reliably determine whether value is "
+                f"{options.funcname} cannot reliably determine whether value is "
                 f"a NewType({tp.__name__!r}, {supertype_repr}) because "
                 f"NewType wrappers are erased at runtime "
                 f"and are indistinguishable from their supertype. "
-                f"Consider using trycast(..., strict=False) to treat "
+                f"Consider using {options.funcname}(..., strict=False) to treat "
                 f"NewType({tp.__name__!r}, {supertype_repr}) "
                 f"like {supertype_repr}."
             )
         else:
             supertype = tp.__supertype__  # type: ignore[attribute-error]  # pytype
-            return _trycast_inner(supertype, value, failure, options)
+            return _checkcast_inner(supertype, value, options)
 
     if isinstance(tp, TypeVar):  # type: ignore[wrong-arg-types]  # pytype
         raise TypeNotSupportedError(
-            "trycast cannot reliably determine whether value matches a TypeVar."
+            f"{options.funcname} cannot reliably determine whether value matches a TypeVar."
         )
 
     if tp is Any:
@@ -721,7 +733,7 @@ def _trycast_inner(tp, value, failure, options):
             return value
 
     if tp is NoReturn:
-        return failure
+        raise ValidationError(tp, value) from None
 
     if isinstance(tp, ForwardRef):
         raise UnresolvedForwardRefError()
@@ -729,7 +741,7 @@ def _trycast_inner(tp, value, failure, options):
     if isinstance(value, tp):  # type: ignore[wrong-arg-types]  # pytype
         return value
     else:
-        return failure
+        raise ValidationError(tp, value) from None
 
 
 class TypeNotSupportedError(TypeError):
@@ -741,35 +753,33 @@ class UnresolvedForwardRefError(TypeError):
 
 
 @overload
-def _trycast_listlike(
+def _checkcast_listlike(
     tp: Type[_T],
     value: object,
-    failure: _F,
     listlike_type: Type,
     options: _TrycastOptions,
     *,
     covariant_t: bool = False,
     t_ellipsis: bool = False,
-) -> Union[_T, _F]:
+) -> _T:
     ...  # pragma: no cover
 
 
 @overload
-def _trycast_listlike(
+def _checkcast_listlike(
     tp: object,
     value: object,
-    failure: _F,
     listlike_type: Type,
     options: _TrycastOptions,
     *,
     covariant_t: bool = False,
     t_ellipsis: bool = False,
-) -> Union[object, _F]:
+) -> object:
     ...  # pragma: no cover
 
 
-def _trycast_listlike(
-    tp, value, failure, listlike_type, options, *, covariant_t=False, t_ellipsis=False
+def _checkcast_listlike(
+    tp, value, listlike_type, options, *, covariant_t=False, t_ellipsis=False
 ):
     if isinstance(value, listlike_type):
         T_ = get_args(tp)
@@ -782,52 +792,54 @@ def _trycast_listlike(
                 if len(T_) == 2 and T_[1] is Ellipsis:
                     (T, _) = T_
                 else:
-                    return failure
+                    raise ValidationError(tp, value) from None
             else:
                 (T,) = T_
 
         if _is_simple_typevar(T, covariant=covariant_t):
             pass
         else:
-            for x in value:  # type: ignore[attribute-error]  # pytype
-                if _trycast_inner(T, x, _FAILURE, options) is _FAILURE:
-                    return failure
+            for (i, x) in enumerate(value):  # type: ignore[attribute-error]  # pytype
+                try:
+                    _checkcast_inner(T, x, options)
+                except ValidationError as e:
+                    raise ValidationError(
+                        tp, value, causes=[e.with_prefix(f"At index {i}")]
+                    ) from None
 
         if isinstance(tp, type):
             return cast(_T, value)  # type: ignore[reportGeneralTypeIssues]  # pyright
         else:
             return value
     else:
-        return failure
+        raise ValidationError(tp, value) from None
 
 
 @overload
-def _trycast_dictlike(
+def _checkcast_dictlike(
     tp: Type[_T],
     value: object,
-    failure: _F,
     dictlike_type: Type,
     options: _TrycastOptions,
     *,
     covariant_v: bool = False,
-) -> Union[_T, _F]:
+) -> _T:
     ...  # pragma: no cover
 
 
 @overload
-def _trycast_dictlike(
+def _checkcast_dictlike(
     tp: object,
     value: object,
-    failure: _F,
     dictlike_type: Type,
     options: _TrycastOptions,
     *,
     covariant_v: bool = False,
-) -> Union[object, _F]:
+) -> object:
     ...  # pragma: no cover
 
 
-def _trycast_dictlike(tp, value, failure, dictlike_type, options, *, covariant_v=False):
+def _checkcast_dictlike(tp, value, dictlike_type, options, *, covariant_v=False):
     if isinstance(value, dictlike_type):
         K_V = get_args(tp)
 
@@ -843,17 +855,24 @@ def _trycast_dictlike(tp, value, failure, dictlike_type, options, *, covariant_v
             pass
         else:
             for (k, v) in value.items():  # type: ignore[attribute-error]  # pytype
-                if (
-                    _trycast_inner(K, k, _FAILURE, options) is _FAILURE
-                    or _trycast_inner(V, v, _FAILURE, options) is _FAILURE
-                ):
-                    return failure
+                try:
+                    _checkcast_inner(K, k, options)
+                except ValidationError as e:
+                    raise ValidationError(
+                        tp, value, causes=[e.with_prefix(f"Key {k!r}")]
+                    ) from None
+                try:
+                    _checkcast_inner(V, v, options)
+                except ValidationError as e:
+                    raise ValidationError(
+                        tp, value, causes=[e.with_prefix(f"At key {k!r}")]
+                    ) from None
         if isinstance(tp, type):
             return cast(_T, value)  # type: ignore[reportGeneralTypeIssues]  # pyright
         else:
             return value
     else:
-        return failure
+        raise ValidationError(tp, value) from None
 
 
 def _is_simple_typevar(T: object, covariant: bool = False) -> bool:
@@ -864,6 +883,34 @@ def _is_simple_typevar(T: object, covariant: bool = False) -> bool:
         and T.__contravariant__ is False  # type: ignore[attribute-error]  # pytype
         and T.__constraints__ == ()  # type: ignore[attribute-error]  # pytype
     )
+
+
+class ValidationError(ValueError):
+    def __init__(
+        self,
+        tp: object,
+        value: object,
+        *,
+        causes: "Optional[List[ValidationError]]" = None,
+        message: Optional[str] = None,
+    ) -> None:
+        if causes is None:
+            causes = []
+        if message is None:
+            message = f"Expected {tp!r} but found {value!r}"
+        super().__init__(message)
+        self._tp = tp
+        self._value = value
+        self._causes = causes
+
+    @staticmethod
+    def from_message(message: str) -> "ValidationError":
+        return ValidationError(None, None, message=message)
+
+    def with_prefix(self, prefix: str, /) -> "ValidationError":
+        return ValidationError(
+            self._tp, self._value, causes=self._causes, message=f"{prefix}: {self}"
+        )
 
 
 # ------------------------------------------------------------------------------
@@ -919,22 +966,19 @@ def isassignable(value, tp, /, *, eval=True):
     See trycast.trycast(..., strict=True) for information about parameters,
     raised exceptions, and other details.
     """
+    try:
+        checkcast(tp, value, strict=True, eval=eval, _funcname="isassignable")
+    except ValidationError:
+        result = False
+    else:
+        result = True
     if isinstance(tp, type):
         return cast(  # type: ignore[invalid-annotation]  # pytype
             TypeGuard[_T],  # type: ignore[not-indexable]  # pytype
-            (
-                trycast(tp, value, _isassignable_failure, strict=True, eval=eval)
-                is not _isassignable_failure
-            ),
+            result,
         )
     else:
-        return (
-            trycast(tp, value, _isassignable_failure, strict=True, eval=eval)
-            is not _isassignable_failure
-        )
-
-
-_isassignable_failure = object()
+        return result
 
 
 # ------------------------------------------------------------------------------
