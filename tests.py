@@ -68,15 +68,16 @@ _FAILURE = object()
 
 
 class TestTryCastModule(TestCase):
-    def test_import_star_from_trycast_does_only_import_trycast_and_isassignable_functions(
+    def test_import_star_from_trycast_does_only_import_appropriate_functions(
         self,
     ) -> None:
         self.assertEqual(
-            (
-                "trycast",
+            {
+                "checkcast",
                 "isassignable",
-            ),
-            trycast_all,
+                "trycast",
+            },
+            set(trycast_all),
         )
 
 
