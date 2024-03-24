@@ -642,7 +642,9 @@ def _checkcast_inner(tp, value, options):
     ):  # MutableMapping, MutableMapping[K, V]
         return _checkcast_dictlike(tp, value, CMutableMapping, options)
 
-    if type_origin is Union or type_origin is UnionType:  # Union[T1, T2, ...]
+    if (
+        type_origin is Union or type_origin is UnionType
+    ):  # Union[T1, T2, ...], Optional[T]
         causes = []
         for T in get_args(tp):
             try:
@@ -982,32 +984,73 @@ def _is_simple_typevar(T: object, covariant: bool = False) -> bool:
     )
 
 
+# ------------------------------------------------------------------------------
+# ValidationError
+
+
+if sys.version_info >= (3, 11):
+    from typing import Self as _SelfValidationError
+else:
+    _SelfValidationError = TypeVar("_SelfValidationError", bound="ValidationError")
+
+
 class ValidationError(ValueError):
     def __init__(
         self,
         tp: object,
         value: object,
+        /,
+        causes: "Optional[Sequence[ValidationError]]" = None,
         *,
-        causes: "Optional[List[ValidationError]]" = None,
-        message: Optional[str] = None,
+        _message: Optional[str] = None,
     ) -> None:
         if causes is None:
             causes = []
-        if message is None:
-            message = f"Expected {tp!r} but found {value!r}"
-        super().__init__(message)
+        if _message is None:
+            _message = _LazyStr(
+                lambda: f"Expected {format_type_str(tp)} but found {value!r}"
+            )
+        super().__init__(_message)
         self._tp = tp
         self._value = value
         self._causes = causes
+        self._prefix = None  # type: Optional[str]
 
     @staticmethod
     def from_message(message: str) -> "ValidationError":
-        return ValidationError(None, None, message=message)
+        return ValidationError(None, None, _message=message)
 
-    def with_prefix(self, prefix: str, /) -> "ValidationError":
-        return ValidationError(
-            self._tp, self._value, causes=self._causes, message=f"{prefix}: {self}"
-        )
+    def with_prefix(self: _SelfValidationError, prefix: str, /) -> _SelfValidationError:
+        self._prefix = prefix
+        return self
+
+    def __str__(self) -> str:
+        parts = []  # type: List[str]
+        self._format_to(parts)
+        return "".join(parts)
+
+    def _format_to(self, parts: List[str], indent: int = 0) -> None:
+        for i in range(indent):
+            parts.append("  ")
+        if self._prefix is not None:
+            parts.append(self._prefix)
+            parts.append(": ")
+        parts.append(super().__str__())
+        if len(self._causes) > 0:
+            for c in self._causes:  # type: ignore[16]  # pyre
+                parts.append("\n")
+                c._format_to(parts, indent=indent + 1)
+
+
+class _LazyStr(str):
+    def __init__(self, value_func: Callable[[], str], /) -> None:
+        self._value_func = value_func
+        self._value = None  # type: Optional[str]
+
+    def __str__(self) -> str:
+        if self._value is None:
+            self._value = self._value_func()
+        return self._value
 
 
 # ------------------------------------------------------------------------------
@@ -1178,6 +1221,38 @@ def eval_type_str(tp: str, /) -> object:
 
 class UnresolvableTypeError(TypeError):
     pass
+
+
+# ------------------------------------------------------------------------------
+# format_type_str
+
+
+def format_type_str(tp: object, /) -> str:
+    """
+    Formats a type annotation object as a string similar to how it would
+    appear in source code.
+    """
+    if tp is Ellipsis:
+        return "..."
+
+    tp_origin = get_origin(tp)
+    if tp_origin is not None:
+        tp_args = get_args(tp)
+        if tp_args != ():
+            if tp_origin is UnionType:
+                return " | ".join([format_type_str(x) for x in tp_args])
+            return (
+                format_type_str(tp_origin)
+                + "["
+                + ", ".join([format_type_str(x) for x in tp_args])
+                + "]"
+            )
+        tp_name = getattr(tp_origin, "__name__", None)
+    else:
+        tp_name = getattr(tp, "__name__", None)
+    if tp_name is not None:
+        return tp_name
+    return repr(tp)
 
 
 # ------------------------------------------------------------------------------
