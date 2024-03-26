@@ -48,6 +48,14 @@ except ImportError:
         ...
 
 
+if sys.version_info >= (3, 11):
+    from typing import Never
+else:
+
+    class Never(type):  # type: ignore[no-redef]
+        ...
+
+
 # get_type_hints
 try:
     # If typing_extensions available,
@@ -198,7 +206,7 @@ if sys.version_info >= (3, 11):
         arg = _type_convert(arg, module=module)
         if isinstance(arg, _GenericAlias) and arg.__origin__ in invalid_generic_forms:  # type: ignore[reportGeneralTypeIssues]  # pyright
             raise TypeError(f"{arg} is not valid as type argument")
-        if arg in (Any, NoReturn, Final):
+        if arg in (Any, Never, NoReturn, Final):
             return arg
         if isinstance(arg, _SpecialForm) or arg in (Generic, Protocol):
             raise TypeError(f"Plain {arg} is not valid as type argument")
@@ -826,7 +834,7 @@ def _checkcast_inner(
     if tp is Any:
         return None
 
-    if tp is NoReturn:
+    if tp is Never or tp is NoReturn:
         return ValidationError(tp, value)
 
     if isinstance(tp, ForwardRef):

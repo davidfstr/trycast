@@ -57,7 +57,13 @@ if sys.version_info >= (3, 9):
     )
 else:
     # Python 3.8+
-    from typing_extensions import TypedDict as RichTypedDict  # type: ignore[not-supported-yet]  # pytype
+    from typing_extensions import (
+        TypedDict as RichTypedDict,  # type: ignore[not-supported-yet]  # pytype
+    )
+
+# Never
+if sys.version_info >= (3, 11):
+    from typing import Never
 
 from typing import _eval_type as eval_type  # type: ignore[attr-defined]
 
@@ -1508,13 +1514,24 @@ class TestTryCast(TestCase):
             lambda: trycast(Tuple[_T, _T], ("str", 123)),  # type: ignore[reportGeneralTypeIssues]  # pyright
         )
 
-    # === Special Types: Any, NoReturn ===
+    # === Special Types: Any, Never, NoReturn ===
 
     def test_any(self) -> None:
         self.assertTryCastSuccess(Any, "words")
         self.assertTryCastSuccess(Any, 1)
         self.assertTryCastSuccess(Any, None)
         self.assertTryCastSuccess(Any, str)
+
+    if sys.version_info >= (3, 11):
+
+        def test_never(self) -> None:
+            self.assertTryCastFailure(Never, "words")  # type: ignore[wrong-arg-types]  # pytype
+            self.assertTryCastFailure(Never, 1)  # type: ignore[wrong-arg-types]  # pytype
+            self.assertTryCastFailure(Never, None)  # type: ignore[wrong-arg-types]  # pytype
+            self.assertTryCastFailure(Never, str)  # type: ignore[wrong-arg-types]  # pytype
+
+            self.assertTryCastFailure(Never, ValueError)  # type: ignore[wrong-arg-types]  # pytype
+            self.assertTryCastFailure(Never, ValueError())  # type: ignore[wrong-arg-types]  # pytype
 
     def test_noreturn(self) -> None:
         self.assertTryCastFailure(NoReturn, "words")  # type: ignore[wrong-arg-types]  # pytype
@@ -2602,7 +2619,16 @@ class TestCheckCast(TestCase):
             lambda: checkcast(Literal["circle"], 0),
         )
 
-    # === Special Types: Any, NoReturn ===
+    # === Special Types: Any, Never, NoReturn ===
+
+    if sys.version_info >= (3, 11):
+
+        def test_never(self) -> None:
+            self.assertRaisesEqual(
+                ValidationError,
+                "Expected Never but found None",
+                lambda: checkcast(Never, None),
+            )
 
     def test_noreturn(self) -> None:
         self.assertRaisesEqual(

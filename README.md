@@ -329,6 +329,7 @@ make help
 * NewTypes (when strict=False)
 * Special Types
     * Any
+    * Never
     * NoReturn
 
 ### Type Checkers Supported
@@ -527,6 +528,9 @@ raised exceptions, and other details.
   `ValidationError` upon failure instead of returning `None`.
   ([#16](https://github.com/davidfstr/trycast/issues/16))
 * Add support for Python 3.12.
+* Enhance support for Python 3.11:
+    * Extend `trycast()` to recognize special `Never` values.
+      ([#26](https://github.com/davidfstr/trycast/issues/26))
 * Drop support for Python 3.7. ([#21](https://github.com/davidfstr/trycast/issues/21))
 * Enforce that calls to `trycast()` and `isassignable()` pass the
   first 2 arguments in positional fashion and not in a named fashion:
