@@ -477,12 +477,12 @@ Raises:
 
 * Add support for Python 3.12.
 * Drop support for Python 3.7. ([#21](https://github.com/davidfstr/trycast/issues/21))
-* Enforce that calls to `trycast()` pass the first 2 arguments in
-  positional fashion like `trycast(T, value)` and not in a named fashion
-  like `trycast(tp=T, value=value)`. ([#18](https://github.com/davidfstr/trycast/issues/18))
-* Enforce that calls to `isassignable()` pass the first 2 arguments in
-  positional fashion like `isassignable(value, T)` and not in a named fashion
-  like `isassignable(value=value, tp=T)`. **(Breaking change)**
+* Enforce that calls to `trycast()` and `isassignable()` pass the
+  first 2 arguments in positional fashion and not in a named fashion:
+  ([#18](https://github.com/davidfstr/trycast/issues/18))
+  **(Breaking change)**
+    * Yes: `trycast(T, value)`, `isassignable(value, T)`
+    * No: `trycast(tp=T, value=value)`, `isassignable(value=value, tp=T)`
 
 ### v1.1.0
 
