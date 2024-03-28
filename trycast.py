@@ -240,10 +240,151 @@ _MISSING = object()
 # ------------------------------------------------------------------------------
 # trycast
 
-# TODO: Add type annotations
+# TODO: Once support for TypeForm is implemented in mypy,
+#       replace the   `(Type[T]) -> Optional[T]` overload
+#       and the       `(object) -> Optional[object]` overload with
+#       the following `(TypeForm[T]) -> Optional[T]` overload:
+#
+#       See: https://github.com/python/mypy/issues/9773
+# @overload
+# def trycast(tp: TypeForm[_T], value: object) -> Optional[_T]: ...
+
+
+# Overload: (tp: str, eval: Literal[False]) -> NoReturn
+
+
+@overload
+def trycast(  # type: ignore[43]  # pyre
+    tp: str, value: object, /, *, strict: bool = True, eval: Literal[False]
+) -> NoReturn:
+    ...  # pragma: no cover
+
+
+# Overload Group: (tp: str|Type[_T]|object, value: object) -> ...
+
+
+@overload
+def trycast(tp: str, value: object, /, *, strict: bool = True, eval: bool = True) -> bool:  # type: ignore[43]  # pyre
+    ...  # pragma: no cover
+
+
+@overload
+def trycast(  # type: ignore[43]  # pyre
+    tp: Type[_T], value: object, /, *, strict: bool = True, eval: bool = True
+) -> Optional[_T]:
+    ...  # pragma: no cover
+
+
+@overload
+def trycast(  # type: ignore[43]  # pyre
+    tp: object, value: object, /, *, strict: bool = True, eval: bool = True
+) -> Optional[object]:
+    ...  # pragma: no cover
+
+
+# Overload Group: (tp: str|Type[_T]|object, value: object, failure: object) -> ...
+
+
+@overload
+def trycast(
+    tp: str,
+    value: object,
+    /,
+    failure: object,
+    *,
+    strict: bool = True,
+    eval: Literal[False],
+) -> NoReturn:
+    ...  # pragma: no cover
+
+
+@overload
+def trycast(
+    tp: Type[_T],
+    value: object,
+    /,
+    failure: _F,
+    *,
+    strict: bool = True,
+    eval: bool = True,
+) -> Union[_T, _F]:
+    ...  # pragma: no cover
+
+
+@overload
+def trycast(
+    tp: object, value: object, /, failure: _F, *, strict: bool = True, eval: bool = True
+) -> Union[object, _F]:
+    ...  # pragma: no cover
+
+
+# Implementation
 
 
 def trycast(tp, value, /, failure=None, *, strict=True, eval=True):
+    """
+    If `value` is in the shape of `tp` (as accepted by a Python typechecker
+    conforming to PEP 484 "Type Hints") then returns it, otherwise returns
+    `failure` (which is None by default).
+
+    This method logically performs an operation similar to:
+
+        return value if isinstance(tp, value) else failure
+
+    except that it supports many more types than `isinstance`, including:
+        * List[T]
+        * Dict[K, V]
+        * Optional[T]
+        * Union[T1, T2, ...]
+        * Literal[...]
+        * T extends TypedDict
+
+    Similar to isinstance(), this method considers every bool value to
+    also be a valid int value, as consistent with Python typecheckers:
+        > trycast(int, True) -> True
+        > isinstance(True, int) -> True
+
+    Note that unlike isinstance(), this method considers every int value to
+    also be a valid float or complex value, as consistent with Python typecheckers:
+        > trycast(float, 1) -> 1
+        > trycast(complex, 1) -> 1
+        > isinstance(1, float) -> False
+        > isinstance(1, complex) -> False
+
+    Note that unlike isinstance(), this method considers every float value to
+    also be a valid complex value, as consistent with Python typecheckers:
+        > trycast(complex, 1.0) -> 1
+        > isinstance(1.0, complex) -> False
+
+    Parameters:
+    * strict --
+        * If strict=False then trycast will additionally accept
+          mypy_extensions.TypedDict instances and Python 3.8 typing.TypedDict
+          instances for the `tp` parameter. Normally these kinds of types are
+          rejected by trycast with a TypeNotSupportedError because these
+          types do not preserve enough information at runtime to reliably
+          determine which keys are required and which are potentially-missing.
+        * If strict=False then trycast will treat `NewType("Foo", T)`
+          the same as `T`. Normally NewTypes are rejected by trycast with a
+          TypeNotSupportedError because values of NewTypes at runtime
+          are indistinguishable from their wrapped supertype.
+    * eval --
+        If eval=False then trycast will not attempt to resolve string
+        type references, which requires the use of the eval() function.
+        Otherwise string type references will be accepted.
+
+    Raises:
+    * TypeNotSupportedError --
+        * If strict=True and either mypy_extensions.TypedDict or a
+          Python 3.8 typing.TypedDict is found within the `tp` argument.
+        * If strict=True and a NewType is found within the `tp` argument.
+        * If a TypeVar is found within the `tp` argument.
+        * If an unrecognized Generic type is found within the `tp` argument.
+    * UnresolvedForwardRefError --
+        If `tp` is a type form which contains a ForwardRef.
+    * UnresolvableTypeError --
+        If `tp` is a string that could not be resolved to a type.
+    """
     e = _checkcast_outer(tp, value, _TrycastOptions(strict, eval, funcname="trycast"))
     if e is not None:
         return failure
@@ -338,52 +479,8 @@ def checkcast(tp, value, /, *, strict=True, eval=True, _funcname="checkcast"):
         * Literal[...]
         * T extends TypedDict
 
-    Similar to isinstance(), this method considers every bool value to
-    also be a valid int value, as consistent with Python typecheckers:
-        > checkcast(int, True) -> True
-        > isinstance(True, int) -> True
-
-    Note that unlike isinstance(), this method considers every int value to
-    also be a valid float or complex value, as consistent with Python typecheckers:
-        > checkcast(float, 1) -> 1
-        > checkcast(complex, 1) -> 1
-        > isinstance(1, float) -> False
-        > isinstance(1, complex) -> False
-
-    Note that unlike isinstance(), this method considers every float value to
-    also be a valid complex value, as consistent with Python typecheckers:
-        > checkcast(complex, 1.0) -> 1
-        > isinstance(1.0, complex) -> False
-
-    Parameters:
-    * strict --
-        * If strict=False then this function will additionally accept
-          mypy_extensions.TypedDict instances and Python 3.8 typing.TypedDict
-          instances for the `tp` parameter. Normally these kinds of types are
-          rejected with a TypeNotSupportedError because these
-          types do not preserve enough information at runtime to reliably
-          determine which keys are required and which are potentially-missing.
-        * If strict=False then `NewType("Foo", T)` will be treated
-          the same as `T`. Normally NewTypes are rejected with a
-          TypeNotSupportedError because values of NewTypes at runtime
-          are indistinguishable from their wrapped supertype.
-    * eval --
-        If eval=False then this function will not attempt to resolve string
-        type references, which requires the use of the eval() function.
-        Otherwise string type references will be accepted.
-
-    Raises:
-    * ValidationError
-    * TypeNotSupportedError --
-        * If strict=True and either mypy_extensions.TypedDict or a
-          Python 3.8 typing.TypedDict is found within the `tp` argument.
-        * If strict=True and a NewType is found within the `tp` argument.
-        * If a TypeVar is found within the `tp` argument.
-        * If an unrecognized Generic type is found within the `tp` argument.
-    * UnresolvedForwardRefError --
-        If `tp` is a type form which contains a ForwardRef.
-    * UnresolvableTypeError --
-        If `tp` is a string that could not be resolved to a type.
+    See trycast.trycast() for information about parameters,
+    raised exceptions, and other details.
     """
     e = _checkcast_outer(tp, value, _TrycastOptions(strict, eval, _funcname))
     if e is not None:
