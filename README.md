@@ -309,6 +309,7 @@ Trycast does type check successfully with the following type checkers:
 
 ## API Reference
 
+<a name="trycast-api"></a>
 ### trycast API
 
 ```
@@ -428,43 +429,10 @@ except that it supports many more types than `isinstance`, including:
 * Literal[...]
 * T extends TypedDict
 
-Similar to isinstance(), this method considers every bool value to
-also be a valid int value, as consistent with Python typecheckers:
+See [trycast.trycast]\(..., strict=True) for information about parameters,
+raised exceptions, and other details.
 
-> isassignable(False, int) -> True
-> isinstance(False, int) -> True
-
-Note that unlike isinstance(), this method considers every int value to
-also be a valid float or complex value, as consistent with Python typecheckers:
-
-> isassignable(1, float) -> True
-> isassignable(1, complex) -> True
-> isinstance(1, float) -> False
-> isinstance(1, complex) -> False
-
-Note that unlike isinstance(), this method considers every float value to
-also be a valid complex value, as consistent with Python typecheckers:
-
-> isassignable(1.0, complex) -> True
-> isinstance(1.0, complex) -> False
-
-Parameters:
-* **eval** --
-  If eval=False then isassignable will not attempt to resolve string
-  type references, which requires the use of the eval() function.
-  Otherwise string type references will be accepted.
-
-Raises:
-* **TypeNotSupportedError** --
-    * If strict=True and either mypy_extensions.TypedDict or a
-      Python 3.8 typing.TypedDict is found within the `tp` argument.
-    * If strict=True and a NewType is found within the `tp` argument.
-    * If a TypeVar is found within the `tp` argument.
-    * If an unrecognized Generic type is found within the `tp` argument.
-* **UnresolvedForwardRefError** --
-  If `tp` is a type form which contains a ForwardRef.
-* **UnresolvableTypeError** --
-  If `tp` is a string that could not be resolved to a type.
+[trycast.trycast]: #trycast-api
 
 
 ## Changelog
