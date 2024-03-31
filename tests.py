@@ -7,6 +7,7 @@ import sys
 import typing
 from contextlib import contextmanager
 from importlib.abc import MetaPathFinder
+from textwrap import dedent
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -26,6 +27,7 @@ from typing import (
     Sequence,
     Set,
     Tuple,
+    Type,
 )
 from typing import (
     TypedDict as NativeTypedDict,  # type: ignore[not-supported-yet]  # pytype
@@ -42,9 +44,10 @@ from trycast import (
     TypeNotSupportedError,
     UnresolvableTypeError,
     UnresolvedForwardRefError,
+    ValidationError,
 )
 from trycast import __all__ as trycast_all
-from trycast import isassignable, trycast
+from trycast import checkcast, isassignable, trycast
 
 # RichTypedDict
 if sys.version_info >= (3, 9):
@@ -68,15 +71,16 @@ _FAILURE = object()
 
 
 class TestTryCastModule(TestCase):
-    def test_import_star_from_trycast_does_only_import_trycast_and_isassignable_functions(
+    def test_import_star_from_trycast_does_only_import_appropriate_functions(
         self,
     ) -> None:
         self.assertEqual(
-            (
-                "trycast",
+            {
+                "checkcast",
                 "isassignable",
-            ),
-            trycast_all,
+                "trycast",
+            },
+            set(trycast_all),
         )
 
 
@@ -86,6 +90,7 @@ class TestTryCastModule(TestCase):
 _T = TypeVar("_T")
 
 
+# For test_generic_types
 class _CellClass(Generic[_T]):
     value: _T
 
@@ -93,6 +98,7 @@ class _CellClass(Generic[_T]):
         self.value = value
 
 
+# For test_uniontype
 class _Movie(RichTypedDict):
     name: str
     year: int
@@ -103,14 +109,17 @@ class _Movie_NativeTypedDict(NativeTypedDict):
     year: int
 
 
+# For test_typeddict_single_inheritance
 class _BookBasedMovie(_Movie):
     based_on: str
 
 
+# For test_typeddict_single_inheritance_with_mixed_totality
 class _MaybeBookBasedMovie(_Movie, total=False):
     based_on: str
 
 
+# For test_typeddict_single_inheritance_with_mixed_totality
 class _MaybeBookBasedMovie_NativeTypedDict(_Movie_NativeTypedDict, total=False):
     based_on: str
 
@@ -125,10 +134,12 @@ class _MaybeMovie_NativeTypedDict(NativeTypedDict, total=False):
     year: int
 
 
+# For test_typeddict_single_inheritance_with_mixed_totality
 class _BookBasedMaybeMovie(_MaybeMovie):
     based_on: str
 
 
+# For test_typeddict_single_inheritance_with_mixed_totality
 class _BookBasedMaybeMovie_NativeTypedDict(_MaybeMovie_NativeTypedDict):
     based_on: str
 
@@ -141,25 +152,31 @@ class _Y(RichTypedDict):
     y: str
 
 
+# For test_typeddict_multiple_inheritance
 class _XYZ(_X, _Y):
     z: bool
 
 
+# For test_callable
+# For test_callable_p_r
 class _CallableObjectWithZeroArgs:
     def __call__(self) -> None:
         pass
 
 
+# For test_callable_p_r
 class _CallableObjectWithOneArg:
     def __call__(self, value: str) -> None:
         pass
 
 
+# For test_callable_p_r
 class _TypeWithZeroArgConstructor:
     def __init__(self) -> None:
         pass
 
 
+# For test_callable_p_r
 class _TypeWithOneArgConstructor:
     def __init__(self, value: str) -> None:
         pass
@@ -168,6 +185,7 @@ class _TypeWithOneArgConstructor:
 _R = TypeVar("_R")
 
 
+# For test_callable_p_r
 def _count_arguments(func: Callable[[int], _R]) -> Callable[..., _R]:
     @functools.wraps(func)
     def inner(*args):
@@ -176,10 +194,22 @@ def _count_arguments(func: Callable[[int], _R]) -> Callable[..., _R]:
     return inner
 
 
+# For test_newtype
 _Url = NewType("_Url", str)
 
 
 class TestTryCast(TestCase):
+    """
+    Tests whether trycast() accepts or rejects various combinations of
+    (type × value).
+
+    For testing the details of the ValidationErrors issued by rejections,
+    in the higher-level checkcast() API, see the TestCheckCast suite instead.
+
+    Duplicate suite structures are used by TestCheckCast and TestTryCast,
+    so it's useful to update both suites at the same time.
+    """
+
     # === Scalars ===
 
     def test_bool(self) -> None:
@@ -2041,6 +2071,699 @@ class _TypingExtensionsGoneLoader(MetaPathFinder):
 
 
 # ------------------------------------------------------------------------------
+# TestCheckCast
+
+
+# For test_http_request_parsing_example
+class _ProxiedHttpRequestEnvelope(RichTypedDict):
+    request: "_ProxiedHttpRequest"
+
+
+class _ProxiedHttpRequest(RichTypedDict):
+    url: str
+    method: "_ProxiedHttpMethod"  # type: ignore[98]  # pyre
+    headers: Mapping[str, str]
+    content: "_ProxiedHttpContent"
+
+
+_ProxiedHttpMethod = Literal[
+    "DELETE",
+    "GET",
+    "HEAD",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+]
+
+
+class _ProxiedHttpContent(RichTypedDict):
+    type: Optional["_HttpContentTypeDescriptor"]  # None only if text == ''
+    text: str
+
+
+class _HttpContentTypeDescriptor(RichTypedDict):
+    family: "_HttpContentTypeFamily"  # type: ignore[6]  # pyre
+    value: "_HttpContentType"  # type: ignore[6]  # pyre
+
+
+_HttpContentTypeFamily = Literal[
+    "text/plain",
+    "text/html",
+    "x-www-form-urlencoded",
+    "application/json",
+]
+
+_HttpContentType = str
+
+
+class TestCheckCast(TestCase):
+    """
+    Tests checkcast()-specific ValidationErrors.
+
+    For testing of checkcast()'s typechecking behavior, see the TestTryCast suite.
+
+    Duplicate suite structures are used by TestCheckCast and TestTryCast,
+    so it's useful to update both suites at the same time.
+    """
+
+    # Enable unlimited diffs in assertion failures
+    maxDiff = None
+
+    # === Scalars ===
+
+    def test_simple_scalar(self) -> None:
+        # Actual bools
+        checkcast(bool, True)
+        checkcast(bool, False)
+
+        # Not actual bools
+        self.assertRaisesEqual(
+            ValidationError,
+            "Expected bool but found 'True'",
+            lambda: checkcast(bool, "True"),
+        )
+
+    def test_none(self) -> None:
+        self.assertRaisesEqual(
+            ValidationError,
+            "Expected NoneType but found 1",
+            lambda: checkcast(None, 1),
+        )
+        checkcast(None, None)
+
+    def test_none_type(self) -> None:
+        self.assertRaisesEqual(
+            ValidationError,
+            "Expected NoneType but found 1",
+            lambda: checkcast(type(None), 1),
+        )
+        checkcast(type(None), None)
+
+    # === Strings ===
+
+    def test_str(self) -> None:
+        self.assertRaisesEqual(
+            ValidationError,
+            "Expected str but found 1",
+            lambda: checkcast(str, 1),
+        )
+
+    # === Raw Collections ===
+
+    def test_list(self) -> None:
+        self.assertRaisesEqual(
+            ValidationError,
+            "Expected list but found None",
+            lambda: checkcast(list, None),
+        )
+
+    def test_big_list(self) -> None:
+        self.assertRaisesEqual(
+            ValidationError,
+            "Expected list but found None",
+            lambda: checkcast(List, None),
+        )
+
+    # === Generic Collections ===
+
+    if sys.version_info >= (3, 9):
+
+        def test_list_t(self) -> None:
+            self.assertRaisesEqual(
+                ValidationError,
+                "Expected list[int] but found None",
+                lambda: checkcast(list[int], None),
+            )
+            self.assertRaisesEqual(
+                ValidationError,
+                dedent(
+                    """\
+                    Expected list[int] but found ['1']
+                      At index 0: Expected int but found '1'
+                    """.rstrip()
+                ),
+                lambda: checkcast(list[int], ["1"]),
+            )
+            self.assertRaisesEqual(
+                ValidationError,
+                dedent(
+                    """\
+                    Expected list[int] but found [0, 1, None, 3, None, 5]
+                      At index 2: Expected int but found None
+                    """.rstrip()
+                ),
+                lambda: checkcast(list[int], [0, 1, None, 3, None, 5]),
+            )
+
+    def test_big_list_t(self) -> None:
+        self.assertRaisesEqual(
+            ValidationError,
+            "Expected list[int] but found None",
+            lambda: checkcast(List[int], None),
+        )
+        self.assertRaisesEqual(
+            ValidationError,
+            dedent(
+                """\
+                Expected list[int] but found ['1']
+                  At index 0: Expected int but found '1'
+                """.rstrip()
+            ),
+            lambda: checkcast(List[int], ["1"]),
+        )
+        self.assertRaisesEqual(
+            ValidationError,
+            dedent(
+                """\
+                Expected list[int] but found [0, 1, None, 3, None, 5]
+                  At index 2: Expected int but found None
+                """.rstrip()
+            ),
+            lambda: checkcast(List[int], [0, 1, None, 3, None, 5]),
+        )
+
+    if sys.version_info >= (3, 9):
+
+        def test_tuple_t_ellipsis(self) -> None:
+            # non-tuple[T, ...]s
+            self.assertRaisesEqual(
+                ValidationError,
+                "Expected tuple[int, ...] but found None",
+                lambda: checkcast(tuple[int, ...], None),  # type: ignore[6]  # pyre
+            )
+            self.assertRaisesEqual(
+                ValidationError,
+                dedent(
+                    """\
+                    Expected tuple[int, ...] but found ('1',)
+                      At index 0: Expected int but found '1'
+                    """.rstrip()
+                ),
+                lambda: checkcast(tuple[int, ...], ("1",)),  # type: ignore[6]  # pyre
+            )
+            self.assertRaisesEqual(
+                ValidationError,
+                dedent(
+                    """\
+                    Expected tuple[int, ...] but found (0, 1, None, 3, None, 5)
+                      At index 2: Expected int but found None
+                    """.rstrip()
+                ),
+                lambda: checkcast(tuple[int, ...], (0, 1, None, 3, None, 5)),  # type: ignore[6]  # pyre
+            )
+
+    def test_big_tuple_t_ellipsis(self) -> None:
+        self.assertRaisesEqual(
+            ValidationError,
+            "Expected tuple[int, ...] but found None",
+            lambda: checkcast(Tuple[int, ...], None),
+        )
+        self.assertRaisesEqual(
+            ValidationError,
+            dedent(
+                """\
+                Expected tuple[int, ...] but found ('1',)
+                  At index 0: Expected int but found '1'
+                """.rstrip()
+            ),
+            lambda: checkcast(Tuple[int, ...], ("1",)),
+        )
+        self.assertRaisesEqual(
+            ValidationError,
+            dedent(
+                """\
+                Expected tuple[int, ...] but found (0, 1, None, 3, None, 5)
+                  At index 2: Expected int but found None
+                """.rstrip()
+            ),
+            lambda: checkcast(Tuple[int, ...], (0, 1, None, 3, None, 5)),
+        )
+
+    if sys.version_info >= (3, 9):
+
+        def test_dict_k_v(self) -> None:
+            self.assertRaisesEqual(
+                ValidationError,
+                "Expected dict[str, int] but found None",
+                lambda: checkcast(dict[str, int], None),
+            )
+            self.assertRaisesEqual(
+                ValidationError,
+                dedent(
+                    """\
+                    Expected dict[int, str] but found {'1': 'foo'}
+                      Key '1': Expected int but found '1'
+                    """.rstrip()
+                ),
+                lambda: checkcast(dict[int, str], {"1": "foo"}),
+            )
+            self.assertRaisesEqual(
+                ValidationError,
+                dedent(
+                    """\
+                    Expected dict[int, str] but found {1: 'foo', '900': 'foo', 2: 'foo', '901': 'foo'}
+                      Key '900': Expected int but found '900'
+                    """.rstrip()
+                ),
+                lambda: checkcast(
+                    dict[int, str], {1: "foo", "900": "foo", 2: "foo", "901": "foo"}
+                ),
+            )
+            self.assertRaisesEqual(
+                ValidationError,
+                dedent(
+                    """\
+                    Expected dict[int, str] but found {1: 999}
+                      At key 1: Expected str but found 999
+                    """.rstrip()
+                ),
+                lambda: checkcast(dict[int, str], {1: 999}),
+            )
+            self.assertRaisesEqual(
+                ValidationError,
+                dedent(
+                    """\
+                    Expected dict[int, str] but found {1: 'foo', 2: 900, 3: 'foo', 4: 901}
+                      At key 2: Expected str but found 900
+                    """.rstrip()
+                ),
+                lambda: checkcast(dict[int, str], {1: "foo", 2: 900, 3: "foo", 4: 901}),
+            )
+
+    def test_big_dict_k_v(self) -> None:
+        self.assertRaisesEqual(
+            ValidationError,
+            "Expected dict[str, int] but found None",
+            lambda: checkcast(Dict[str, int], None),
+        )
+        self.assertRaisesEqual(
+            ValidationError,
+            dedent(
+                """\
+                Expected dict[int, str] but found {'1': 'foo'}
+                  Key '1': Expected int but found '1'
+                """.rstrip()
+            ),
+            lambda: checkcast(Dict[int, str], {"1": "foo"}),
+        )
+        self.assertRaisesEqual(
+            ValidationError,
+            dedent(
+                """\
+                Expected dict[int, str] but found {1: 'foo', '900': 'foo', 2: 'foo', '901': 'foo'}
+                  Key '900': Expected int but found '900'
+                """.rstrip()
+            ),
+            lambda: checkcast(
+                Dict[int, str], {1: "foo", "900": "foo", 2: "foo", "901": "foo"}
+            ),
+        )
+        self.assertRaisesEqual(
+            ValidationError,
+            dedent(
+                """\
+                Expected dict[int, str] but found {1: 999}
+                  At key 1: Expected str but found 999
+                """.rstrip()
+            ),
+            lambda: checkcast(Dict[int, str], {1: 999}),
+        )
+        self.assertRaisesEqual(
+            ValidationError,
+            dedent(
+                """\
+                Expected dict[int, str] but found {1: 'foo', 2: 900, 3: 'foo', 4: 901}
+                  At key 2: Expected str but found 900
+                """.rstrip()
+            ),
+            lambda: checkcast(Dict[int, str], {1: "foo", 2: 900, 3: "foo", 4: 901}),
+        )
+
+    # === TypedDicts ===
+
+    def test_typeddict(self) -> None:
+        class Point2D(RichTypedDict):
+            x: int
+            y: int
+
+        class PartialPoint2D(RichTypedDict, total=False):
+            x: int
+            y: int
+
+        class Point3D(RichTypedDict):
+            x: int
+            y: int
+            z: int
+
+        # Point2D
+        self.assertRaisesEqual(
+            ValidationError,
+            dedent(
+                """\
+                Expected Point2D but found {'x': 1}
+                  Required key 'y' is missing
+                """.rstrip()
+            ),
+            lambda: checkcast(Point2D, {"x": 1}),
+        )
+        checkcast(Point2D, {"x": 1, "y": 1})
+        self.assertRaisesEqual(
+            ValidationError,
+            dedent(
+                """\
+                Expected Point2D but found {'x': 1, 'y': 'string'}
+                  At key 'y': Expected int but found 'string'
+                """.rstrip()
+            ),
+            lambda: checkcast(Point2D, {"x": 1, "y": "string"}),
+        )
+        checkcast(Point2D, {"x": 1, "y": 1, "z": 1})
+        checkcast(Point2D, {"x": 1, "y": 1, "z": "string"})
+
+        # PartialPoint2D
+        self.assertRaisesEqual(
+            ValidationError,
+            dedent(
+                """\
+                Expected PartialPoint2D but found {'x': 1, 'y': 'string'}
+                  At key 'y': Expected int but found 'string'
+                """.rstrip()
+            ),
+            lambda: checkcast(PartialPoint2D, {"x": 1, "y": "string"}),
+        )
+
+        # Point3D
+        self.assertRaisesEqual(
+            ValidationError,
+            dedent(
+                """\
+                Expected Point3D but found {'x': 1, 'y': 1}
+                  Required key 'z' is missing
+                """.rstrip()
+            ),
+            lambda: checkcast(Point3D, {"x": 1, "y": 1}),
+        )
+
+    # === Tuples (Heterogeneous) ===
+
+    if sys.version_info >= (3, 9):
+        # TODO: Upgrade mypy to a version that supports PEP 585 and `tuple[Ts]`
+        if not TYPE_CHECKING:
+
+            def test_tuple_ts(self) -> None:
+                self.assertRaisesEqual(
+                    ValidationError,
+                    "Expected tuple[int] but found None",
+                    lambda: checkcast(tuple[int], None),
+                )
+                self.assertRaisesEqual(
+                    ValidationError,
+                    dedent(
+                        """\
+                        Expected tuple[int] but found ('A',)
+                          At index 0: Expected int but found 'A'
+                        """.rstrip()
+                    ),
+                    lambda: checkcast(tuple[int], ("A",)),
+                )
+                self.assertRaisesEqual(
+                    ValidationError,
+                    dedent(
+                        """\
+                        Expected tuple[int, str] but found (1, 2)
+                          At index 1: Expected str but found 2
+                        """.rstrip()
+                    ),
+                    lambda: checkcast(tuple[int, str], (1, 2)),
+                )
+
+    def test_big_tuple_ts(self) -> None:
+        self.assertRaisesEqual(
+            ValidationError,
+            "Expected tuple[int] but found None",
+            lambda: checkcast(Tuple[int], None),
+        )
+        self.assertRaisesEqual(
+            ValidationError,
+            dedent(
+                """\
+                Expected tuple[int] but found ('A',)
+                  At index 0: Expected int but found 'A'
+                """.rstrip()
+            ),
+            lambda: checkcast(Tuple[int], ("A",)),
+        )
+        self.assertRaisesEqual(
+            ValidationError,
+            dedent(
+                """\
+                Expected tuple[int, str] but found (1, 2)
+                  At index 1: Expected str but found 2
+                """.rstrip()
+            ),
+            lambda: checkcast(Tuple[int, str], (1, 2)),
+        )
+
+    # === Unions ===
+
+    def test_union(self) -> None:
+        self.assertRaisesEqual(
+            ValidationError,
+            dedent(
+                """\
+                Expected Union[int, str] but found None
+                  Expected int but found None
+                  Expected str but found None
+                """.rstrip()
+            ),
+            lambda: checkcast(Union[int, str], None),
+        )
+        checkcast(Union[int, str], "words")
+
+    def test_optional(self) -> None:
+        # NOTE: It would be nicer if Optional[T] was preserved
+        #       and NOT converted to Union[T, NoneType]
+        self.assertRaisesEqual(
+            ValidationError,
+            dedent(
+                """\
+                Expected Union[str, NoneType] but found 1
+                  Expected str but found 1
+                  Expected NoneType but found 1
+                """.rstrip()
+            ),
+            lambda: checkcast(Optional[str], 1),
+        )
+        checkcast(Optional[str], "words")
+        checkcast(Optional[str], None)
+
+    def test_uniontype(self) -> None:
+        if sys.version_info < (3, 10):
+            self.skipTest("UnionType requires Python 3.10 or later")
+
+        self.assertRaisesEqual(
+            ValidationError,
+            dedent(
+                """\
+                Expected int | str but found None
+                  Expected int but found None
+                  Expected str but found None
+                """.rstrip()
+            ),
+            lambda: checkcast(int | str, None),
+        )
+        checkcast(int | str, "words")
+
+    # === Literals ===
+
+    def test_literal(self) -> None:
+        # Literal-like with the wrong value
+        self.assertRaisesEqual(
+            ValidationError,
+            "Expected Literal['circle'] but found 'square'",
+            lambda: checkcast(Literal["circle"], "square"),
+        )
+        self.assertRaisesEqual(
+            ValidationError,
+            "Expected Literal[1] but found 2",
+            lambda: checkcast(Literal[1], 2),
+        )
+
+        # non-Literal
+        self.assertRaisesEqual(
+            ValidationError,
+            "Expected Literal['circle'] but found None",
+            lambda: checkcast(Literal["circle"], None),
+        )
+        self.assertRaisesEqual(
+            ValidationError,
+            "Expected Literal['circle'] but found 0",
+            lambda: checkcast(Literal["circle"], 0),
+        )
+
+    # === Special Types: Any, NoReturn ===
+
+    def test_noreturn(self) -> None:
+        self.assertRaisesEqual(
+            ValidationError,
+            "Expected NoReturn but found None",
+            lambda: checkcast(NoReturn, None),
+        )
+
+    # === Large Examples ===
+
+    def test_http_request_parsing_example(self) -> None:
+        checkcast(
+            _ProxiedHttpRequestEnvelope,
+            {
+                "request": {
+                    "url": "https://example.com/",
+                    "method": "GET",
+                    "headers": {},
+                    "content": {"type": None, "text": ""},
+                }
+            },
+        )
+        self.assertRaisesEqual(
+            ValidationError,
+            dedent(
+                """\
+                Expected _ProxiedHttpRequestEnvelope but found {'request': {'url': 'https://example.com/', 'method': 'BREW', 'headers': {}, 'content': {'type': None, 'text': ''}}}
+                  At key 'request': Expected _ProxiedHttpRequest but found {'url': 'https://example.com/', 'method': 'BREW', 'headers': {}, 'content': {'type': None, 'text': ''}}
+                    At key 'method': Expected Literal['DELETE', 'GET', 'HEAD', 'OPTIONS', 'PATCH', 'POST', 'PUT'] but found 'BREW'
+                """.rstrip()
+            ),
+            lambda: checkcast(
+                _ProxiedHttpRequestEnvelope,
+                {
+                    "request": {
+                        "url": "https://example.com/",
+                        "method": "BREW",
+                        "headers": {},
+                        "content": {"type": None, "text": ""},
+                    }
+                },
+            ),
+        )
+
+        checkcast(
+            _ProxiedHttpRequestEnvelope,
+            {
+                "request": {
+                    "url": "https://example.com/api/posts",
+                    "method": "GET",
+                    "headers": {},
+                    "content": {
+                        "type": {
+                            "family": "application/json",
+                            "value": "application/json",
+                        },
+                        "text": '{"offset": 0, "limit": 20}',
+                    },
+                }
+            },
+        )
+        self.assertRaisesEqual(
+            ValidationError,
+            dedent(
+                """\
+                Expected _ProxiedHttpRequestEnvelope but found {'request': {'url': 'https://example.com/api/posts', 'method': 'GET', 'headers': {}, 'content': {'type': {'value': 'application/json'}, 'text': '{"offset": 0, "limit": 20}'}}}
+                  At key 'request': Expected _ProxiedHttpRequest but found {'url': 'https://example.com/api/posts', 'method': 'GET', 'headers': {}, 'content': {'type': {'value': 'application/json'}, 'text': '{"offset": 0, "limit": 20}'}}
+                    At key 'content': Expected _ProxiedHttpContent but found {'type': {'value': 'application/json'}, 'text': '{"offset": 0, "limit": 20}'}
+                      At key 'type': Expected Union[_HttpContentTypeDescriptor, NoneType] but found {'value': 'application/json'}
+                        Expected _HttpContentTypeDescriptor but found {'value': 'application/json'}
+                          Required key 'family' is missing
+                        Expected NoneType but found {'value': 'application/json'}
+                """.rstrip()
+            ),
+            lambda: checkcast(
+                _ProxiedHttpRequestEnvelope,
+                {
+                    "request": {
+                        "url": "https://example.com/api/posts",
+                        "method": "GET",
+                        "headers": {},
+                        "content": {
+                            "type": {"value": "application/json"},
+                            "text": '{"offset": 0, "limit": 20}',
+                        },
+                    }
+                },
+            ),
+        )
+        self.assertRaisesEqual(
+            ValidationError,
+            dedent(
+                """\
+                Expected _ProxiedHttpRequestEnvelope but found {'request': {'url': 'https://example.com/api/posts', 'method': 'GET', 'headers': {}, 'content': {'type': {'family': 'application/json', 'value': 'application/json'}, 'text': None}}}
+                  At key 'request': Expected _ProxiedHttpRequest but found {'url': 'https://example.com/api/posts', 'method': 'GET', 'headers': {}, 'content': {'type': {'family': 'application/json', 'value': 'application/json'}, 'text': None}}
+                    At key 'content': Expected _ProxiedHttpContent but found {'type': {'family': 'application/json', 'value': 'application/json'}, 'text': None}
+                      At key 'text': Expected str but found None
+                """.rstrip()
+            ),
+            lambda: checkcast(
+                _ProxiedHttpRequestEnvelope,
+                {
+                    "request": {
+                        "url": "https://example.com/api/posts",
+                        "method": "GET",
+                        "headers": {},
+                        "content": {
+                            "type": {
+                                "family": "application/json",
+                                "value": "application/json",
+                            },
+                            "text": None,
+                        },
+                    }
+                },
+            ),
+        )
+
+    # === Utility ===
+
+    def assertRaisesEqual(
+        self, tp: Type[BaseException], msg: str, callable: Callable
+    ) -> None:
+        try:
+            callable()
+        except tp as e:
+            self.assertEqual(msg, str(e))
+        else:
+            self.fail(f"Expected {tp}")
+
+
+class TestValidationError(TestCase):
+    """
+    Tests the ValidationError class.
+    """
+
+    def test_validation_error_api_is_only_two_arg_constructor_and_str(self) -> None:
+        # Ensure can create ValidationError with (tp, value)
+        e = ValidationError(str, None)
+
+        # Ensure can get str() of ValidationError
+        self.assertEqual("Expected str but found None", str(e))
+
+        # Ensure non-dunder API attributes match expected set
+        if True:
+            standard_e = Exception()
+            standard_e_api = [x for x in dir(standard_e) if not x.startswith("_")]
+
+            expected_api = [
+                # nothing
+            ]  # type: List[str]
+            actual_api = [
+                x for x in dir(e) if not x.startswith("_") and x not in standard_e_api
+            ]
+            self.assertEqual(expected_api, actual_api)
+
+    def test_validation_error_is_value_error(self) -> None:
+        self.assertTrue(issubclass(ValidationError, ValueError))
+
+
+# ------------------------------------------------------------------------------
 # TestIsTypedDict
 
 from typing import (
@@ -2071,6 +2794,10 @@ class MypyExtensionsPoint(mypy_extensions.TypedDict):  # type: ignore[reportGene
 
 
 class TestIsTypedDict(TestCase):
+    """
+    Tests whether the _is_typed_dict() internal function works.
+    """
+
     def test_recognizes_typed_dict_from_typing(self) -> None:
         self.assertTrue(_is_typed_dict(TypingPoint))
 
@@ -2090,6 +2817,10 @@ class _Cell(RichTypedDict):
 
 
 class TestIsAssignable(TestCase):
+    """
+    Tests whether the isassignable() function works.
+    """
+
     def test_is_similar_to_isinstance(self) -> None:
         self.assertTrue(isassignable("words", str))
         self.assertTrue(isassignable(1, int))

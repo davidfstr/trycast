@@ -6,7 +6,7 @@ Trycast helps parses JSON-like values whose shape is defined by
 [typed dictionaries](https://www.python.org/dev/peps/pep-0589/#abstract)
 (TypedDicts) and other standard Python type hints.
 
-You can use either the `trycast()` or `isassignable()` functions below
+You can use the `trycast()`, `checkcast()`, or `isassignable()` functions below
 for parsing:
 
 
@@ -88,6 +88,40 @@ def draw_shape_endpoint() -> HTTPResponse:
 > 
 > These limitations are in the process of being resolved by
 > [introducing TypeForm support to mypy](https://github.com/python/mypy/issues/9773).
+
+### checkcast()
+
+`checkcast()` is similar to `trycast()` but instead of returning `None` 
+when parsing fails it raises an exception explaining why and where the 
+parsing failed.
+
+Here is an example of parsing a `Circle` object using `checkcast()`:
+
+```python
+>>> from typing import Literal, TypedDict
+>>> from trycast import checkcast
+>>> 
+>>> class Point2D(TypedDict):
+...     x: float
+...     y: float
+... 
+>>> class Circle(TypedDict):
+...     type: Literal['circle']
+...     center: Point2D  # a nested TypedDict!
+...     radius: float
+... 
+>>> checkcast(Circle, {"type": "circle", "center": {"x": 1}, "radius": 10})
+Traceback (most recent call last):
+  ...
+trycast.ValidationError: Expected Circle but found {'type': 'circle', 'center': {'x': 1}, 'radius': 10}
+  At key 'center': Expected Point2D but found {'x': 1}
+    Required key 'y' is missing
+>>> 
+```
+
+`ValidationError` only spends time generating a message if you try to print it
+or stringify it, so can be cheaply caught if you only want to use it for
+control flow purposes.
 
 
 ### isassignable()
@@ -364,18 +398,18 @@ also be a valid complex value, as consistent with Python typecheckers:
 Parameters:
 
 * **strict** -- 
-    * If strict=False then trycast will additionally accept
+    * If strict=False then this function will additionally accept
       mypy_extensions.TypedDict instances and Python 3.8 typing.TypedDict
       instances for the `tp` parameter. Normally these kinds of types are
-      rejected by trycast with a TypeNotSupportedError because these
+      rejected with a TypeNotSupportedError because these
       types do not preserve enough information at runtime to reliably
       determine which keys are required and which are potentially-missing.
-    * If strict=False then trycast will treat `NewType("Foo", T)`
-      the same as `T`. Normally NewTypes are rejected by trycast with a
+    * If strict=False then `NewType("Foo", T)` will be treated
+      the same as `T`. Normally NewTypes are rejected with a
       TypeNotSupportedError because values of NewTypes at runtime
       are indistinguishable from their wrapped supertype.
 * **eval** --
-  If eval=False then trycast will not attempt to resolve string
+  If eval=False then this function will not attempt to resolve string
   type references, which requires the use of the eval() function.
   Otherwise string type references will be accepted.
 
@@ -399,6 +433,52 @@ Footnotes:
 * ‡ TypeFormString[T] is a stringified [type annotation object]. For example: `"list[str]"`
 
 [type annotation object]: https://github.com/python/mypy/issues/9773
+
+
+### checkcast API
+
+```
+def checkcast(
+    tp: TypeForm[T]† | TypeFormString[T]‡,
+    value: object,
+    /, *, strict: bool = True,
+    eval: bool = True
+) -> T: ...
+```
+
+If `value` is in the shape of `tp` (as accepted by a Python typechecker
+conforming to PEP 484 "Type Hints") then returns it, otherwise
+raises ValidationError.
+
+This method logically performs an operation similar to:
+
+```
+if isinstance(tp, value):
+    return value
+else:
+    raise ValidationError(tp, value)
+```
+
+except that it supports many more types than `isinstance`, including:
+
+* List[T]
+* Dict[K, V]
+* Optional[T]
+* Union[T1, T2, ...]
+* Literal[...]
+* T extends TypedDict
+
+See [trycast.trycast]\() for information about parameters,
+raised exceptions, and other details.
+
+Raises:
+
+* **ValidationError** -- If `value` is not in the shape of `tp`.
+* **TypeNotSupportedError**
+* **UnresolvedForwardRefError**
+* **UnresolvableTypeError**
+
+[trycast.trycast]: #trycast-api
 
 
 ### isassignable API
@@ -443,6 +523,9 @@ raised exceptions, and other details.
 
 ### main
 
+* Add `checkcast()`, an alternative to `trycast()` which raises a
+  `ValidationError` upon failure instead of returning `None`.
+  ([#16](https://github.com/davidfstr/trycast/issues/16))
 * Add support for Python 3.12.
 * Drop support for Python 3.7. ([#21](https://github.com/davidfstr/trycast/issues/21))
 * Enforce that calls to `trycast()` and `isassignable()` pass the
