@@ -398,18 +398,18 @@ also be a valid complex value, as consistent with Python typecheckers:
 Parameters:
 
 * **strict** -- 
-    * If strict=False then trycast will additionally accept
+    * If strict=False then this function will additionally accept
       mypy_extensions.TypedDict instances and Python 3.8 typing.TypedDict
       instances for the `tp` parameter. Normally these kinds of types are
-      rejected by trycast with a TypeNotSupportedError because these
+      rejected with a TypeNotSupportedError because these
       types do not preserve enough information at runtime to reliably
       determine which keys are required and which are potentially-missing.
-    * If strict=False then trycast will treat `NewType("Foo", T)`
-      the same as `T`. Normally NewTypes are rejected by trycast with a
+    * If strict=False then `NewType("Foo", T)` will be treated
+      the same as `T`. Normally NewTypes are rejected with a
       TypeNotSupportedError because values of NewTypes at runtime
       are indistinguishable from their wrapped supertype.
 * **eval** --
-  If eval=False then trycast will not attempt to resolve string
+  If eval=False then this function will not attempt to resolve string
   type references, which requires the use of the eval() function.
   Otherwise string type references will be accepted.
 
@@ -470,6 +470,13 @@ except that it supports many more types than `isinstance`, including:
 
 See [trycast.trycast]\() for information about parameters,
 raised exceptions, and other details.
+
+Raises:
+
+* **ValidationError** -- If `value` is not in the shape of `tp`.
+* **TypeNotSupportedError**
+* **UnresolvedForwardRefError**
+* **UnresolvableTypeError**
 
 [trycast.trycast]: #trycast-api
 
