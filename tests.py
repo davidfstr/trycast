@@ -1654,6 +1654,37 @@ class TestTryCast(TestCase):
             {"Target": dict(x=50, y=50)},
         )
 
+    # === type Statement ===
+
+    if sys.version_info >= (3, 12):
+
+        def test_alias_to_union_defined_by_type_statement(self) -> None:
+            import test_data.forwardrefs_example_with_type_statement
+
+            # Union with forward refs with deferred resolution
+            self.assertTryCastSuccess(
+                test_data.forwardrefs_example_with_type_statement.Shape,
+                dict(type="circle", center=dict(x=50, y=50), radius=25),
+            )
+
+        def test_alias_to_list_defined_by_type_statement(self) -> None:
+            import test_data.forwardrefs_example_with_type_statement
+
+            # list with forward refs with deferred resolution
+            self.assertTryCastSuccess(
+                test_data.forwardrefs_example_with_type_statement.Scatterplot,
+                [dict(x=50, y=50)],
+            )
+
+        def test_alias_to_dict_with_forwardrefs(self) -> None:
+            import test_data.forwardrefs_example_with_type_statement
+
+            # dict with forward refs with deferred resolution
+            self.assertTryCastSuccess(
+                test_data.forwardrefs_example_with_type_statement.PointForLabel,
+                {"Target": dict(x=50, y=50)},
+            )
+
     # === Stringified References ===
 
     def test_stringified_reference(self) -> None:
@@ -1987,16 +2018,25 @@ class TestTryCast(TestCase):
             lambda: trycast((int, str), 1),
         )
 
+    # NOTE: The internal _type_check function is heavily exercised by this test.
     def test_reversing_order_of_first_two_arguments_gives_nice_error_message(
         self,
     ) -> None:
-        self.assertEqual(1, trycast(int, 1))
+        CASES = [
+            (int, 1),
+            (bool, True),
+            (list, [1, 2]),
+            (dict, {"x": 1, "y": 2}),
+        ]
 
-        self.assertRaisesRegex(
-            TypeError,
-            "requires a type as its first argument",
-            lambda: trycast(1, int),
-        )
+        for tp, value in CASES:
+            with self.subTest(tp=tp):
+                self.assertEqual(value, trycast(tp, value))
+                self.assertRaisesRegex(
+                    TypeError,
+                    "requires a type as its first argument",
+                    lambda: trycast(value, tp),
+                )
 
     # === Large Examples ===
 

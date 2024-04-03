@@ -40,6 +40,7 @@ from typing import _eval_type as eval_type  # type: ignore[attr-defined]
 from typing import _type_repr as type_repr  # type: ignore[attr-defined]
 from typing import cast, get_args, get_origin, overload
 
+# UnionType
 try:
     from types import UnionType  # type: ignore[attr-defined]
 except ImportError:
@@ -48,11 +49,22 @@ except ImportError:
         ...
 
 
+# Never
 if sys.version_info >= (3, 11):
     from typing import Never
 else:
 
     class Never(type):  # type: ignore[no-redef]
+        ...
+
+
+# TypeAliasType
+if sys.version_info >= (3, 12):
+    from typing import TypeAliasType  # type: ignore[21]  # pyre
+else:
+
+    class TypeAliasType(type):  # type: ignore[no-redef]
+        __value__: object
         ...
 
 
@@ -168,51 +180,21 @@ else:
 
 # _type_check
 if sys.version_info >= (3, 11):
-    import types
-    from typing import _GenericAlias  # type: ignore[attr-defined]  # noqa: F811
-    from typing import (  # type: ignore[attr-defined]
-        ClassVar,
-        Final,
-        Generic,
-        ParamSpec,
-        Protocol,
-        _SpecialForm,
-    )
-
-    # Workaround https://github.com/python/cpython/issues/92601
-    # by using Python 3.10's typing._type_check()
+    # NOTE: This function is derived from Python 3.12's typing._type_check
+    #       internal helper function. It is however more concerned with
+    #       rejecting known non-types (true negatives) than it is
+    #       avoiding rejecting actual types (false negatives).
+    #       See discussion at: https://github.com/python/cpython/issues/92601
     def _type_check(arg: object, msg: str):
-        """Check that the argument is a type, and return it (internal helper).
+        """Returns the argument if it appears to be a type.
+        Raises TypeError if the argument is a known non-type.
 
-        As a special case, accept None and return type(None) instead. Also wrap strings
-        into ForwardRef instances. Consider several corner cases, for example plain
-        special forms like Union are not valid, while Union[int, str] is OK, etc.
-        The msg argument is a human-readable error message, e.g::
-
-            "Union[arg, ...]: arg should be a type."
-
-        We append the repr() of the actual value (truncated to 100 chars).
+        As a special case, accepts None and returns type(None) instead.
+        Also wraps strings into ForwardRef instances.
         """
-        is_argument = True
-        module = None
-        is_class = False
-
-        invalid_generic_forms = (Generic, Protocol)  # type: tuple[object, ...]
-        if not is_class:
-            invalid_generic_forms += (ClassVar,)
-            if is_argument:
-                invalid_generic_forms += (Final,)
-
-        arg = _type_convert(arg, module=module)
-        if isinstance(arg, _GenericAlias) and arg.__origin__ in invalid_generic_forms:  # type: ignore[reportGeneralTypeIssues]  # pyright
-            raise TypeError(f"{arg} is not valid as type argument")
-        if arg in (Any, Never, NoReturn, Final):
-            return arg
-        if isinstance(arg, _SpecialForm) or arg in (Generic, Protocol):
-            raise TypeError(f"Plain {arg} is not valid as type argument")
-        if isinstance(arg, (type, TypeVar, ForwardRef, types.UnionType, ParamSpec)):
-            return arg
-        if not callable(arg):
+        arg = _type_convert(arg, module=None)
+        # Recognize *common* non-types. (This check is not exhaustive.)
+        if isinstance(arg, (dict, list, int, tuple)):
             raise TypeError(f"{msg} Got {arg!r:.100}.")
         return arg
 
@@ -828,6 +810,9 @@ def _checkcast_inner(
     if tp is Never or tp is NoReturn:
         return ValidationError(tp, value)
 
+    if isinstance(tp, TypeAliasType):  # type: ignore[16]  # pyre
+        return _checkcast_inner(tp.__value__, value, options)  # type: ignore[16]  # pyre
+
     if isinstance(tp, ForwardRef):
         raise UnresolvedForwardRefError()
 
@@ -989,7 +974,7 @@ class ValidationError(ValueError):
 
     # Private builder method
     def _with_prefix(
-        self: _SelfValidationError, prefix: "_LazyStr", /
+        self: _SelfValidationError, prefix: "_LazyStr", /  # type: ignore[11]  # pyre  # noqa: W504
     ) -> _SelfValidationError:
         self._prefix = prefix
         return self
