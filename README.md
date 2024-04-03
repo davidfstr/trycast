@@ -312,6 +312,8 @@ make help
     * –––
     * Required, NotRequired
       ([PEP 655](https://peps.python.org/pep-0655/))
+    * ReadOnly
+      ([PEP 705](https://peps.python.org/pep-0705/))
 * Tuples (Heterogeneous)
     * tuple[T1], tuple[T1, T2], tuple[T1, T2, T3], etc
     * Tuple[T1], Tuple[T1, T2], Tuple[T1, T2, T3], etc
@@ -527,6 +529,9 @@ raised exceptions, and other details.
 * Add `checkcast()`, an alternative to `trycast()` which raises a
   `ValidationError` upon failure instead of returning `None`.
   ([#16](https://github.com/davidfstr/trycast/issues/16))
+* Add support for Python 3.13.
+    * Add support for `ReadOnly[]` from PEP 705.
+      ([#25](https://github.com/davidfstr/trycast/issues/25))
 * Add support for Python 3.12.
 * Enhance support for Python 3.11:
     * Extend `trycast()` to recognize special `Never` values.

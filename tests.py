@@ -65,6 +65,12 @@ else:
 if sys.version_info >= (3, 11):
     from typing import Never
 
+# ReadOnly
+try:
+    from typing import ReadOnly  # type: ignore[attr-defined]
+except ImportError:
+    from typing_extensions import ReadOnly  # type: ignore[21]  # pyre
+
 from typing import _eval_type as eval_type  # type: ignore[attr-defined]
 
 from typing_extensions import ParamSpec
@@ -1204,6 +1210,28 @@ class TestTryCast(TestCase):
         self.assertTryCastSuccess(NontotalMovie, {"title": "Blade Runner"})
         self.assertTryCastFailure(NontotalMovie, {"title": 1982, "year": 1982})
         self.assertTryCastFailure(NontotalMovie, {"year": 1982})
+
+    def test_typeddict_readonly(self) -> None:
+        import typing_extensions
+
+        if sys.version_info >= (3, 13):
+            self.assertIs(typing.ReadOnly, typing_extensions.ReadOnly)  # type: ignore[attr-defined, 16]  # mypy, pyre
+
+        class Movie(typing_extensions.TypedDict):  # type: ignore[not-supported-yet]  # pytype
+            title: str
+            year: int
+
+        class ReadOnlyMovie(typing_extensions.TypedDict):
+            title: ReadOnly[str]
+            year: ReadOnly[int]
+
+        # Movie
+        self.assertTryCastSuccess(Movie, {"title": "Blade Runner", "year": 1982})
+
+        # ReadOnlyMovie
+        self.assertTryCastSuccess(
+            ReadOnlyMovie, {"title": "Blade Runner", "year": 1982}
+        )
 
     def test_typeddict_using_mapping_value(self) -> None:
         class NamedObject(RichTypedDict):
