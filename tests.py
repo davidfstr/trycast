@@ -1234,32 +1234,30 @@ class TestTryCast(TestCase):
     # === Tuples (Heterogeneous) ===
 
     if sys.version_info >= (3, 9):
-        # TODO: Upgrade mypy to a version that supports PEP 585 and `tuple[Ts]`
-        if not TYPE_CHECKING:
 
-            def test_tuple_ts(self) -> None:
-                # tuple[Ts]
-                self.assertTryCastSuccess(tuple[int], (1,))
-                self.assertTryCastSuccess(tuple[int, str], (1, "a"))
-                self.assertTryCastSuccess(tuple[int, str, bool], (1, "a", True))
+        def test_tuple_ts(self) -> None:
+            # tuple[Ts]
+            self.assertTryCastSuccess(tuple[int], (1,))  # type: ignore[6]  # pyre
+            self.assertTryCastSuccess(tuple[int, str], (1, "a"))  # type: ignore[6]  # pyre
+            self.assertTryCastSuccess(tuple[int, str, bool], (1, "a", True))  # type: ignore[6]  # pyre
 
-                # tuple[Ts]-like tuples
-                self.assertTryCastFailure(tuple[int], ("A",))
-                self.assertTryCastFailure(tuple[int, str], (1, 2))
-                self.assertTryCastFailure(tuple[int, str, bool], (1, "a", object()))
+            # tuple[Ts]-like tuples
+            self.assertTryCastFailure(tuple[int], ("A",))
+            self.assertTryCastFailure(tuple[int, str], (1, 2))  # type: ignore[6]  # pyre
+            self.assertTryCastFailure(tuple[int, str, bool], (1, "a", object()))  # type: ignore[6]  # pyre
 
-                # tuple[Ts]-like lists
-                self.assertTryCastFailure(tuple[int], [1])
-                self.assertTryCastFailure(tuple[int, str], [1, "a"])
-                self.assertTryCastFailure(tuple[int, str, bool], [1, "a", True])
+            # tuple[Ts]-like lists
+            self.assertTryCastFailure(tuple[int], [1])
+            self.assertTryCastFailure(tuple[int, str], [1, "a"])  # type: ignore[6]  # pyre
+            self.assertTryCastFailure(tuple[int, str, bool], [1, "a", True])  # type: ignore[6]  # pyre
 
-                # non-tuple[Ts]
-                self.assertTryCastFailure(tuple[int], 0)
-                self.assertTryCastFailure(tuple[int], "foo")
-                self.assertTryCastFailure(tuple[int], ["1"])
-                self.assertTryCastFailure(tuple[int], {1: 1})
-                self.assertTryCastFailure(tuple[int], {1})
-                self.assertTryCastFailure(tuple[int], object())
+            # non-tuple[Ts]
+            self.assertTryCastFailure(tuple[int], 0)
+            self.assertTryCastFailure(tuple[int], "foo")
+            self.assertTryCastFailure(tuple[int], ["1"])
+            self.assertTryCastFailure(tuple[int], {1: 1})
+            self.assertTryCastFailure(tuple[int], {1})
+            self.assertTryCastFailure(tuple[int], object())
 
     def test_big_tuple_ts(self) -> None:
         # Tuple[Ts]
@@ -2485,35 +2483,33 @@ class TestCheckCast(TestCase):
     # === Tuples (Heterogeneous) ===
 
     if sys.version_info >= (3, 9):
-        # TODO: Upgrade mypy to a version that supports PEP 585 and `tuple[Ts]`
-        if not TYPE_CHECKING:
 
-            def test_tuple_ts(self) -> None:
-                self.assertRaisesEqual(
-                    ValidationError,
-                    "Expected tuple[int] but found None",
-                    lambda: checkcast(tuple[int], None),
-                )
-                self.assertRaisesEqual(
-                    ValidationError,
-                    dedent(
-                        """\
-                        Expected tuple[int] but found ('A',)
-                          At index 0: Expected int but found 'A'
-                        """.rstrip()
-                    ),
-                    lambda: checkcast(tuple[int], ("A",)),
-                )
-                self.assertRaisesEqual(
-                    ValidationError,
-                    dedent(
-                        """\
-                        Expected tuple[int, str] but found (1, 2)
-                          At index 1: Expected str but found 2
-                        """.rstrip()
-                    ),
-                    lambda: checkcast(tuple[int, str], (1, 2)),
-                )
+        def test_tuple_ts(self) -> None:
+            self.assertRaisesEqual(
+                ValidationError,
+                "Expected tuple[int] but found None",
+                lambda: checkcast(tuple[int], None),
+            )
+            self.assertRaisesEqual(
+                ValidationError,
+                dedent(
+                    """\
+                    Expected tuple[int] but found ('A',)
+                      At index 0: Expected int but found 'A'
+                    """.rstrip()
+                ),
+                lambda: checkcast(tuple[int], ("A",)),
+            )
+            self.assertRaisesEqual(
+                ValidationError,
+                dedent(
+                    """\
+                    Expected tuple[int, str] but found (1, 2)
+                      At index 1: Expected str but found 2
+                    """.rstrip()
+                ),
+                lambda: checkcast(tuple[int, str], (1, 2)),  # type: ignore[6]  # pyre
+            )
 
     def test_big_tuple_ts(self) -> None:
         self.assertRaisesEqual(
