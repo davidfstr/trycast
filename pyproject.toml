@@ -37,7 +37,7 @@ pyright = "*"
 pyre-check = "*"
 pytype = { version = "==2022.3.21", python = ">=3.7.4,<3.10" }
 tox = "^3.23.1"
-black = "==22.3.0"
+black = "==24.3.0"
 isort = "^5.9.1"
 flake8 = "^3.9.2"
 coverage = "*"

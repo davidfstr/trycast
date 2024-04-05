@@ -264,8 +264,7 @@ _MISSING = object()
 @overload
 def trycast(  # type: ignore[43]  # pyre
     tp: str, value: object, /, *, strict: bool = True, eval: Literal[False]
-) -> NoReturn:
-    ...  # pragma: no cover
+) -> NoReturn: ...  # pragma: no cover
 
 
 # Overload Group: (tp: str|Type[_T]|object, value: object) -> ...
@@ -279,15 +278,13 @@ def trycast(tp: str, value: object, /, *, strict: bool = True, eval: bool = True
 @overload
 def trycast(  # type: ignore[43]  # pyre
     tp: Type[_T], value: object, /, *, strict: bool = True, eval: bool = True
-) -> Optional[_T]:
-    ...  # pragma: no cover
+) -> Optional[_T]: ...  # pragma: no cover
 
 
 @overload
 def trycast(  # type: ignore[43]  # pyre
     tp: object, value: object, /, *, strict: bool = True, eval: bool = True
-) -> Optional[object]:
-    ...  # pragma: no cover
+) -> Optional[object]: ...  # pragma: no cover
 
 
 # Overload Group: (tp: str|Type[_T]|object, value: object, failure: object) -> ...
@@ -302,8 +299,7 @@ def trycast(
     *,
     strict: bool = True,
     eval: Literal[False],
-) -> NoReturn:
-    ...  # pragma: no cover
+) -> NoReturn: ...  # pragma: no cover
 
 
 @overload
@@ -315,15 +311,13 @@ def trycast(
     *,
     strict: bool = True,
     eval: bool = True,
-) -> Union[_T, _F]:
-    ...  # pragma: no cover
+) -> Union[_T, _F]: ...  # pragma: no cover
 
 
 @overload
 def trycast(
     tp: object, value: object, /, failure: _F, *, strict: bool = True, eval: bool = True
-) -> Union[object, _F]:
-    ...  # pragma: no cover
+) -> Union[object, _F]: ...  # pragma: no cover
 
 
 # Implementation
@@ -425,8 +419,7 @@ def checkcast(  # type: ignore[43]  # pyre
     strict: bool = True,
     eval: Literal[False],
     _funcname: str = "checkcast",
-) -> NoReturn:
-    ...  # pragma: no cover
+) -> NoReturn: ...  # pragma: no cover
 
 
 # Overload Group: (tp: str|Type[_T]|object, value: object) -> ...
@@ -446,8 +439,7 @@ def checkcast(  # type: ignore[43]  # pyre
     strict: bool = True,
     eval: bool = True,
     _funcname: str = "checkcast",
-) -> Optional[_T]:
-    ...  # pragma: no cover
+) -> Optional[_T]: ...  # pragma: no cover
 
 
 @overload
@@ -459,8 +451,7 @@ def checkcast(  # type: ignore[43]  # pyre
     strict: bool = True,
     eval: bool = True,
     _funcname: str = "checkcast",
-) -> Optional[object]:
-    ...  # pragma: no cover
+) -> Optional[object]: ...  # pragma: no cover
 
 
 # Implementation
@@ -622,7 +613,7 @@ def _checkcast_inner(
                 if len(value) != len(type_args):
                     return ValidationError(tp, value)
 
-                for (i, T, t) in zip(range(len(type_args)), type_args, value):
+                for i, T, t in zip(range(len(type_args)), type_args, value):
                     e = _checkcast_inner(T, t, options)
                     if e is not None:
                         return ValidationError(
@@ -783,7 +774,7 @@ def _checkcast_inner(
                     else:
                         required_keys = frozenset()
 
-            for (k, v) in value.items():  # type: ignore[attribute-error]  # pytype
+            for k, v in value.items():  # type: ignore[attribute-error]  # pytype
                 V = resolved_annotations.get(k, _MISSING)
                 if V is not _MISSING:
                     e = _checkcast_inner(V, v, options)
@@ -881,7 +872,7 @@ def _checkcast_listlike(
         if _is_simple_typevar(T, covariant=covariant_t):
             pass
         else:
-            for (i, x) in enumerate(value):  # type: ignore[attribute-error]  # pytype
+            for i, x in enumerate(value):  # type: ignore[attribute-error]  # pytype
                 e = _checkcast_inner(T, x, options)
                 if e is not None:
                     return ValidationError(
@@ -917,7 +908,7 @@ def _checkcast_dictlike(
         if _is_simple_typevar(K) and _is_simple_typevar(V, covariant=covariant_v):
             pass
         else:
-            for (k, v) in value.items():  # type: ignore[attribute-error]  # pytype
+            for k, v in value.items():  # type: ignore[attribute-error]  # pytype
                 e = _checkcast_inner(K, k, options)
                 if e is not None:
                     return ValidationError(
@@ -1053,13 +1044,15 @@ class _LazyStr(str):
 
 
 @overload
-def isassignable(value: object, tp: str, /, *, eval: Literal[False]) -> NoReturn:
-    ...  # pragma: no cover
+def isassignable(
+    value: object, tp: str, /, *, eval: Literal[False]
+) -> NoReturn: ...  # pragma: no cover
 
 
 @overload
-def isassignable(value: object, tp: str, /, *, eval: bool = True) -> bool:
-    ...  # pragma: no cover
+def isassignable(
+    value: object, tp: str, /, *, eval: bool = True
+) -> bool: ...  # pragma: no cover
 
 
 @overload
@@ -1068,8 +1061,9 @@ def isassignable(value: object, tp: Type[_T], /, *, eval: bool = True) -> TypeGu
 
 
 @overload
-def isassignable(value: object, tp: object, /, *, eval: bool = True) -> bool:
-    ...  # pragma: no cover
+def isassignable(
+    value: object, tp: object, /, *, eval: bool = True
+) -> bool: ...  # pragma: no cover
 
 
 def isassignable(value, tp, /, *, eval=True):
