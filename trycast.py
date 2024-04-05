@@ -395,9 +395,9 @@ def trycast(tp, value, /, failure=None, *, strict=True, eval=True):
     """
     e = _checkcast_outer(tp, value, _TrycastOptions(strict, eval, funcname="trycast"))
     if e is not None:
-        return failure
+        return failure  # type: ignore[bad-return-type]  # pytype
     else:
-        return value
+        return value  # type: ignore[bad-return-type]  # pytype
 
 
 # ------------------------------------------------------------------------------
@@ -500,7 +500,7 @@ def checkcast(tp, value, /, *, strict=True, eval=True, _funcname="checkcast"):
     if e is not None:
         raise e
     else:
-        return value
+        return value  # type: ignore[bad-return-type]  # pytype
 
 
 class _TrycastOptions(NamedTuple):
@@ -1102,7 +1102,7 @@ def isassignable(value, tp, /, *, eval=True):
             result,
         )
     else:
-        return result
+        return result  # type: ignore[bad-return-type]  # pytype
 
 
 # ------------------------------------------------------------------------------
