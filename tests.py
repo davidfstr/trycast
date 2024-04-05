@@ -985,7 +985,7 @@ class TestTryCast(TestCase):
         self.assertTryCastSuccess(Point3D, {"x": 1, "y": 1, "z": 1})
 
     def test_typeddict_with_extra_keys(self) -> None:
-        class Packet(NativeTypedDict):
+        class Packet(RichTypedDict):
             type: str
             payload: str
 
@@ -1329,21 +1329,20 @@ class TestTryCast(TestCase):
         # non-Optional[str]
         self.assertTryCastFailure(Optional[str], [])
 
-    def test_uniontype(self) -> None:
-        if sys.version_info < (3, 10):
-            self.skipTest("UnionType requires Python 3.10 or later")
+    if sys.version_info >= (3, 10):
 
-        # int | str, equivalent to Union[int, str]
-        self.assertTryCastSuccess(int | str, 1)  # type: ignore[operator]
-        self.assertTryCastSuccess(int | str, "foo")  # type: ignore[operator]
+        def test_uniontype(self) -> None:
+            # int | str, equivalent to Union[int, str]
+            self.assertTryCastSuccess(int | str, 1)  # type: ignore[operator]
+            self.assertTryCastSuccess(int | str, "foo")  # type: ignore[operator]
 
-        # non-(int | str)
-        self.assertTryCastFailure(int | str, [])  # type: ignore[operator]
+            # non-(int | str)
+            self.assertTryCastFailure(int | str, [])  # type: ignore[operator]
 
-        # UnionType with TypedDict
-        self.assertTryCastSuccess(_Movie | None, _Movie(name="Blade Runner", year=1982))  # type: ignore[operator]
-        self.assertTryCastSuccess(_Movie | None, None)  # type: ignore[operator]
-        self.assertTryCastFailure(_Movie | None, {})  # type: ignore[operator]
+            # UnionType with TypedDict
+            self.assertTryCastSuccess(_Movie | None, _Movie(name="Blade Runner", year=1982))  # type: ignore[operator]
+            self.assertTryCastSuccess(_Movie | None, None)  # type: ignore[operator]
+            self.assertTryCastFailure(_Movie | None, {})  # type: ignore[operator]
 
     # === Literals ===
 
@@ -1964,11 +1963,13 @@ class TestTryCast(TestCase):
                 )
                 self.assertTryCastSuccess(Point3D, {"x": 1, "y": 2}, strict=False)
                 self.assertTryCastSuccess(Point3D, {"x": 1}, strict=False)  # surprise!
-                self.assertTryCastFailure(Point3D, {"q": 1}, strict=False)
+                # NOTE: Unknown keys are allowed
+                self.assertTryCastSuccess(Point3D, {"q": 1}, strict=False)
 
                 self.assertTryCastSuccess(MaybePoint1D, {"x": 1}, strict=False)
                 self.assertTryCastSuccess(MaybePoint1D, {}, strict=False)
-                self.assertTryCastFailure(MaybePoint1D, {"q": 1}, strict=False)
+                # NOTE: Unknown keys are allowed
+                self.assertTryCastSuccess(MaybePoint1D, {"q": 1}, strict=False)
 
                 self.assertTryCastSuccess(
                     TaggedMaybePoint1D, {"x": 1, "name": "one"}, strict=False
@@ -2571,12 +2572,14 @@ class TestCheckCast(TestCase):
     def test_union(self) -> None:
         self.assertRaisesEqual(
             ValidationError,
-            dedent(
-                """\
-                Expected Union[int, str] but found None
-                  Expected int but found None
-                  Expected str but found None
-                """.rstrip()
+            self._typing_error_messages(
+                dedent(
+                    """\
+                    Expected Union[int, str] but found None
+                      Expected int but found None
+                      Expected str but found None
+                    """.rstrip()
+                )
             ),
             lambda: checkcast(Union[int, str], None),
         )
@@ -2587,34 +2590,35 @@ class TestCheckCast(TestCase):
         #       and NOT converted to Union[T, NoneType]
         self.assertRaisesEqual(
             ValidationError,
-            dedent(
-                """\
-                Expected Union[str, NoneType] but found 1
-                  Expected str but found 1
-                  Expected NoneType but found 1
-                """.rstrip()
+            self._typing_error_messages(
+                dedent(
+                    """\
+                    Expected Union[str, NoneType] but found 1
+                      Expected str but found 1
+                      Expected NoneType but found 1
+                    """.rstrip()
+                )
             ),
             lambda: checkcast(Optional[str], 1),
         )
         checkcast(Optional[str], "words")
         checkcast(Optional[str], None)
 
-    def test_uniontype(self) -> None:
-        if sys.version_info < (3, 10):
-            self.skipTest("UnionType requires Python 3.10 or later")
+    if sys.version_info >= (3, 10):
 
-        self.assertRaisesEqual(
-            ValidationError,
-            dedent(
-                """\
-                Expected int | str but found None
-                  Expected int but found None
-                  Expected str but found None
-                """.rstrip()
-            ),
-            lambda: checkcast(int | str, None),
-        )
-        checkcast(int | str, "words")
+        def test_uniontype(self) -> None:
+            self.assertRaisesEqual(
+                ValidationError,
+                dedent(
+                    """\
+                    Expected int | str but found None
+                      Expected int but found None
+                      Expected str but found None
+                    """.rstrip()
+                ),
+                lambda: checkcast(int | str, None),
+            )
+            checkcast(int | str, "words")
 
     # === Literals ===
 
@@ -2622,24 +2626,26 @@ class TestCheckCast(TestCase):
         # Literal-like with the wrong value
         self.assertRaisesEqual(
             ValidationError,
-            "Expected Literal['circle'] but found 'square'",
+            self._typing_error_messages(
+                "Expected Literal['circle'] but found 'square'"
+            ),
             lambda: checkcast(Literal["circle"], "square"),
         )
         self.assertRaisesEqual(
             ValidationError,
-            "Expected Literal[1] but found 2",
+            self._typing_error_messages("Expected Literal[1] but found 2"),
             lambda: checkcast(Literal[1], 2),
         )
 
         # non-Literal
         self.assertRaisesEqual(
             ValidationError,
-            "Expected Literal['circle'] but found None",
+            self._typing_error_messages("Expected Literal['circle'] but found None"),
             lambda: checkcast(Literal["circle"], None),
         )
         self.assertRaisesEqual(
             ValidationError,
-            "Expected Literal['circle'] but found 0",
+            self._typing_error_messages("Expected Literal['circle'] but found 0"),
             lambda: checkcast(Literal["circle"], 0),
         )
 
@@ -2657,7 +2663,7 @@ class TestCheckCast(TestCase):
     def test_noreturn(self) -> None:
         self.assertRaisesEqual(
             ValidationError,
-            "Expected NoReturn but found None",
+            self._typing_error_messages("Expected NoReturn but found None"),
             lambda: checkcast(NoReturn, None),
         )
 
@@ -2677,12 +2683,14 @@ class TestCheckCast(TestCase):
         )
         self.assertRaisesEqual(
             ValidationError,
-            dedent(
-                """\
-                Expected _ProxiedHttpRequestEnvelope but found {'request': {'url': 'https://example.com/', 'method': 'BREW', 'headers': {}, 'content': {'type': None, 'text': ''}}}
-                  At key 'request': Expected _ProxiedHttpRequest but found {'url': 'https://example.com/', 'method': 'BREW', 'headers': {}, 'content': {'type': None, 'text': ''}}
-                    At key 'method': Expected Literal['DELETE', 'GET', 'HEAD', 'OPTIONS', 'PATCH', 'POST', 'PUT'] but found 'BREW'
-                """.rstrip()
+            self._typing_error_messages(
+                dedent(
+                    """\
+                    Expected _ProxiedHttpRequestEnvelope but found {'request': {'url': 'https://example.com/', 'method': 'BREW', 'headers': {}, 'content': {'type': None, 'text': ''}}}
+                      At key 'request': Expected _ProxiedHttpRequest but found {'url': 'https://example.com/', 'method': 'BREW', 'headers': {}, 'content': {'type': None, 'text': ''}}
+                        At key 'method': Expected Literal['DELETE', 'GET', 'HEAD', 'OPTIONS', 'PATCH', 'POST', 'PUT'] but found 'BREW'
+                    """.rstrip()
+                )
             ),
             lambda: checkcast(
                 _ProxiedHttpRequestEnvelope,
@@ -2716,16 +2724,18 @@ class TestCheckCast(TestCase):
         )
         self.assertRaisesEqual(
             ValidationError,
-            dedent(
-                """\
-                Expected _ProxiedHttpRequestEnvelope but found {'request': {'url': 'https://example.com/api/posts', 'method': 'GET', 'headers': {}, 'content': {'type': {'value': 'application/json'}, 'text': '{"offset": 0, "limit": 20}'}}}
-                  At key 'request': Expected _ProxiedHttpRequest but found {'url': 'https://example.com/api/posts', 'method': 'GET', 'headers': {}, 'content': {'type': {'value': 'application/json'}, 'text': '{"offset": 0, "limit": 20}'}}
-                    At key 'content': Expected _ProxiedHttpContent but found {'type': {'value': 'application/json'}, 'text': '{"offset": 0, "limit": 20}'}
-                      At key 'type': Expected Union[_HttpContentTypeDescriptor, NoneType] but found {'value': 'application/json'}
-                        Expected _HttpContentTypeDescriptor but found {'value': 'application/json'}
-                          Required key 'family' is missing
-                        Expected NoneType but found {'value': 'application/json'}
-                """.rstrip()
+            self._typing_error_messages(
+                dedent(
+                    """\
+                    Expected _ProxiedHttpRequestEnvelope but found {'request': {'url': 'https://example.com/api/posts', 'method': 'GET', 'headers': {}, 'content': {'type': {'value': 'application/json'}, 'text': '{"offset": 0, "limit": 20}'}}}
+                      At key 'request': Expected _ProxiedHttpRequest but found {'url': 'https://example.com/api/posts', 'method': 'GET', 'headers': {}, 'content': {'type': {'value': 'application/json'}, 'text': '{"offset": 0, "limit": 20}'}}
+                        At key 'content': Expected _ProxiedHttpContent but found {'type': {'value': 'application/json'}, 'text': '{"offset": 0, "limit": 20}'}
+                          At key 'type': Expected Union[_HttpContentTypeDescriptor, NoneType] but found {'value': 'application/json'}
+                            Expected _HttpContentTypeDescriptor but found {'value': 'application/json'}
+                              Required key 'family' is missing
+                            Expected NoneType but found {'value': 'application/json'}
+                    """.rstrip()
+                )
             ),
             lambda: checkcast(
                 _ProxiedHttpRequestEnvelope,
@@ -2774,14 +2784,32 @@ class TestCheckCast(TestCase):
     # === Utility ===
 
     def assertRaisesEqual(
-        self, tp: Type[BaseException], msg: str, callable: Callable
+        self, tp: Type[BaseException], msg: Union[str, List[str]], callable: Callable
     ) -> None:
         try:
             callable()
         except tp as e:
-            self.assertEqual(msg, str(e))
+            if isinstance(msg, str):
+                expected_values = [msg]
+            else:
+                expected_values = msg
+            if (actual_value := str(e)) not in expected_values:
+                # Raise AssertionError with better message
+                self.assertEqual(expected_values[0], actual_value)
         else:
             self.fail(f"Expected {tp}")
+
+    @staticmethod
+    def _typing_error_messages(template: str) -> List[str]:
+        python_lt_3_9 = (
+            template.replace("Literal", "typing.Literal")
+            .replace("NoReturn", "typing.NoReturn")
+            .replace("Union", "typing.Union")
+        )
+        return [
+            template,
+            python_lt_3_9,  # for Python <=3.9
+        ]
 
 
 class TestValidationError(TestCase):

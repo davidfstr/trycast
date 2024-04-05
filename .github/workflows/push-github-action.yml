@@ -11,56 +11,31 @@ jobs:
       fail-fast: false
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v3
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Display Python version
-        run: python -c "import sys; print(sys.version)"
-
-      - name: Display pip version
-        run: python -m pip --version
-
-      - name: Get pip version
-        id: pip-version
-        run: echo "PIP_VERSION=$(python -m pip --version | cut -f 2 -d ' ')" >> $GITHUB_OUTPUT
+        uses: actions/checkout@v4
 
       - name: Install Poetry
         run: pipx install "poetry>=1.4.0,<1.5.0"
 
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: poetry
+
+      - name: Display Python version
+        run: poetry run python -c "import sys; print(sys.version)"
+
+      - name: Display pip version
+        run: poetry run python -m pip --version
+
       - name: Display Poetry version
         run: poetry --version
 
-      - name: Get Poetry version
-        id: poetry-version
-        run: echo "POETRY_VERSION=$(poetry --version | cut -f 3- -d ' ')" >> $GITHUB_OUTPUT
-
-      # NOTE: Necessary to cache pip files because the cached pypoetry 
-      #       virtualenv does depend on them.
-      - name: Cache pip files
-        id: cache-pip
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key:      pip--os-${{ runner.os }}-python-${{ matrix.python-version }}-pip-${{ steps.pip-version.outputs.PIP_VERSION }}-poetry-${{ steps.poetry-version.outputs.POETRY_VERSION }}-lock-${{ hashFiles('poetry.lock') }}
-
-      - name: Cache installed dependencies
-        id: cache-pypoetry
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pypoetry/virtualenvs
-          key: pypoetry--os-${{ runner.os }}-python-${{ matrix.python-version }}-pip-${{ steps.pip-version.outputs.PIP_VERSION }}-poetry-${{ steps.poetry-version.outputs.POETRY_VERSION }}-lock-${{ hashFiles('poetry.lock') }}
-
       - name: Install dependencies with Poetry
-        if: ${{ (steps.cache-pip.outputs.cache-hit != 'true') || (steps.cache-pypoetry.outputs.cache-hit != 'true') }}
         run: poetry install
 
       - name: Lint
         run: poetry run make lint
 
       - name: Run tests
-        # Run tox using the version of Python in `PATH`
-        run: poetry run tox -e py
+        run: poetry run python -m unittest
