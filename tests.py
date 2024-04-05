@@ -1329,21 +1329,20 @@ class TestTryCast(TestCase):
         # non-Optional[str]
         self.assertTryCastFailure(Optional[str], [])
 
-    def test_uniontype(self) -> None:
-        if sys.version_info < (3, 10):
-            self.skipTest("UnionType requires Python 3.10 or later")
+    if sys.version_info >= (3, 10):
 
-        # int | str, equivalent to Union[int, str]
-        self.assertTryCastSuccess(int | str, 1)  # type: ignore[operator]
-        self.assertTryCastSuccess(int | str, "foo")  # type: ignore[operator]
+        def test_uniontype(self) -> None:
+            # int | str, equivalent to Union[int, str]
+            self.assertTryCastSuccess(int | str, 1)  # type: ignore[operator]
+            self.assertTryCastSuccess(int | str, "foo")  # type: ignore[operator]
 
-        # non-(int | str)
-        self.assertTryCastFailure(int | str, [])  # type: ignore[operator]
+            # non-(int | str)
+            self.assertTryCastFailure(int | str, [])  # type: ignore[operator]
 
-        # UnionType with TypedDict
-        self.assertTryCastSuccess(_Movie | None, _Movie(name="Blade Runner", year=1982))  # type: ignore[operator]
-        self.assertTryCastSuccess(_Movie | None, None)  # type: ignore[operator]
-        self.assertTryCastFailure(_Movie | None, {})  # type: ignore[operator]
+            # UnionType with TypedDict
+            self.assertTryCastSuccess(_Movie | None, _Movie(name="Blade Runner", year=1982))  # type: ignore[operator]
+            self.assertTryCastSuccess(_Movie | None, None)  # type: ignore[operator]
+            self.assertTryCastFailure(_Movie | None, {})  # type: ignore[operator]
 
     # === Literals ===
 
@@ -2603,22 +2602,21 @@ class TestCheckCast(TestCase):
         checkcast(Optional[str], "words")
         checkcast(Optional[str], None)
 
-    def test_uniontype(self) -> None:
-        if sys.version_info < (3, 10):
-            self.skipTest("UnionType requires Python 3.10 or later")
+    if sys.version_info >= (3, 10):
 
-        self.assertRaisesEqual(
-            ValidationError,
-            dedent(
-                """\
-                Expected int | str but found None
-                  Expected int but found None
-                  Expected str but found None
-                """.rstrip()
-            ),
-            lambda: checkcast(int | str, None),
-        )
-        checkcast(int | str, "words")
+        def test_uniontype(self) -> None:
+            self.assertRaisesEqual(
+                ValidationError,
+                dedent(
+                    """\
+                    Expected int | str but found None
+                      Expected int but found None
+                      Expected str but found None
+                    """.rstrip()
+                ),
+                lambda: checkcast(int | str, None),
+            )
+            checkcast(int | str, "words")
 
     # === Literals ===
 
