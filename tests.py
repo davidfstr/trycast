@@ -985,7 +985,7 @@ class TestTryCast(TestCase):
         self.assertTryCastSuccess(Point3D, {"x": 1, "y": 1, "z": 1})
 
     def test_typeddict_with_extra_keys(self) -> None:
-        class Packet(NativeTypedDict):
+        class Packet(RichTypedDict):
             type: str
             payload: str
 
@@ -1963,11 +1963,13 @@ class TestTryCast(TestCase):
                 )
                 self.assertTryCastSuccess(Point3D, {"x": 1, "y": 2}, strict=False)
                 self.assertTryCastSuccess(Point3D, {"x": 1}, strict=False)  # surprise!
-                self.assertTryCastFailure(Point3D, {"q": 1}, strict=False)
+                # NOTE: Unknown keys are allowed
+                self.assertTryCastSuccess(Point3D, {"q": 1}, strict=False)
 
                 self.assertTryCastSuccess(MaybePoint1D, {"x": 1}, strict=False)
                 self.assertTryCastSuccess(MaybePoint1D, {}, strict=False)
-                self.assertTryCastFailure(MaybePoint1D, {"q": 1}, strict=False)
+                # NOTE: Unknown keys are allowed
+                self.assertTryCastSuccess(MaybePoint1D, {"q": 1}, strict=False)
 
                 self.assertTryCastSuccess(
                     TaggedMaybePoint1D, {"x": 1, "name": "one"}, strict=False
