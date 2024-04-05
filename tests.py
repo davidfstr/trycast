@@ -1685,6 +1685,23 @@ class TestTryCast(TestCase):
                 {"Target": dict(x=50, y=50)},
             )
 
+        def test_parameterized_alias(self) -> None:
+            import test_data.type_statement_example
+
+            self.assertTryCastSuccess(
+                test_data.type_statement_example.FancyTuple[int, float],  # type: ignore[misc]  # mypy
+                (1, 2.0),
+            )
+            self.assertTryCastSuccess(
+                test_data.type_statement_example.FancyTuple,
+                ("hello", "world"),
+            )
+
+            self.assertTryCastFailure(
+                test_data.type_statement_example.FancyTuple[int, float],  # type: ignore[misc]  # mypy
+                (1, "boom"),
+            )
+
     # === Stringified References ===
 
     def test_stringified_reference(self) -> None:

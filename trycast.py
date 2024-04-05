@@ -40,10 +40,24 @@ from typing import _eval_type as eval_type  # type: ignore[attr-defined]
 from typing import _type_repr as type_repr  # type: ignore[attr-defined]
 from typing import cast, get_args, get_origin, overload
 
+# GenericAlias
+if sys.version_info >= (3, 9):
+    from types import GenericAlias
+else:
+
+    class GenericAlias(type):  # type: ignore[no-redef]
+        __origin__: object
+        __args__: Tuple[object, ...]
+
+        def __init__(self, origin: object, args: Tuple[object, ...]) -> None: ...
+
+        ...
+
+
 # UnionType
-try:
+if sys.version_info >= (3, 10):
     from types import UnionType  # type: ignore[attr-defined]
-except ImportError:
+else:
 
     class UnionType(type):  # type: ignore[no-redef]
         ...
@@ -64,6 +78,7 @@ if sys.version_info >= (3, 12):
 else:
 
     class TypeAliasType(type):  # type: ignore[no-redef]
+        __type_params__: Tuple[object, ...]
         __value__: object
         ...
 
@@ -719,6 +734,19 @@ def _checkcast_inner(
             else:
                 return ValidationError(tp, value)
 
+    if isinstance(type_origin, TypeAliasType):  # type: ignore[16]  # pyre
+        if len(type_origin.__type_params__) > 0:
+            substitutions = dict(
+                zip(
+                    type_origin.__type_params__,
+                    get_args(tp) + ((Any,) * len(type_origin.__type_params__)),
+                )
+            )  # type: Dict[object, object]
+            new_tp = _substitute(tp.__value__, substitutions)  # type: ignore[attr-defined]  # mypy
+        else:
+            new_tp = tp.__value__  # type: ignore[attr-defined]  # mypy
+        return _checkcast_inner(new_tp, value, options)  # type: ignore[16]  # pyre
+
     if isinstance(tp, _GenericAlias):  # type: ignore[16]  # pyre
         raise TypeNotSupportedError(
             f"{options.funcname} does not know how to recognize generic type "
@@ -811,7 +839,14 @@ def _checkcast_inner(
         return ValidationError(tp, value)
 
     if isinstance(tp, TypeAliasType):  # type: ignore[16]  # pyre
-        return _checkcast_inner(tp.__value__, value, options)  # type: ignore[16]  # pyre
+        if len(tp.__type_params__) > 0:  # type: ignore[16]  # pyre
+            substitutions = dict(
+                zip(tp.__type_params__, ((Any,) * len(tp.__type_params__)))
+            )
+            new_tp = _substitute(tp.__value__, substitutions)
+        else:
+            new_tp = tp.__value__
+        return _checkcast_inner(new_tp, value, options)  # type: ignore[16]  # pyre
 
     if isinstance(tp, ForwardRef):
         raise UnresolvedForwardRefError()
@@ -828,6 +863,16 @@ class TypeNotSupportedError(TypeError):
 
 class UnresolvedForwardRefError(TypeError):
     pass
+
+
+def _substitute(tp: object, substitutions: Dict[object, object]) -> object:
+    if isinstance(tp, GenericAlias):  # ex: tuple[T1, T2]
+        return GenericAlias(  # type: ignore[reportCallIssue]  # pyright
+            tp.__origin__, tuple([_substitute(a, substitutions) for a in tp.__args__])
+        )
+    if isinstance(tp, TypeVar):  # type: ignore[wrong-arg-types]  # pytype
+        return substitutions.get(tp, tp)
+    return tp
 
 
 def _checkcast_listlike(

@@ -70,7 +70,12 @@ pythonPlatform = "All"
 profile = "black"
 atomic = true
 line_length = 88
-skip_glob = ["venv*", "test_data/forwardrefs_example*.py", ".pytype"]
+skip_glob = [
+    ".pytype",
+    "test_data/forwardrefs_example*.py",
+    "test_data/type_statement_example.py",
+    "venv*",
+]
 
 # Formatter: Black
 [tool.black]
