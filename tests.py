@@ -79,7 +79,7 @@ _FAILURE = object()
 
 
 # ------------------------------------------------------------------------------
-# TestTryCastModule
+# API: TestTryCastModule
 
 
 class TestTryCastModule(TestCase):
@@ -97,7 +97,7 @@ class TestTryCastModule(TestCase):
 
 
 # ------------------------------------------------------------------------------
-# TestTryCast
+# API: TestTryCast
 
 _T = TypeVar("_T")
 
@@ -2115,7 +2115,7 @@ class _TypingExtensionsGoneLoader(MetaPathFinder):
 
 
 # ------------------------------------------------------------------------------
-# TestCheckCast
+# API: TestCheckCast
 
 
 # For test_http_request_parsing_example
@@ -2842,52 +2842,7 @@ class TestValidationError(TestCase):
 
 
 # ------------------------------------------------------------------------------
-# TestIsTypedDict
-
-from typing import (
-    TypedDict as TypingTypedDict,  # type: ignore[not-supported-yet]  # pytype
-)
-
-from trycast import _is_typed_dict
-
-
-class TypingPoint(TypingTypedDict):
-    x: int
-    y: int
-
-
-from typing_extensions import (
-    TypedDict as TypingExtensionsTypedDict,  # type: ignore[not-supported-yet]  # pytype
-)
-
-
-class TypingExtensionsPoint(TypingExtensionsTypedDict):
-    x: int
-    y: int
-
-
-class MypyExtensionsPoint(mypy_extensions.TypedDict):  # type: ignore[reportGeneralTypeIssues]  # pyright
-    x: int
-    y: int
-
-
-class TestIsTypedDict(TestCase):
-    """
-    Tests whether the _is_typed_dict() internal function works.
-    """
-
-    def test_recognizes_typed_dict_from_typing(self) -> None:
-        self.assertTrue(_is_typed_dict(TypingPoint))
-
-    def test_recognizes_typed_dict_from_typing_extensions(self) -> None:
-        self.assertTrue(_is_typed_dict(TypingExtensionsPoint))
-
-    def test_recognizes_typed_dict_from_mypy_extensions(self) -> None:
-        self.assertTrue(_is_typed_dict(MypyExtensionsPoint))
-
-
-# ------------------------------------------------------------------------------
-# TestIsAssignable
+# API: TestIsAssignable
 
 
 class _Cell(RichTypedDict):
@@ -2947,7 +2902,52 @@ class TestIsAssignable(TestCase):
 
 
 # ------------------------------------------------------------------------------
-# TestTypechecks
+# Internal: TestIsTypedDict
+
+from typing import (
+    TypedDict as TypingTypedDict,  # type: ignore[not-supported-yet]  # pytype
+)
+
+from trycast import _is_typed_dict
+
+
+class TypingPoint(TypingTypedDict):
+    x: int
+    y: int
+
+
+from typing_extensions import (
+    TypedDict as TypingExtensionsTypedDict,  # type: ignore[not-supported-yet]  # pytype
+)
+
+
+class TypingExtensionsPoint(TypingExtensionsTypedDict):
+    x: int
+    y: int
+
+
+class MypyExtensionsPoint(mypy_extensions.TypedDict):  # type: ignore[reportGeneralTypeIssues]  # pyright
+    x: int
+    y: int
+
+
+class TestIsTypedDict(TestCase):
+    """
+    Tests whether the _is_typed_dict() internal function works.
+    """
+
+    def test_recognizes_typed_dict_from_typing(self) -> None:
+        self.assertTrue(_is_typed_dict(TypingPoint))
+
+    def test_recognizes_typed_dict_from_typing_extensions(self) -> None:
+        self.assertTrue(_is_typed_dict(TypingExtensionsPoint))
+
+    def test_recognizes_typed_dict_from_mypy_extensions(self) -> None:
+        self.assertTrue(_is_typed_dict(MypyExtensionsPoint))
+
+
+# ------------------------------------------------------------------------------
+# Meta: TestTypechecks
 
 _P = ParamSpec("_P")
 
