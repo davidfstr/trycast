@@ -524,7 +524,7 @@ raised exceptions, and other details.
 
 * See the [Roadmap](https://github.com/davidfstr/trycast/wiki/Roadmap).
 
-### main
+### v1.2.0
 
 * Add `checkcast()`, an alternative to `trycast()` which raises a
   `ValidationError` upon failure instead of returning `None`.
