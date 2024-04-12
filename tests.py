@@ -79,7 +79,7 @@ _FAILURE = object()
 
 
 # ------------------------------------------------------------------------------
-# TestTryCastModule
+# API: TestTryCastModule
 
 
 class TestTryCastModule(TestCase):
@@ -97,7 +97,7 @@ class TestTryCastModule(TestCase):
 
 
 # ------------------------------------------------------------------------------
-# TestTryCast
+# API: TestTryCast
 
 _T = TypeVar("_T")
 
@@ -1654,6 +1654,54 @@ class TestTryCast(TestCase):
             {"Target": dict(x=50, y=50)},
         )
 
+    # === type Statement ===
+
+    if sys.version_info >= (3, 12):
+
+        def test_alias_to_union_defined_by_type_statement(self) -> None:
+            import test_data.forwardrefs_example_with_type_statement
+
+            # Union with forward refs with deferred resolution
+            self.assertTryCastSuccess(
+                test_data.forwardrefs_example_with_type_statement.Shape,
+                dict(type="circle", center=dict(x=50, y=50), radius=25),
+            )
+
+        def test_alias_to_list_defined_by_type_statement(self) -> None:
+            import test_data.forwardrefs_example_with_type_statement
+
+            # list with forward refs with deferred resolution
+            self.assertTryCastSuccess(
+                test_data.forwardrefs_example_with_type_statement.Scatterplot,
+                [dict(x=50, y=50)],
+            )
+
+        def test_alias_to_dict_with_forwardrefs(self) -> None:
+            import test_data.forwardrefs_example_with_type_statement
+
+            # dict with forward refs with deferred resolution
+            self.assertTryCastSuccess(
+                test_data.forwardrefs_example_with_type_statement.PointForLabel,
+                {"Target": dict(x=50, y=50)},
+            )
+
+        def test_parameterized_alias(self) -> None:
+            import test_data.type_statement_example
+
+            self.assertTryCastSuccess(
+                test_data.type_statement_example.FancyTuple[int, float],  # type: ignore[misc]  # mypy
+                (1, 2.0),
+            )
+            self.assertTryCastSuccess(
+                test_data.type_statement_example.FancyTuple,
+                ("hello", "world"),
+            )
+
+            self.assertTryCastFailure(
+                test_data.type_statement_example.FancyTuple[int, float],  # type: ignore[misc]  # mypy
+                (1, "boom"),
+            )
+
     # === Stringified References ===
 
     def test_stringified_reference(self) -> None:
@@ -1987,16 +2035,25 @@ class TestTryCast(TestCase):
             lambda: trycast((int, str), 1),
         )
 
+    # NOTE: The internal _type_check function is heavily exercised by this test.
     def test_reversing_order_of_first_two_arguments_gives_nice_error_message(
         self,
     ) -> None:
-        self.assertEqual(1, trycast(int, 1))
+        CASES = [
+            (int, 1),
+            (bool, True),
+            (list, [1, 2]),
+            (dict, {"x": 1, "y": 2}),
+        ]
 
-        self.assertRaisesRegex(
-            TypeError,
-            "requires a type as its first argument",
-            lambda: trycast(1, int),
-        )
+        for tp, value in CASES:
+            with self.subTest(tp=tp):
+                self.assertEqual(value, trycast(tp, value))
+                self.assertRaisesRegex(
+                    TypeError,
+                    "requires a type as its first argument",
+                    lambda: trycast(value, tp),
+                )
 
     # === Large Examples ===
 
@@ -2115,7 +2172,7 @@ class _TypingExtensionsGoneLoader(MetaPathFinder):
 
 
 # ------------------------------------------------------------------------------
-# TestCheckCast
+# API: TestCheckCast
 
 
 # For test_http_request_parsing_example
@@ -2842,52 +2899,7 @@ class TestValidationError(TestCase):
 
 
 # ------------------------------------------------------------------------------
-# TestIsTypedDict
-
-from typing import (
-    TypedDict as TypingTypedDict,  # type: ignore[not-supported-yet]  # pytype
-)
-
-from trycast import _is_typed_dict
-
-
-class TypingPoint(TypingTypedDict):
-    x: int
-    y: int
-
-
-from typing_extensions import (
-    TypedDict as TypingExtensionsTypedDict,  # type: ignore[not-supported-yet]  # pytype
-)
-
-
-class TypingExtensionsPoint(TypingExtensionsTypedDict):
-    x: int
-    y: int
-
-
-class MypyExtensionsPoint(mypy_extensions.TypedDict):  # type: ignore[reportGeneralTypeIssues]  # pyright
-    x: int
-    y: int
-
-
-class TestIsTypedDict(TestCase):
-    """
-    Tests whether the _is_typed_dict() internal function works.
-    """
-
-    def test_recognizes_typed_dict_from_typing(self) -> None:
-        self.assertTrue(_is_typed_dict(TypingPoint))
-
-    def test_recognizes_typed_dict_from_typing_extensions(self) -> None:
-        self.assertTrue(_is_typed_dict(TypingExtensionsPoint))
-
-    def test_recognizes_typed_dict_from_mypy_extensions(self) -> None:
-        self.assertTrue(_is_typed_dict(MypyExtensionsPoint))
-
-
-# ------------------------------------------------------------------------------
-# TestIsAssignable
+# API: TestIsAssignable
 
 
 class _Cell(RichTypedDict):
@@ -2947,7 +2959,52 @@ class TestIsAssignable(TestCase):
 
 
 # ------------------------------------------------------------------------------
-# TestTypechecks
+# Internal: TestIsTypedDict
+
+from typing import (
+    TypedDict as TypingTypedDict,  # type: ignore[not-supported-yet]  # pytype
+)
+
+from trycast import _is_typed_dict
+
+
+class TypingPoint(TypingTypedDict):
+    x: int
+    y: int
+
+
+from typing_extensions import (
+    TypedDict as TypingExtensionsTypedDict,  # type: ignore[not-supported-yet]  # pytype
+)
+
+
+class TypingExtensionsPoint(TypingExtensionsTypedDict):
+    x: int
+    y: int
+
+
+class MypyExtensionsPoint(mypy_extensions.TypedDict):  # type: ignore[reportGeneralTypeIssues]  # pyright
+    x: int
+    y: int
+
+
+class TestIsTypedDict(TestCase):
+    """
+    Tests whether the _is_typed_dict() internal function works.
+    """
+
+    def test_recognizes_typed_dict_from_typing(self) -> None:
+        self.assertTrue(_is_typed_dict(TypingPoint))
+
+    def test_recognizes_typed_dict_from_typing_extensions(self) -> None:
+        self.assertTrue(_is_typed_dict(TypingExtensionsPoint))
+
+    def test_recognizes_typed_dict_from_mypy_extensions(self) -> None:
+        self.assertTrue(_is_typed_dict(MypyExtensionsPoint))
+
+
+# ------------------------------------------------------------------------------
+# Meta: TestTypechecks
 
 _P = ParamSpec("_P")
 

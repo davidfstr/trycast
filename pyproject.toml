@@ -28,7 +28,7 @@ classifiers = [  # https://pypi.org/classifiers/
 "Release notes" = "https://github.com/davidfstr/trycast#changelog"
 
 [tool.poetry.dependencies]
-python = ">=3.8"
+python = ">=3.8.1"
 
 [tool.poetry.dev-dependencies]
 mypy = "*"
@@ -37,9 +37,9 @@ pyright = "*"
 pyre-check = "*"
 pytype = { version = "==2022.3.21", python = ">=3.7.4,<3.10" }
 tox = "^3.23.1"
-black = "==22.3.0"
+black = "==24.3.0"
 isort = "^5.9.1"
-flake8 = "^3.9.2"
+flake8 = ">=6.0,<7.0"
 coverage = "*"
 # NOTE: Duplicated in: [tool.tox] > legacy_tox_ini > [testenv] > deps
 typing-extensions = ">=4.11.0rc1"  # for get_type_hints() that supports ReadOnly
@@ -70,7 +70,12 @@ pythonPlatform = "All"
 profile = "black"
 atomic = true
 line_length = 88
-skip_glob = ["venv*", "test_data/forwardrefs_example_with_import_annotations.py", ".pytype"]
+skip_glob = [
+    ".pytype",
+    "test_data/forwardrefs_example*.py",
+    "test_data/type_statement_example.py",
+    "venv*",
+]
 
 # Formatter: Black
 [tool.black]

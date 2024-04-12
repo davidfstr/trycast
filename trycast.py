@@ -40,19 +40,46 @@ from typing import _eval_type as eval_type  # type: ignore[attr-defined]
 from typing import _type_repr as type_repr  # type: ignore[attr-defined]
 from typing import cast, get_args, get_origin, overload
 
-try:
+# GenericAlias
+if sys.version_info >= (3, 9):
+    from types import GenericAlias
+else:
+
+    class GenericAlias(type):  # type: ignore[no-redef]
+        __origin__: object
+        __args__: Tuple[object, ...]
+
+        def __init__(self, origin: object, args: Tuple[object, ...]) -> None: ...
+
+        ...
+
+
+# UnionType
+if sys.version_info >= (3, 10):
     from types import UnionType  # type: ignore[attr-defined]
-except ImportError:
+else:
 
     class UnionType(type):  # type: ignore[no-redef]
         ...
 
 
+# Never
 if sys.version_info >= (3, 11):
     from typing import Never
 else:
 
     class Never(type):  # type: ignore[no-redef]
+        ...
+
+
+# TypeAliasType
+if sys.version_info >= (3, 12):
+    from typing import TypeAliasType  # type: ignore[21]  # pyre
+else:
+
+    class TypeAliasType(type):  # type: ignore[no-redef]
+        __type_params__: Tuple[object, ...]
+        __value__: object
         ...
 
 
@@ -168,51 +195,21 @@ else:
 
 # _type_check
 if sys.version_info >= (3, 11):
-    import types
-    from typing import _GenericAlias  # type: ignore[attr-defined]  # noqa: F811
-    from typing import (  # type: ignore[attr-defined]
-        ClassVar,
-        Final,
-        Generic,
-        ParamSpec,
-        Protocol,
-        _SpecialForm,
-    )
-
-    # Workaround https://github.com/python/cpython/issues/92601
-    # by using Python 3.10's typing._type_check()
+    # NOTE: This function is derived from Python 3.12's typing._type_check
+    #       internal helper function. It is however more concerned with
+    #       rejecting known non-types (true negatives) than it is
+    #       avoiding rejecting actual types (false negatives).
+    #       See discussion at: https://github.com/python/cpython/issues/92601
     def _type_check(arg: object, msg: str):
-        """Check that the argument is a type, and return it (internal helper).
+        """Returns the argument if it appears to be a type.
+        Raises TypeError if the argument is a known non-type.
 
-        As a special case, accept None and return type(None) instead. Also wrap strings
-        into ForwardRef instances. Consider several corner cases, for example plain
-        special forms like Union are not valid, while Union[int, str] is OK, etc.
-        The msg argument is a human-readable error message, e.g::
-
-            "Union[arg, ...]: arg should be a type."
-
-        We append the repr() of the actual value (truncated to 100 chars).
+        As a special case, accepts None and returns type(None) instead.
+        Also wraps strings into ForwardRef instances.
         """
-        is_argument = True
-        module = None
-        is_class = False
-
-        invalid_generic_forms = (Generic, Protocol)  # type: tuple[object, ...]
-        if not is_class:
-            invalid_generic_forms += (ClassVar,)
-            if is_argument:
-                invalid_generic_forms += (Final,)
-
-        arg = _type_convert(arg, module=module)
-        if isinstance(arg, _GenericAlias) and arg.__origin__ in invalid_generic_forms:  # type: ignore[reportGeneralTypeIssues]  # pyright
-            raise TypeError(f"{arg} is not valid as type argument")
-        if arg in (Any, Never, NoReturn, Final):
-            return arg
-        if isinstance(arg, _SpecialForm) or arg in (Generic, Protocol):
-            raise TypeError(f"Plain {arg} is not valid as type argument")
-        if isinstance(arg, (type, TypeVar, ForwardRef, types.UnionType, ParamSpec)):
-            return arg
-        if not callable(arg):
+        arg = _type_convert(arg, module=None)
+        # Recognize *common* non-types. (This check is not exhaustive.)
+        if isinstance(arg, (dict, list, int, tuple)):
             raise TypeError(f"{msg} Got {arg!r:.100}.")
         return arg
 
@@ -264,8 +261,7 @@ _MISSING = object()
 @overload
 def trycast(  # type: ignore[43]  # pyre
     tp: str, value: object, /, *, strict: bool = True, eval: Literal[False]
-) -> NoReturn:
-    ...  # pragma: no cover
+) -> NoReturn: ...  # pragma: no cover
 
 
 # Overload Group: (tp: str|Type[_T]|object, value: object) -> ...
@@ -279,15 +275,13 @@ def trycast(tp: str, value: object, /, *, strict: bool = True, eval: bool = True
 @overload
 def trycast(  # type: ignore[43]  # pyre
     tp: Type[_T], value: object, /, *, strict: bool = True, eval: bool = True
-) -> Optional[_T]:
-    ...  # pragma: no cover
+) -> Optional[_T]: ...  # pragma: no cover
 
 
 @overload
 def trycast(  # type: ignore[43]  # pyre
     tp: object, value: object, /, *, strict: bool = True, eval: bool = True
-) -> Optional[object]:
-    ...  # pragma: no cover
+) -> Optional[object]: ...  # pragma: no cover
 
 
 # Overload Group: (tp: str|Type[_T]|object, value: object, failure: object) -> ...
@@ -302,8 +296,7 @@ def trycast(
     *,
     strict: bool = True,
     eval: Literal[False],
-) -> NoReturn:
-    ...  # pragma: no cover
+) -> NoReturn: ...  # pragma: no cover
 
 
 @overload
@@ -315,15 +308,13 @@ def trycast(
     *,
     strict: bool = True,
     eval: bool = True,
-) -> Union[_T, _F]:
-    ...  # pragma: no cover
+) -> Union[_T, _F]: ...  # pragma: no cover
 
 
 @overload
 def trycast(
     tp: object, value: object, /, failure: _F, *, strict: bool = True, eval: bool = True
-) -> Union[object, _F]:
-    ...  # pragma: no cover
+) -> Union[object, _F]: ...  # pragma: no cover
 
 
 # Implementation
@@ -425,8 +416,7 @@ def checkcast(  # type: ignore[43]  # pyre
     strict: bool = True,
     eval: Literal[False],
     _funcname: str = "checkcast",
-) -> NoReturn:
-    ...  # pragma: no cover
+) -> NoReturn: ...  # pragma: no cover
 
 
 # Overload Group: (tp: str|Type[_T]|object, value: object) -> ...
@@ -446,8 +436,7 @@ def checkcast(  # type: ignore[43]  # pyre
     strict: bool = True,
     eval: bool = True,
     _funcname: str = "checkcast",
-) -> Optional[_T]:
-    ...  # pragma: no cover
+) -> Optional[_T]: ...  # pragma: no cover
 
 
 @overload
@@ -459,8 +448,7 @@ def checkcast(  # type: ignore[43]  # pyre
     strict: bool = True,
     eval: bool = True,
     _funcname: str = "checkcast",
-) -> Optional[object]:
-    ...  # pragma: no cover
+) -> Optional[object]: ...  # pragma: no cover
 
 
 # Implementation
@@ -622,7 +610,7 @@ def _checkcast_inner(
                 if len(value) != len(type_args):
                     return ValidationError(tp, value)
 
-                for (i, T, t) in zip(range(len(type_args)), type_args, value):
+                for i, T, t in zip(range(len(type_args)), type_args, value):
                     e = _checkcast_inner(T, t, options)
                     if e is not None:
                         return ValidationError(
@@ -746,6 +734,19 @@ def _checkcast_inner(
             else:
                 return ValidationError(tp, value)
 
+    if isinstance(type_origin, TypeAliasType):  # type: ignore[16]  # pyre
+        if len(type_origin.__type_params__) > 0:
+            substitutions = dict(
+                zip(
+                    type_origin.__type_params__,
+                    get_args(tp) + ((Any,) * len(type_origin.__type_params__)),
+                )
+            )  # type: Dict[object, object]
+            new_tp = _substitute(tp.__value__, substitutions)  # type: ignore[attr-defined]  # mypy
+        else:
+            new_tp = tp.__value__  # type: ignore[attr-defined]  # mypy
+        return _checkcast_inner(new_tp, value, options)  # type: ignore[16]  # pyre
+
     if isinstance(tp, _GenericAlias):  # type: ignore[16]  # pyre
         raise TypeNotSupportedError(
             f"{options.funcname} does not know how to recognize generic type "
@@ -783,7 +784,7 @@ def _checkcast_inner(
                     else:
                         required_keys = frozenset()
 
-            for (k, v) in value.items():  # type: ignore[attribute-error]  # pytype
+            for k, v in value.items():  # type: ignore[attribute-error]  # pytype
                 V = resolved_annotations.get(k, _MISSING)
                 if V is not _MISSING:
                     e = _checkcast_inner(V, v, options)
@@ -837,6 +838,16 @@ def _checkcast_inner(
     if tp is Never or tp is NoReturn:
         return ValidationError(tp, value)
 
+    if isinstance(tp, TypeAliasType):  # type: ignore[16]  # pyre
+        if len(tp.__type_params__) > 0:  # type: ignore[16]  # pyre
+            substitutions = dict(
+                zip(tp.__type_params__, ((Any,) * len(tp.__type_params__)))
+            )
+            new_tp = _substitute(tp.__value__, substitutions)
+        else:
+            new_tp = tp.__value__
+        return _checkcast_inner(new_tp, value, options)  # type: ignore[16]  # pyre
+
     if isinstance(tp, ForwardRef):
         raise UnresolvedForwardRefError()
 
@@ -852,6 +863,16 @@ class TypeNotSupportedError(TypeError):
 
 class UnresolvedForwardRefError(TypeError):
     pass
+
+
+def _substitute(tp: object, substitutions: Dict[object, object]) -> object:
+    if isinstance(tp, GenericAlias):  # ex: tuple[T1, T2]
+        return GenericAlias(  # type: ignore[reportCallIssue]  # pyright
+            tp.__origin__, tuple([_substitute(a, substitutions) for a in tp.__args__])
+        )
+    if isinstance(tp, TypeVar):  # type: ignore[wrong-arg-types]  # pytype
+        return substitutions.get(tp, tp)
+    return tp
 
 
 def _checkcast_listlike(
@@ -881,7 +902,7 @@ def _checkcast_listlike(
         if _is_simple_typevar(T, covariant=covariant_t):
             pass
         else:
-            for (i, x) in enumerate(value):  # type: ignore[attribute-error]  # pytype
+            for i, x in enumerate(value):  # type: ignore[attribute-error]  # pytype
                 e = _checkcast_inner(T, x, options)
                 if e is not None:
                     return ValidationError(
@@ -917,7 +938,7 @@ def _checkcast_dictlike(
         if _is_simple_typevar(K) and _is_simple_typevar(V, covariant=covariant_v):
             pass
         else:
-            for (k, v) in value.items():  # type: ignore[attribute-error]  # pytype
+            for k, v in value.items():  # type: ignore[attribute-error]  # pytype
                 e = _checkcast_inner(K, k, options)
                 if e is not None:
                     return ValidationError(
@@ -998,7 +1019,7 @@ class ValidationError(ValueError):
 
     # Private builder method
     def _with_prefix(
-        self: _SelfValidationError, prefix: "_LazyStr", /
+        self: _SelfValidationError, prefix: "_LazyStr", /  # type: ignore[11]  # pyre  # noqa: W504
     ) -> _SelfValidationError:
         self._prefix = prefix
         return self
@@ -1053,13 +1074,15 @@ class _LazyStr(str):
 
 
 @overload
-def isassignable(value: object, tp: str, /, *, eval: Literal[False]) -> NoReturn:
-    ...  # pragma: no cover
+def isassignable(
+    value: object, tp: str, /, *, eval: Literal[False]
+) -> NoReturn: ...  # pragma: no cover
 
 
 @overload
-def isassignable(value: object, tp: str, /, *, eval: bool = True) -> bool:
-    ...  # pragma: no cover
+def isassignable(
+    value: object, tp: str, /, *, eval: bool = True
+) -> bool: ...  # pragma: no cover
 
 
 @overload
@@ -1068,8 +1091,9 @@ def isassignable(value: object, tp: Type[_T], /, *, eval: bool = True) -> TypeGu
 
 
 @overload
-def isassignable(value: object, tp: object, /, *, eval: bool = True) -> bool:
-    ...  # pragma: no cover
+def isassignable(
+    value: object, tp: object, /, *, eval: bool = True
+) -> bool: ...  # pragma: no cover
 
 
 def isassignable(value, tp, /, *, eval=True):

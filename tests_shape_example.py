@@ -1,5 +1,5 @@
 import sys
-from typing import List, Optional, Union, cast
+from typing import List, Optional, Union, cast  # noqa: F401
 
 from trycast import trycast
 

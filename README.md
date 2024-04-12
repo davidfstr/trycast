@@ -530,11 +530,13 @@ raised exceptions, and other details.
   `ValidationError` upon failure instead of returning `None`.
   ([#16](https://github.com/davidfstr/trycast/issues/16))
 * Add support for Python 3.13.
-    * Add support for `ReadOnly[]` from PEP 705.
+    * Recognize `ReadOnly[]` from PEP 705.
       ([#25](https://github.com/davidfstr/trycast/issues/25))
 * Add support for Python 3.12.
+    * Recognize `type` statements from PEP 695.
+      ([#29](https://github.com/davidfstr/trycast/issues/29))
 * Enhance support for Python 3.11:
-    * Extend `trycast()` to recognize special `Never` values.
+    * Recognize special `Never` values.
       ([#26](https://github.com/davidfstr/trycast/issues/26))
 * Drop support for Python 3.7. ([#21](https://github.com/davidfstr/trycast/issues/21))
 * Enforce that calls to `trycast()` and `isassignable()` pass the
