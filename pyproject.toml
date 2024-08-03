@@ -21,7 +21,8 @@ classifiers = [  # https://pypi.org/classifiers/
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
-    "Topic :: Software Development"
+    "Topic :: Software Development",
+    "Typing :: Typed"
 ]
 
 [tool.poetry.urls]
@@ -53,7 +54,7 @@ build-backend = "poetry.core.masonry.api"
 # Config Syntax Reference:
 # https://mypy.readthedocs.io/en/latest/config_file.html#using-a-pyproject-toml-file
 [tool.mypy]
-files = "trycast.py,tests.py"
+files = "trycast/__init__.py,tests.py"
 mypy_path = "."
 strict_optional = true
 

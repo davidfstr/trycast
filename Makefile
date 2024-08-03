@@ -92,7 +92,7 @@ endif
 .PHONY: pytype
 ifneq "$(pytype_path)" ""
 pytype:  ## Run pytype typechecker.
-	pytype --keep-going trycast.py tests.py
+	pytype --keep-going trycast/__init__.py tests.py
 else
 pytype:
 endif
