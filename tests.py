@@ -3086,7 +3086,7 @@ class TestTypechecks(TestCase):
     def test_no_pytype_typechecker_errors_exist(self) -> None:
         try:
             subprocess.check_output(
-                ["pytype", "--keep-going", "trycast.py", "tests.py"],
+                ["pytype", "--keep-going", "trycast/__init__.py", "tests.py"],
                 env={"LANG": "en_US.UTF-8", "PATH": os.environ.get("PATH", "")},
                 stderr=subprocess.STDOUT,
             )
