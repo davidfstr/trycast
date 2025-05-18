@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "trycast"
-version = "1.2.0"  # publish: version
+version = "1.2.1"  # publish: version
 description = ""
 authors = ["David Foster <david@dafoster.net>"]
 license = "MIT"
