@@ -36,9 +36,18 @@ from typing import (
     TypeVar,
     Union,
 )
-from typing import _eval_type as eval_type  # type: ignore[attr-defined]
 from typing import _type_repr as type_repr  # type: ignore[attr-defined]
 from typing import cast, get_args, get_origin, overload
+
+# eval_type
+if sys.version_info >= (3, 13):
+    from typing import _eval_type  # type: ignore[attr-defined]
+
+    def eval_type(x, y, z):
+        return _eval_type(x, y, z, type_params=())
+
+else:
+    from typing import _eval_type as eval_type  # type: ignore[attr-defined]
 
 # GenericAlias
 if sys.version_info >= (3, 9):
@@ -1142,9 +1151,9 @@ _EXTRA_ADVISE_IF_MOD_IS_BUILTINS = (
 )
 
 
-# TODO: Use this signature for _eval_type once support for TypeForm is
+# TODO: Use this signature for eval_type_str once support for TypeForm is
 #       implemented in mypy. See: https://github.com/python/mypy/issues/9773
-# def _eval_type(tp: str) -> TypeForm: ...
+# def eval_type_str(tp: str) -> TypeForm: ...
 
 
 @functools.lru_cache()

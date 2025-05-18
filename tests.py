@@ -71,7 +71,15 @@ try:
 except ImportError:
     from typing_extensions import ReadOnly  # type: ignore[21]  # pyre
 
-from typing import _eval_type as eval_type  # type: ignore[attr-defined]
+# eval_type
+if sys.version_info >= (3, 13):
+    from typing import _eval_type  # type: ignore[attr-defined]
+
+    def eval_type(x, y, z):
+        return _eval_type(x, y, z, type_params=())
+
+else:
+    from typing import _eval_type as eval_type  # type: ignore[attr-defined]
 
 # ParamSpec
 if sys.version_info >= (3, 13):
