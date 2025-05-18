@@ -83,9 +83,9 @@ else:
 
 # ParamSpec
 if sys.version_info >= (3, 13):
-    from typing import ParamSpec
+    from typing import ParamSpec  # type: ignore[import-error]  # pytype
 else:
-    from typing_extensions import ParamSpec
+    from typing_extensions import ParamSpec  # type: ignore[not-supported-yet]  # pytype
 
 _FAILURE = object()
 
@@ -3042,8 +3042,8 @@ def _tag(tag_name: str) -> Callable[[Callable[_P, _R]], Callable[_P, _R]]:  # ty
         $ TRYCAST_SKIP_TEST_TAGS=pyright,pyre python -m unittest
     """
 
-    def decorate(f: Callable[_P, _R]) -> Callable[_P, _R]:
-        def decorated(*args: _P.args, **kwargs: _P.kwargs) -> _R:
+    def decorate(f: Callable[_P, _R]) -> Callable[_P, _R]:  # type: ignore[invalid-annotation]  # pytype
+        def decorated(*args: _P.args, **kwargs: _P.kwargs) -> _R:  # type: ignore[invalid-annotation]  # pytype
             if tag_name in os.environ.get("TRYCAST_SKIP_TEST_TAGS", "").split(","):
                 raise SkipTest(f"skipping test tagged {tag_name}")
             return f(*args, **kwargs)
