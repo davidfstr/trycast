@@ -395,13 +395,13 @@ def trycast(tp, value, /, failure=None, *, strict=True, eval=True):
 # checkcast
 
 # TODO: Once support for TypeForm is implemented in mypy,
-#       replace the   `(Type[T]) -> Optional[T]` overload
-#       and the       `(object) -> Optional[object]` overload with
-#       the following `(TypeForm[T]) -> Optional[T]` overload:
+#       replace the   `(Type[T]) -> T` overload
+#       and the       `(object) -> object` overload with
+#       the following `(TypeForm[T]) -> T` overload:
 #
 #       See: https://github.com/python/mypy/issues/9773
 # @overload
-# def checkcast(tp: TypeForm[_T], value: object) -> Optional[_T]: ...
+# def checkcast(tp: TypeForm[_T], value: object) -> _T: ...
 
 
 # Overload: (tp: str, eval: Literal[False]) -> NoReturn
@@ -436,7 +436,7 @@ def checkcast(  # type: ignore[43]  # pyre
     strict: bool = True,
     eval: bool = True,
     _funcname: str = "checkcast",
-) -> Optional[_T]: ...  # pragma: no cover
+) -> _T: ...  # pragma: no cover
 
 
 @overload
@@ -448,7 +448,7 @@ def checkcast(  # type: ignore[43]  # pyre
     strict: bool = True,
     eval: bool = True,
     _funcname: str = "checkcast",
-) -> Optional[object]: ...  # pragma: no cover
+) -> object: ...  # pragma: no cover
 
 
 # Implementation

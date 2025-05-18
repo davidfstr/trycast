@@ -2838,6 +2838,16 @@ class TestCheckCast(TestCase):
             ),
         )
 
+    # === Misc ===
+
+    def test_checkcast_returns_value_of_correct_type(self) -> None:
+        input = True
+        output = checkcast(bool, input)
+        if sys.version_info >= (3, 11):
+            from typing import assert_type
+
+            assert_type(output, bool)  # NOT: bool | None
+
     # === Utility ===
 
     def assertRaisesEqual(

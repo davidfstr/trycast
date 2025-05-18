@@ -524,6 +524,12 @@ raised exceptions, and other details.
 
 * See the [Roadmap](https://github.com/davidfstr/trycast/wiki/Roadmap).
 
+### v1.2.1
+
+* Fix `checkcast()` to declare that it returns a `T` rather than `T | None`.
+* Add `py.typed` file so that typecheckers know that the `trycast` module
+  bundles its own types.
+
 ### v1.2.0
 
 * Add `checkcast()`, an alternative to `trycast()` which raises a
