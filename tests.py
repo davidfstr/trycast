@@ -73,7 +73,11 @@ except ImportError:
 
 from typing import _eval_type as eval_type  # type: ignore[attr-defined]
 
-from typing_extensions import ParamSpec
+# ParamSpec
+if sys.version_info >= (3, 13):
+    from typing import ParamSpec
+else:
+    from typing_extensions import ParamSpec
 
 _FAILURE = object()
 
