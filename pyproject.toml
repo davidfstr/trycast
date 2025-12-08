@@ -16,7 +16,6 @@ classifiers = [  # https://pypi.org/classifiers/
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -29,9 +28,9 @@ classifiers = [  # https://pypi.org/classifiers/
 "Release notes" = "https://github.com/davidfstr/trycast#changelog"
 
 [tool.poetry.dependencies]
-python = ">=3.8.1"
+python = ">=3.9"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 mypy = "*"
 mypy_extensions = "*"
 pyright = "*"
@@ -87,7 +86,7 @@ line_length = 88
 legacy_tox_ini = """
 
 [tox]
-envlist = py38,py39,py310,py311,py312
+envlist = py39,py310,py311,py312
 isolated_build = True
 
 [testenv]

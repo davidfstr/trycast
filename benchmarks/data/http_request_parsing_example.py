@@ -1,17 +1,7 @@
-import sys
 from typing import Literal, Mapping, Optional
-
-# RichTypedDict
-if sys.version_info >= (3, 9):
-    # Python 3.9+
-    from typing import (
-        TypedDict as RichTypedDict,  # type: ignore[not-supported-yet]  # pytype
-    )
-else:
-    # Python 3.8+
-    from typing_extensions import (
-        TypedDict as RichTypedDict,  # type: ignore[not-supported-yet]  # pytype
-    )
+from typing import (
+    TypedDict as RichTypedDict,  # type: ignore[not-supported-yet]  # pytype
+)
 
 
 # For test_http_request_parsing_example

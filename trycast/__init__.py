@@ -158,7 +158,7 @@ def _is_typed_dict(tp: object) -> bool:
 
 # _is_newtype
 if NewType.__class__.__name__ == "function":  # type: ignore[reportGeneralTypeIssues]  # pyright
-    # Python 3.8 - 3.9
+    # Python 3.9
     def _is_newtype(tp: object) -> bool:
         return (
             hasattr(tp, "__class__")
@@ -367,8 +367,8 @@ def trycast(tp, value, /, failure=None, *, strict=True, eval=True):
     Parameters:
     * strict --
         * If strict=False then this function will additionally accept
-          mypy_extensions.TypedDict instances and Python 3.8 typing.TypedDict
-          instances for the `tp` parameter. Normally these kinds of types are
+          mypy_extensions.TypedDict instances for the `tp` parameter.
+          Normally these kinds of types are
           rejected with a TypeNotSupportedError because these
           types do not preserve enough information at runtime to reliably
           determine which keys are required and which are potentially-missing.
@@ -383,8 +383,7 @@ def trycast(tp, value, /, failure=None, *, strict=True, eval=True):
 
     Raises:
     * TypeNotSupportedError --
-        * If strict=True and either mypy_extensions.TypedDict or a
-          Python 3.8 typing.TypedDict is found within the `tp` argument.
+        * If strict=True and mypy_extensions.TypedDict is found within the `tp` argument.
         * If strict=True and a NewType is found within the `tp` argument.
         * If a TypeVar is found within the `tp` argument.
         * If an unrecognized Generic type is found within the `tp` argument.
@@ -772,15 +771,12 @@ def _checkcast_inner(
                 resolved_annotations = tp.__annotations__  # type: ignore[attribute-error]  # pytype
 
             try:
-                # {typing in Python 3.9+, typing_extensions}.TypedDict
+                # {typing, typing_extensions}.TypedDict
                 required_keys = tp.__required_keys__  # type: ignore[attr-defined, attribute-error]  # mypy, pytype
             except AttributeError:
-                # {typing in Python 3.8, mypy_extensions}.TypedDict
+                # {mypy_extensions}.TypedDict
                 if options.strict:
-                    if sys.version_info[:2] >= (3, 9):
-                        advise = "Suggest use a typing.TypedDict instead."
-                    else:
-                        advise = "Suggest use a typing_extensions.TypedDict instead."
+                    advise = "Suggest use a typing.TypedDict instead."
                     advise2 = f"Or use {options.funcname}(..., strict=False)."
                     raise TypeNotSupportedError(
                         f"{options.funcname} cannot determine which keys are required "
@@ -896,7 +892,7 @@ def _checkcast_listlike(
     if isinstance(value, listlike_type):
         T_ = get_args(tp)
 
-        if len(T_) == 0:  # Python 3.9+
+        if len(T_) == 0:
             (T,) = (_SimpleTypeVarCo if covariant_t else _SimpleTypeVar,)
 
         else:
@@ -936,7 +932,7 @@ def _checkcast_dictlike(
     if isinstance(value, dictlike_type):
         K_V = get_args(tp)
 
-        if len(K_V) == 0:  # Python 3.9+
+        if len(K_V) == 0:
             (K, V) = (
                 _SimpleTypeVar,
                 _SimpleTypeVarCo if covariant_v else _SimpleTypeVar,

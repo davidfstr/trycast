@@ -1,19 +1,8 @@
-import sys
-from typing import List, Optional, Union, cast  # noqa: F401
+from typing import List, Literal, Optional  # noqa: F401
+from typing import TypedDict as RichTypedDict
+from typing import Union, cast  # noqa: F401
 
 from trycast import trycast
-
-# Literal
-if sys.version_info >= (3, 8):
-    from typing import Literal  # Python 3.8+
-else:
-    from typing_extensions import Literal  # Python 3.5+
-
-# RichTypedDict
-if sys.version_info >= (3, 9):
-    from typing import TypedDict as RichTypedDict  # Python 3.9+
-else:
-    from typing_extensions import TypedDict as RichTypedDict  # Python 3.5+
 
 
 class Point2D(RichTypedDict):

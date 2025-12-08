@@ -1,17 +1,6 @@
-import sys
-from typing import Dict, List, Union
-
-# Literal
-if sys.version_info >= (3, 8):
-    from typing import Literal  # Python 3.8+
-else:
-    from typing_extensions import Literal  # Python 3.5+
-
-# RichTypedDict
-if sys.version_info >= (3, 9):
-    from typing import TypedDict as RichTypedDict  # Python 3.9+
-else:
-    from typing_extensions import TypedDict as RichTypedDict  # Python 3.5+
+from typing import Dict, List, Literal
+from typing import TypedDict as RichTypedDict
+from typing import Union
 
 
 class Point2D(RichTypedDict):

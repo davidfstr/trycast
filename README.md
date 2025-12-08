@@ -217,9 +217,8 @@ python -m pip install trycast
 
 - So that `trycast()` can recognize TypedDicts with mixed required and
   not-required keys correctly:
-    * Use Python 3.9+ if possible.
-    * Prefer using `typing.TypedDict`, unless you must use Python 3.8.
-      In Python 3.8 prefer `typing_extensions.TypedDict` instead.
+    * Use Python 3.9+.
+    * Prefer using `typing.TypedDict` instead of `typing_extensions.TypedDict`.
     * Avoid using `mypy_extensions.TypedDict` in general.
 
 
@@ -402,8 +401,8 @@ Parameters:
 
 * **strict** -- 
     * If strict=False then this function will additionally accept
-      mypy_extensions.TypedDict instances and Python 3.8 typing.TypedDict
-      instances for the `tp` parameter. Normally these kinds of types are
+      mypy_extensions.TypedDict instances for the `tp` parameter. 
+      Normally these kinds of types are
       rejected with a TypeNotSupportedError because these
       types do not preserve enough information at runtime to reliably
       determine which keys are required and which are potentially-missing.
@@ -419,8 +418,7 @@ Parameters:
 Raises:
 
 * **TypeNotSupportedError** --
-    * If strict=True and either mypy_extensions.TypedDict or a
-      Python 3.8 typing.TypedDict is found within the `tp` argument.
+    * If strict=True and mypy_extensions.TypedDict is found within the `tp` argument.
     * If strict=True and a NewType is found within the `tp` argument.
     * If a TypeVar is found within the `tp` argument.
     * If an unrecognized Generic type is found within the `tp` argument.
@@ -523,6 +521,11 @@ raised exceptions, and other details.
 ### Future
 
 * See the [Roadmap](https://github.com/davidfstr/trycast/wiki/Roadmap).
+
+### main (v2.0.0)
+
+* Drop support for Python 3.8.
+    * Remove supporting code for Python 3.8's neutered TypedDict.
 
 ### v1.2.1
 
