@@ -20,6 +20,7 @@ classifiers = [  # https://pypi.org/classifiers/
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Software Development",
     "Typing :: Typed"
 ]
@@ -36,7 +37,7 @@ mypy_extensions = "*"
 pyright = "*"
 pyre-check = "*"
 pytype = { version = "==2022.3.21", python = ">=3.7.4,<3.10" }
-tox = "^3.23.1"
+tox = ">=4.0.0,<5.0.0"
 black = "==24.3.0"
 isort = "^5.9.1"
 flake8 = ">=6.0,<7.0"
@@ -86,7 +87,7 @@ line_length = 88
 legacy_tox_ini = """
 
 [tox]
-envlist = py39,py310,py311,py312
+envlist = py39,py310,py311,py312,py313
 isolated_build = True
 
 [testenv]
