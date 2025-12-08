@@ -62,7 +62,7 @@ strict_optional = true
 # 
 # Config Syntax Reference:
 [tool.pyright]
-include = ["."]
+include = ["trycast", "tests.py"]
 pythonPlatform = "All"
 #typeCheckingMode = "strict"  # TODO: try this
 
