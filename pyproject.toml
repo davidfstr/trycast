@@ -36,7 +36,8 @@ mypy = "*"
 mypy_extensions = "*"
 pyright = "*"
 pyre-check = "*"
-pytype = { version = "==2022.3.21", python = ">=3.7.4,<3.10" }
+# NOTE: Duplicated in: [tool.tox] > legacy_tox_ini > [testenv] > deps
+pytype = { version = "==2024.04.11", python = ">=3.7.4,<3.10" }
 tox = ">=4.0.0,<5.0.0"
 black = "==24.3.0"
 isort = "^5.9.1"
@@ -93,7 +94,7 @@ isolated_build = True
 [testenv]
 deps =
     mypy
-    pytype == 2022.3.21 ; python_version < "3.10"
+    pytype == 2024.04.11 ; python_version < "3.10"
     typing-extensions >= 4.11.0rc1
 commands =
     python3 -m unittest
