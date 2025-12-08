@@ -873,7 +873,8 @@ class UnresolvedForwardRefError(TypeError):
 def _substitute(tp: object, substitutions: Dict[object, object]) -> object:
     if isinstance(tp, GenericAlias):  # ex: tuple[T1, T2]
         return GenericAlias(  # type: ignore[reportCallIssue]  # pyright
-            tp.__origin__, tuple([_substitute(a, substitutions) for a in tp.__args__])
+            tp.__origin__,  # type: ignore[arg-type]
+            tuple([_substitute(a, substitutions) for a in tp.__args__]),
         )
     if isinstance(tp, TypeVar):  # type: ignore[wrong-arg-types]  # pytype
         return substitutions.get(tp, tp)
