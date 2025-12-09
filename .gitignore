@@ -19,3 +19,6 @@ htmlcov
 
 # pyre
 .pyre
+
+# AI coding
+/plan
