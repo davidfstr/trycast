@@ -340,7 +340,6 @@ Trycast does type check successfully with the following type checkers:
 * [Mypy]
 * [Pyright] / [Pylance]
 * [Pyre]
-* [Pytype]
 
 
 ## API Reference
@@ -526,6 +525,8 @@ raised exceptions, and other details.
 
 * Drop support for Python 3.8.
     * Remove supporting code for Python 3.8's neutered TypedDict.
+* Drop support for Pytype type checker, since it has been 
+  [deprecated](https://github.com/google/pytype/blob/main/README.md).
 
 ### v1.2.1
 
@@ -605,7 +606,7 @@ raised exceptions, and other details.
     * trycast has been in production use for over a year
       at [at least one company] without issues.
     * trycast supports all major Python type checkers
-      (Mypy, Pyright/Pylance, Pyre, Pytype).
+      (Mypy, Pyright/Pylance, Pyre).
     * trycast's initial API is finalized.
 * Fix `coverage` to be a dev-dependency rather than a regular dependency.
 

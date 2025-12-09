@@ -1,7 +1,5 @@
 from typing import Literal, Mapping, Optional
-from typing import (
-    TypedDict as RichTypedDict,  # type: ignore[not-supported-yet]  # pytype
-)
+from typing import TypedDict as RichTypedDict
 
 
 # For test_http_request_parsing_example

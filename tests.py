@@ -29,12 +29,8 @@ from typing import (
     Tuple,
     Type,
 )
-from typing import (
-    TypedDict as NativeTypedDict,  # type: ignore[not-supported-yet]  # pytype
-)
-from typing import (
-    TypedDict as RichTypedDict,  # type: ignore[not-supported-yet]  # pytype
-)
+from typing import TypedDict as NativeTypedDict
+from typing import TypedDict as RichTypedDict
 from typing import TypeVar, Union, cast
 from unittest import SkipTest, TestCase
 
@@ -74,9 +70,9 @@ else:
 
 # ParamSpec
 if sys.version_info >= (3, 13):
-    from typing import ParamSpec  # type: ignore[import-error]  # pytype
+    from typing import ParamSpec
 else:
-    from typing_extensions import ParamSpec  # type: ignore[not-supported-yet]  # pytype
+    from typing_extensions import ParamSpec
 
 _FAILURE = object()
 
@@ -1156,12 +1152,12 @@ class TestTryCast(TestCase):
             self.assertIs(typing.Required, typing_extensions.Required)  # type: ignore[16]  # pyre
             self.assertIs(typing.NotRequired, typing_extensions.NotRequired)  # type: ignore[16]  # pyre
 
-        class TotalMovie(typing_extensions.TypedDict):  # type: ignore[not-supported-yet]  # pytype
+        class TotalMovie(typing_extensions.TypedDict):
             title: str
-            year: typing_extensions.NotRequired[int]  # type: ignore[not-supported-yet]  # pytype
+            year: typing_extensions.NotRequired[int]
 
         class NontotalMovie(typing_extensions.TypedDict, total=False):
-            title: typing_extensions.Required[str]  # type: ignore[not-supported-yet]  # pytype
+            title: typing_extensions.Required[str]
             year: int
 
         # TotalMovie
@@ -1186,7 +1182,7 @@ class TestTryCast(TestCase):
         if sys.version_info >= (3, 13):
             self.assertIs(typing.ReadOnly, typing_extensions.ReadOnly)  # type: ignore[attr-defined, 16]  # mypy, pyre
 
-        class Movie(typing_extensions.TypedDict):  # type: ignore[not-supported-yet]  # pytype
+        class Movie(typing_extensions.TypedDict):
             title: str
             year: int
 
@@ -1519,22 +1515,22 @@ class TestTryCast(TestCase):
     if sys.version_info >= (3, 11):
 
         def test_never(self) -> None:
-            self.assertTryCastFailure(Never, "words")  # type: ignore[wrong-arg-types]  # pytype
-            self.assertTryCastFailure(Never, 1)  # type: ignore[wrong-arg-types]  # pytype
-            self.assertTryCastFailure(Never, None)  # type: ignore[wrong-arg-types]  # pytype
-            self.assertTryCastFailure(Never, str)  # type: ignore[wrong-arg-types]  # pytype
+            self.assertTryCastFailure(Never, "words")
+            self.assertTryCastFailure(Never, 1)
+            self.assertTryCastFailure(Never, None)
+            self.assertTryCastFailure(Never, str)
 
-            self.assertTryCastFailure(Never, ValueError)  # type: ignore[wrong-arg-types]  # pytype
-            self.assertTryCastFailure(Never, ValueError())  # type: ignore[wrong-arg-types]  # pytype
+            self.assertTryCastFailure(Never, ValueError)
+            self.assertTryCastFailure(Never, ValueError())
 
     def test_noreturn(self) -> None:
-        self.assertTryCastFailure(NoReturn, "words")  # type: ignore[wrong-arg-types]  # pytype
-        self.assertTryCastFailure(NoReturn, 1)  # type: ignore[wrong-arg-types]  # pytype
-        self.assertTryCastFailure(NoReturn, None)  # type: ignore[wrong-arg-types]  # pytype
-        self.assertTryCastFailure(NoReturn, str)  # type: ignore[wrong-arg-types]  # pytype
+        self.assertTryCastFailure(NoReturn, "words")
+        self.assertTryCastFailure(NoReturn, 1)
+        self.assertTryCastFailure(NoReturn, None)
+        self.assertTryCastFailure(NoReturn, str)
 
-        self.assertTryCastFailure(NoReturn, ValueError)  # type: ignore[wrong-arg-types]  # pytype
-        self.assertTryCastFailure(NoReturn, ValueError())  # type: ignore[wrong-arg-types]  # pytype
+        self.assertTryCastFailure(NoReturn, ValueError)
+        self.assertTryCastFailure(NoReturn, ValueError())
 
     # === Forward References ===
 
@@ -1885,7 +1881,7 @@ class TestTryCast(TestCase):
         if sys.version_info < (3, 9):
 
             def test_rejects_python_3_8_typeddict_when_strict_is_true(self) -> None:
-                class Point2D(typing.TypedDict):  # type: ignore[not-supported-yet]  # pytype
+                class Point2D(typing.TypedDict):
                     x: int
                     y: int
 
@@ -2884,16 +2880,14 @@ class TestIsAssignable(TestCase):
     #        self._demands_a_never(value)  # ensure typechecks
     #
     # @staticmethod
-    # def _demands_a_never(value: NoReturn) -> NoReturn:  # type: ignore[invalid-annotation]  # pytype
+    # def _demands_a_never(value: NoReturn) -> NoReturn:
     #    raise ValueError("expected this code to be unreachable")
 
 
 # ------------------------------------------------------------------------------
 # Internal: TestIsTypedDict
 
-from typing import (
-    TypedDict as TypingTypedDict,  # type: ignore[not-supported-yet]  # pytype
-)
+from typing import TypedDict as TypingTypedDict
 
 from trycast import _is_typed_dict
 
@@ -2903,9 +2897,7 @@ class TypingPoint(TypingTypedDict):
     y: int
 
 
-from typing_extensions import (
-    TypedDict as TypingExtensionsTypedDict,  # type: ignore[not-supported-yet]  # pytype
-)
+from typing_extensions import TypedDict as TypingExtensionsTypedDict
 
 
 class TypingExtensionsPoint(TypingExtensionsTypedDict):
@@ -2950,8 +2942,8 @@ def _tag(tag_name: str) -> Callable[[Callable[_P, _R]], Callable[_P, _R]]:  # ty
         $ TRYCAST_SKIP_TEST_TAGS=pyright,pyre python -m unittest
     """
 
-    def decorate(f: Callable[_P, _R]) -> Callable[_P, _R]:  # type: ignore[invalid-annotation]  # pytype
-        def decorated(*args: _P.args, **kwargs: _P.kwargs) -> _R:  # type: ignore[invalid-annotation]  # pytype
+    def decorate(f: Callable[_P, _R]) -> Callable[_P, _R]:
+        def decorated(*args: _P.args, **kwargs: _P.kwargs) -> _R:
             if tag_name in os.environ.get("TRYCAST_SKIP_TEST_TAGS", "").split(","):
                 raise SkipTest(f"skipping test tagged {tag_name}")
             return f(*args, **kwargs)
@@ -3011,24 +3003,6 @@ class TestTypechecks(TestCase):
                 return
 
             self.fail(f"pyre typechecking failed:\n\n{output_str}")
-
-    @_tag("pytype")
-    def test_no_pytype_typechecker_errors_exist(self) -> None:
-        try:
-            subprocess.check_output(
-                ["pytype", "--keep-going", "trycast/__init__.py", "tests.py"],
-                env={"LANG": "en_US.UTF-8", "PATH": os.environ.get("PATH", "")},
-                stderr=subprocess.STDOUT,
-            )
-        except subprocess.CalledProcessError as e:  # pragma: no cover
-            self.fail(
-                f'pytype typechecking failed:\n\n{e.output.decode("utf-8").strip()}'
-            )
-        except FileNotFoundError:
-            if sys.version_info >= (3, 10):
-                self.skipTest("Cannot run pytype on Python 3.10+")
-            else:  # pragma: no cover
-                raise
 
 
 # ------------------------------------------------------------------------------

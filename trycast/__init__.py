@@ -12,13 +12,13 @@ from collections.abc import MutableSequence as CMutableSequence
 from collections.abc import Sequence as CSequence
 from inspect import Parameter
 from types import ModuleType
-from typing import ForwardRef  # type: ignore[import-error]  # pytype (for ForwardRef)
 from typing import _GenericAlias  # type: ignore[attr-defined]
 from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
     Dict,
+    ForwardRef,
     FrozenSet,
     List,
     Literal,
@@ -109,9 +109,7 @@ if sys.version_info >= (3, 10):
     from typing import TypeGuard  # Python 3.10+
 else:
     try:
-        from typing_extensions import (
-            TypeGuard,  # type: ignore[not-supported-yet]  # pytype
-        )
+        from typing_extensions import TypeGuard
     except ImportError:
         if not TYPE_CHECKING:
 
@@ -394,9 +392,9 @@ def trycast(tp, value, /, failure=None, *, strict=True, eval=True):
     """
     e = _checkcast_outer(tp, value, _TrycastOptions(strict, eval, funcname="trycast"))
     if e is not None:
-        return failure  # type: ignore[bad-return-type]  # pytype
+        return failure
     else:
-        return value  # type: ignore[bad-return-type]  # pytype
+        return value
 
 
 # ------------------------------------------------------------------------------
@@ -496,7 +494,7 @@ def checkcast(tp, value, /, *, strict=True, eval=True, _funcname="checkcast"):
     if e is not None:
         raise e
     else:
-        return value  # type: ignore[bad-return-type]  # pytype
+        return value
 
 
 class _TrycastOptions(NamedTuple):
@@ -509,7 +507,7 @@ def _checkcast_outer(
     tp: object, value: object, options: _TrycastOptions
 ) -> "Optional[ValidationError]":
     if isinstance(tp, str):
-        if options.eval:  # == options.eval (for pytype)
+        if options.eval:
             tp = eval_type_str(tp)  # does use eval()
         else:
             raise UnresolvableTypeError(
@@ -535,7 +533,7 @@ def _checkcast_outer(
             else:
                 raise
     try:
-        return _checkcast_inner(tp, value, options)  # type: ignore[bad-return-type]  # pytype
+        return _checkcast_inner(tp, value, options)
     except UnresolvedForwardRefError:
         if options.eval:
             advise = (
@@ -768,11 +766,11 @@ def _checkcast_inner(
                     tp  # type: ignore[arg-type]  # mypy
                 )  # resolve ForwardRefs in tp.__annotations__
             else:
-                resolved_annotations = tp.__annotations__  # type: ignore[attribute-error]  # pytype
+                resolved_annotations = tp.__annotations__
 
             try:
                 # {typing, typing_extensions}.TypedDict
-                required_keys = tp.__required_keys__  # type: ignore[attr-defined, attribute-error]  # mypy, pytype
+                required_keys = tp.__required_keys__  # type: ignore[attr-defined]  # mypy
             except AttributeError:
                 # {mypy_extensions}.TypedDict
                 if options.strict:
@@ -784,12 +782,12 @@ def _checkcast_inner(
                         f"specified kind of TypedDict. {advise} {advise2}"
                     )
                 else:
-                    if tp.__total__:  # type: ignore[attr-defined, attribute-error]  # mypy, pytype
+                    if tp.__total__:  # type: ignore[attr-defined]  # mypy
                         required_keys = resolved_annotations.keys()
                     else:
                         required_keys = frozenset()
 
-            for k, v in value.items():  # type: ignore[attribute-error]  # pytype
+            for k, v in value.items():
                 V = resolved_annotations.get(k, _MISSING)
                 if V is not _MISSING:
                     e = _checkcast_inner(V, v, options)
@@ -801,7 +799,7 @@ def _checkcast_inner(
                         )
 
             for k in required_keys:
-                if k not in value:  # type: ignore[unsupported-operands]  # pytype
+                if k not in value:
                     return ValidationError(
                         tp,
                         value,
@@ -817,7 +815,7 @@ def _checkcast_inner(
 
     if _is_newtype(tp):
         if options.strict:
-            supertype_repr = type_repr(tp.__supertype__)  # type: ignore[attr-defined, attribute-error]  # mypy, pytype
+            supertype_repr = type_repr(tp.__supertype__)  # type: ignore[attr-defined]  # mypy
             tp_name_repr = repr(tp.__name__)  # type: ignore[attr-defined]  # mypy
             raise TypeNotSupportedError(
                 f"{options.funcname} cannot reliably determine whether value is "
@@ -829,10 +827,10 @@ def _checkcast_inner(
                 f"like {supertype_repr}."
             )
         else:
-            supertype = tp.__supertype__  # type: ignore[attr-defined, attribute-error]  # mypy, pytype
+            supertype = tp.__supertype__  # type: ignore[attr-defined]  # mypy
             return _checkcast_inner(supertype, value, options)
 
-    if isinstance(tp, TypeVar):  # type: ignore[wrong-arg-types]  # pytype
+    if isinstance(tp, TypeVar):
         raise TypeNotSupportedError(
             f"{options.funcname} cannot reliably determine whether value matches a TypeVar."
         )
@@ -856,7 +854,7 @@ def _checkcast_inner(
     if isinstance(tp, ForwardRef):
         raise UnresolvedForwardRefError()
 
-    if isinstance(value, tp):  # type: ignore[arg-type, wrong-arg-types]  # mypy, pytype
+    if isinstance(value, tp):  # type: ignore[arg-type]  # mypy
         return None
     else:
         return ValidationError(tp, value)
@@ -876,7 +874,7 @@ def _substitute(tp: object, substitutions: Dict[object, object]) -> object:
             tp.__origin__,  # type: ignore[arg-type]
             tuple([_substitute(a, substitutions) for a in tp.__args__]),
         )
-    if isinstance(tp, TypeVar):  # type: ignore[wrong-arg-types]  # pytype
+    if isinstance(tp, TypeVar):
         return substitutions.get(tp, tp)
     return tp
 
@@ -908,7 +906,7 @@ def _checkcast_listlike(
         if _is_simple_typevar(T, covariant=covariant_t):
             pass
         else:
-            for i, x in enumerate(value):  # type: ignore[attribute-error]  # pytype
+            for i, x in enumerate(value):  # type: ignore[reportArgumentType]  # pyright
                 e = _checkcast_inner(T, x, options)
                 if e is not None:
                     return ValidationError(
@@ -944,7 +942,7 @@ def _checkcast_dictlike(
         if _is_simple_typevar(K) and _is_simple_typevar(V, covariant=covariant_v):
             pass
         else:
-            for k, v in value.items():  # type: ignore[attribute-error]  # pytype
+            for k, v in value.items():  # type: ignore[reportAttributeAccessIssue]  # pyright
                 e = _checkcast_inner(K, k, options)
                 if e is not None:
                     return ValidationError(
@@ -966,11 +964,11 @@ def _checkcast_dictlike(
 
 def _is_simple_typevar(T: object, covariant: bool = False) -> bool:
     return (
-        isinstance(T, TypeVar)  # type: ignore[wrong-arg-types]  # pytype
-        and T.__constraints__ == ()  # type: ignore[attribute-error]  # pytype
-        and T.__covariant__ == covariant  # type: ignore[attribute-error]  # pytype
-        and T.__contravariant__ is False  # type: ignore[attribute-error]  # pytype
-        and T.__constraints__ == ()  # type: ignore[attribute-error]  # pytype
+        isinstance(T, TypeVar)
+        and T.__constraints__ == ()
+        and T.__covariant__ == covariant
+        and T.__contravariant__ is False
+        and T.__constraints__ == ()
     )
 
 
@@ -1092,8 +1090,9 @@ def isassignable(
 
 
 @overload
-def isassignable(value: object, tp: Type[_T], /, *, eval: bool = True) -> TypeGuard[_T]:  # type: ignore[invalid-annotation]  # pytype
-    ...  # pragma: no cover
+def isassignable(
+    value: object, tp: Type[_T], /, *, eval: bool = True
+) -> TypeGuard[_T]: ...  # pragma: no cover
 
 
 @overload
@@ -1127,12 +1126,12 @@ def isassignable(value, tp, /, *, eval=True):
     )
     result = e is None
     if isinstance(tp, type):
-        return cast(  # type: ignore[invalid-annotation]  # pytype
-            TypeGuard[_T],  # type: ignore[not-indexable]  # pytype
+        return cast(
+            TypeGuard[_T],  # type: ignore[reportGeneralTypeIssues]  # pyright
             result,
         )
     else:
-        return result  # type: ignore[bad-return-type]  # pytype
+        return result
 
 
 # ------------------------------------------------------------------------------
