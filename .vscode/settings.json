@@ -1,3 +1,17 @@
 {
-    "pylint.enabled": false
+    "pylint.enabled": false,
+    "chat.tools.terminal.autoApprove": {
+        "git diff": true,
+        // Require manual approval for reformat
+        "make format": false,
+        "make lint": true,
+        "make test": true,
+        "make testall": true,
+        "make typecheck": true,
+        "python -m unittest": true,
+        "python3 -m unittest": true,
+        "source venv/bin/activate": true,
+        "source venv3.13/bin/activate": true,
+        "source venv3.14/bin/activate": true,
+    },
 }
