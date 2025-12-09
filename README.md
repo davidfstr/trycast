@@ -524,6 +524,10 @@ raised exceptions, and other details.
 
 * See the [Roadmap](https://github.com/davidfstr/trycast/wiki/Roadmap).
 
+### main (v1.3.0)
+
+* Add support for Python 3.14.
+
 ### v1.2.1
 
 * Fix `checkcast()` to declare that it returns a `T` rather than `T | None`.

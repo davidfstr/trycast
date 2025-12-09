@@ -21,6 +21,8 @@ classifiers = [  # https://pypi.org/classifiers/
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Software Development",
     "Typing :: Typed"
 ]
@@ -87,7 +89,7 @@ line_length = 88
 legacy_tox_ini = """
 
 [tox]
-envlist = py38,py39,py310,py311,py312
+envlist = py38,py39,py310,py311,py312,py313,py314
 isolated_build = True
 
 [testenv]
