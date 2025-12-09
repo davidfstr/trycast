@@ -219,7 +219,6 @@ python -m pip install trycast
   not-required keys correctly:
     * Use Python 3.9+.
     * Prefer using `typing.TypedDict` instead of `typing_extensions.TypedDict`.
-    * Avoid using `mypy_extensions.TypedDict` in general.
 
 
 ## Presentations & Videos
@@ -307,7 +306,6 @@ make help
 * TypedDict
     * typing.TypedDict, typing_extensions.TypedDict
       ([PEP 589](https://peps.python.org/pep-0589/))
-    * mypy_extensions.TypedDict (when strict=False)
     * –––
     * Required, NotRequired
       ([PEP 655](https://peps.python.org/pep-0655/))
@@ -399,12 +397,6 @@ also be a valid complex value, as consistent with Python typecheckers:
 Parameters:
 
 * **strict** -- 
-    * If strict=False then this function will additionally accept
-      mypy_extensions.TypedDict instances for the `tp` parameter. 
-      Normally these kinds of types are
-      rejected with a TypeNotSupportedError because these
-      types do not preserve enough information at runtime to reliably
-      determine which keys are required and which are potentially-missing.
     * If strict=False then `NewType("Foo", T)` will be treated
       the same as `T`. Normally NewTypes are rejected with a
       TypeNotSupportedError because values of NewTypes at runtime
@@ -417,7 +409,6 @@ Parameters:
 Raises:
 
 * **TypeNotSupportedError** --
-    * If strict=True and mypy_extensions.TypedDict is found within the `tp` argument.
     * If strict=True and a NewType is found within the `tp` argument.
     * If a TypeVar is found within the `tp` argument.
     * If an unrecognized Generic type is found within the `tp` argument.
@@ -524,9 +515,12 @@ raised exceptions, and other details.
 ### main (v2.0.0)
 
 * Drop support for Python 3.8.
-    * Remove supporting code for Python 3.8's neutered TypedDict.
+    * Drop support for Python 3.8's neutered TypedDict,
+      which lacks metadata present in later versions.
 * Drop support for Pytype type checker, since it has been 
-  [deprecated](https://github.com/google/pytype/blob/main/README.md).
+  [deprecated](https://github.com/google/pytype/blob/main/README.md)
+  as of Aug 2025.
+* Drop support for mypy_extensions.TypedDict, since it was deprecated in Aug 2023.
 
 ### v1.2.1
 

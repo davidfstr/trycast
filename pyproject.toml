@@ -33,7 +33,6 @@ python = ">=3.9"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "*"
-mypy_extensions = "*"
 pyright = "*"
 pyre-check = "*"
 tox = ">=4.0.0,<5.0.0"

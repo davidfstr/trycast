@@ -138,15 +138,6 @@ try:
 except ImportError:
     pass
 
-try:
-    from mypy_extensions import (  # type: ignore[attr-defined]  # isort: skip
-        _TypedDictMeta as _MypyExtensionsTypedDictMeta,  # type: ignore[reportGeneralTypeIssues]  # pyright
-    )
-
-    _typed_dict_meta_list.append(_MypyExtensionsTypedDictMeta)  # type: ignore[16]  # pyre
-except ImportError:
-    pass
-
 _typed_dict_metas = tuple(_typed_dict_meta_list)
 
 
@@ -364,12 +355,6 @@ def trycast(tp, value, /, failure=None, *, strict=True, eval=True):
 
     Parameters:
     * strict --
-        * If strict=False then this function will additionally accept
-          mypy_extensions.TypedDict instances for the `tp` parameter.
-          Normally these kinds of types are
-          rejected with a TypeNotSupportedError because these
-          types do not preserve enough information at runtime to reliably
-          determine which keys are required and which are potentially-missing.
         * If strict=False then `NewType("Foo", T)` will be treated
           the same as `T`. Normally NewTypes are rejected with a
           TypeNotSupportedError because values of NewTypes at runtime
@@ -381,7 +366,6 @@ def trycast(tp, value, /, failure=None, *, strict=True, eval=True):
 
     Raises:
     * TypeNotSupportedError --
-        * If strict=True and mypy_extensions.TypedDict is found within the `tp` argument.
         * If strict=True and a NewType is found within the `tp` argument.
         * If a TypeVar is found within the `tp` argument.
         * If an unrecognized Generic type is found within the `tp` argument.
@@ -768,24 +752,8 @@ def _checkcast_inner(
             else:
                 resolved_annotations = tp.__annotations__
 
-            try:
-                # {typing, typing_extensions}.TypedDict
-                required_keys = tp.__required_keys__  # type: ignore[attr-defined]  # mypy
-            except AttributeError:
-                # {mypy_extensions}.TypedDict
-                if options.strict:
-                    advise = "Suggest use a typing.TypedDict instead."
-                    advise2 = f"Or use {options.funcname}(..., strict=False)."
-                    raise TypeNotSupportedError(
-                        f"{options.funcname} cannot determine which keys are required "
-                        f"and which are potentially-missing for the "
-                        f"specified kind of TypedDict. {advise} {advise2}"
-                    )
-                else:
-                    if tp.__total__:  # type: ignore[attr-defined]  # mypy
-                        required_keys = resolved_annotations.keys()
-                    else:
-                        required_keys = frozenset()
+            # {typing, typing_extensions}.TypedDict
+            required_keys = tp.__required_keys__  # type: ignore[attr-defined]  # mypy
 
             for k, v in value.items():
                 V = resolved_annotations.get(k, _MISSING)

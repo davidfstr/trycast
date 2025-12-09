@@ -34,8 +34,6 @@ from typing import TypedDict as RichTypedDict
 from typing import TypeVar, Union, cast
 from unittest import SkipTest, TestCase
 
-import mypy_extensions
-
 import test_data.forwardrefs_example
 import test_data.forwardrefs_example_with_import_annotations
 from tests_shape_example import HTTP_400_BAD_REQUEST, draw_shape_endpoint, shapes_drawn
@@ -1854,23 +1852,7 @@ class TestTryCast(TestCase):
 
     # === strict=True mode ===
 
-    def test_rejects_mypy_typeddict_when_strict_is_true(self) -> None:
-        class Point2D(mypy_extensions.TypedDict):  # type: ignore[reportGeneralTypeIssues]  # pyright
-            x: int
-            y: int
-
-        class Point3D(Point2D, total=False):  # type: ignore[reportGeneralTypeIssues]  # pyright
-            z: int
-
-        self.assertRaisesRegex(
-            TypeNotSupportedError,
-            (
-                "trycast cannot determine which keys are required.*?"
-                "Suggest use a typing(_extensions)?.TypedDict.*?"
-                "strict=False"
-            ),
-            lambda: trycast(Point3D, {"x": 1, "y": 2}, strict=True),
-        )
+    # (TODO: Add test related to NewTypes)
 
     # NOTE: Cannot combine the following two if-checks with an `and`
     #       because that is too complicated for Pyre to understand.
@@ -1900,47 +1882,7 @@ class TestTryCast(TestCase):
 
     # === strict=False mode ===
 
-    def test_accepts_mypy_typeddict_when_strict_is_false(self) -> None:
-        class Point2D(mypy_extensions.TypedDict):  # type: ignore[reportGeneralTypeIssues]  # pyright
-            x: int
-            y: int
-
-        # NOTE: mypy_extensions.TypedDict doesn't preserve at runtime
-        #       which of Point3D's inherited fields from Point2D are required.
-        #       So trycast() guesses (incorrectly) that ALL fields of Point3D
-        #       are not-required because Point3D is declared as total=False.
-        class Point3D(Point2D, total=False):  # type: ignore[reportGeneralTypeIssues]  # pyright
-            z: int
-
-        class MaybePoint1D(mypy_extensions.TypedDict, total=False):  # type: ignore[reportGeneralTypeIssues]  # pyright
-            x: int
-
-        class TaggedMaybePoint1D(MaybePoint1D):
-            name: str
-
-        self.assertTryCastSuccess(Point2D, {"x": 1, "y": 2}, strict=False)
-        self.assertTryCastFailure(Point2D, {"x": 1, "y": "string"}, strict=False)
-        self.assertTryCastFailure(Point2D, {"x": 1}, strict=False)
-
-        self.assertTryCastSuccess(Point3D, {"x": 1, "y": 2, "z": 3}, strict=False)
-        self.assertTryCastFailure(
-            Point3D, {"x": 1, "y": 2, "z": "string"}, strict=False
-        )
-        self.assertTryCastSuccess(Point3D, {"x": 1, "y": 2}, strict=False)
-        self.assertTryCastSuccess(Point3D, {"x": 1}, strict=False)  # surprise!
-        self.assertTryCastSuccess(Point3D, {"q": 1}, strict=False)  # surprise!
-
-        self.assertTryCastSuccess(MaybePoint1D, {"x": 1}, strict=False)
-        self.assertTryCastFailure(MaybePoint1D, {"x": "string"}, strict=False)
-        self.assertTryCastSuccess(MaybePoint1D, {}, strict=False)
-        self.assertTryCastSuccess(MaybePoint1D, {"q": 1}, strict=False)  # surprise!
-
-        self.assertTryCastSuccess(
-            TaggedMaybePoint1D, {"x": 1, "name": "one"}, strict=False
-        )
-        self.assertTryCastFailure(
-            TaggedMaybePoint1D, {"name": "one"}, strict=False
-        )  # surprise!
+    # (TODO: Add test related to NewTypes)
 
     # === Misuse: Nice Error Messages ===
 
@@ -2905,11 +2847,6 @@ class TypingExtensionsPoint(TypingExtensionsTypedDict):
     y: int
 
 
-class MypyExtensionsPoint(mypy_extensions.TypedDict):  # type: ignore[reportGeneralTypeIssues]  # pyright
-    x: int
-    y: int
-
-
 class TestIsTypedDict(TestCase):
     """
     Tests whether the _is_typed_dict() internal function works.
@@ -2920,9 +2857,6 @@ class TestIsTypedDict(TestCase):
 
     def test_recognizes_typed_dict_from_typing_extensions(self) -> None:
         self.assertTrue(_is_typed_dict(TypingExtensionsPoint))
-
-    def test_recognizes_typed_dict_from_mypy_extensions(self) -> None:
-        self.assertTrue(_is_typed_dict(MypyExtensionsPoint))
 
 
 # ------------------------------------------------------------------------------

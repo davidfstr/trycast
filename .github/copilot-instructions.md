@@ -22,7 +22,7 @@ Single-file implementation in `trycast/__init__.py` (~1300 lines).
   else:
       from typing import _eval_type as eval_type
   ```
-- TypedDict compatibility: prefer `typing.TypedDict`, fallback to `typing_extensions.TypedDict`, avoid `mypy_extensions.TypedDict`
+- TypedDict compatibility: prefer `typing.TypedDict`, fallback to `typing_extensions.TypedDict`
 
 ### Debugging CPython typing.py Changes
 
