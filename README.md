@@ -513,6 +513,7 @@ raised exceptions, and other details.
 
 ### main (v2.0.0)
 
+* Add support for Python 3.14.
 * Drop support for Python 3.8 and Python 3.9.
     * Drop support for Python 3.8's neutered TypedDict,
       which lacks metadata present in later versions.

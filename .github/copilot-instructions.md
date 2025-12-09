@@ -10,7 +10,7 @@ Single-file implementation in `trycast/__init__.py` (~1300 lines).
 
 ### Version Compatibility Strategy
 
-**Critical**: trycast supports Python 3.10-3.13 with extensive conditional imports:
+**Critical**: trycast supports Python 3.10-3.14 with extensive conditional imports:
 - Use `sys.version_info >= (major, minor)` checks to conditionally import features
 - Import from `typing_extensions` as fallback for older Python versions
 - Example pattern (lines 43-50, 53-65, 67-77):
@@ -56,8 +56,8 @@ When adding features, test against all typecheckers: `make typecheck` runs mypy,
 ## Development Workflows
 
 ### Testing Commands (Makefile)
-- `make test` - Run unittest against current Python version
-- `make testall` - Run tox across Python 3.10-3.13 (uses venv3.10/, venv3.11/, etc.)
+- `make test` - Run tests against current Python version
+- `make testall` - Run tests across all supported Python versions (uses venv3.10/, venv3.11/, etc.)
 - `make typecheck` - Run all typecheckers (mypy, pyright, pyre)
 - `make format` - Format with black + isort
 - `make lint` - Check black/isort/flake8 compliance

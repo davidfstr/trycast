@@ -2,6 +2,7 @@
 import functools
 import os
 import platform
+import re
 import subprocess
 import sys
 import typing
@@ -2724,12 +2725,37 @@ class TestCheckCast(TestCase):
         else:
             self.fail(f"Expected {tp}")
 
-    # TODO: Inline unique implementation
     @staticmethod
     def _typing_error_messages(template: str) -> List[str]:
-        return [
-            template,
-        ]
+        # In Python 3.14+, Union[T1, T2] is represented as "T1 | T2" instead of "Union[T1, T2]".
+        if sys.version_info >= (3, 14):
+            # Convert "Union[...]" to "... | ..." format
+            def convert_union(match: "re.Match[str]") -> str:
+                content = match.group(1)
+                # Split by comma but not within brackets
+                parts = []
+                bracket_depth = 0
+                current_part = []
+                for char in content:
+                    if char in "[<(":
+                        bracket_depth += 1
+                        current_part.append(char)
+                    elif char in "]>)":
+                        bracket_depth -= 1
+                        current_part.append(char)
+                    elif char == "," and bracket_depth == 0:
+                        parts.append("".join(current_part).strip())
+                        current_part = []
+                    else:
+                        current_part.append(char)
+                parts.append("".join(current_part).strip())
+                return " | ".join(parts)
+
+            converted = re.sub(r"Union\[([^\]]+)\]", convert_union, template)
+            return [converted]
+        else:
+            # Python <3.14
+            return [template]
 
 
 class TestValidationError(TestCase):
