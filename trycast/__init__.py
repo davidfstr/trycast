@@ -146,19 +146,8 @@ def _is_typed_dict(tp: object) -> bool:
 
 
 # _is_newtype
-if NewType.__class__.__name__ == "function":  # type: ignore[reportGeneralTypeIssues]  # pyright
-    # Python 3.9
-    def _is_newtype(tp: object) -> bool:
-        return (
-            hasattr(tp, "__class__")
-            and tp.__class__.__name__ == "function"
-            and hasattr(tp, "__qualname__")
-            and tp.__qualname__.startswith("NewType.<locals>")  # type: ignore[attr-defined]
-            and hasattr(tp, "__module__")
-            and tp.__module__ == "typing"
-        )
-
-elif NewType.__class__.__name__ == "type":  # type: ignore[reportGeneralTypeIssues]  # pyright
+# TODO: Inline unique implementation
+if NewType.__class__.__name__ == "type":  # type: ignore[reportGeneralTypeIssues]  # pyright
     # Python 3.10+
     def _is_newtype(tp: object) -> bool:
         return isinstance(tp, NewType)  # type: ignore[arg-type]

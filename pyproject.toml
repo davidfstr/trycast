@@ -16,7 +16,6 @@ classifiers = [  # https://pypi.org/classifiers/
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -29,7 +28,7 @@ classifiers = [  # https://pypi.org/classifiers/
 "Release notes" = "https://github.com/davidfstr/trycast#changelog"
 
 [tool.poetry.dependencies]
-python = ">=3.9"
+python = ">=3.10"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "*"
@@ -84,7 +83,7 @@ line_length = 88
 legacy_tox_ini = """
 
 [tox]
-envlist = py39,py310,py311,py312,py313
+envlist = py310,py311,py312,py313
 isolated_build = True
 
 [testenv]

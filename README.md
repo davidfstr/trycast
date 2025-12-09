@@ -217,7 +217,6 @@ python -m pip install trycast
 
 - So that `trycast()` can recognize TypedDicts with mixed required and
   not-required keys correctly:
-    * Use Python 3.9+.
     * Prefer using `typing.TypedDict` instead of `typing_extensions.TypedDict`.
 
 
@@ -514,7 +513,7 @@ raised exceptions, and other details.
 
 ### main (v2.0.0)
 
-* Drop support for Python 3.8.
+* Drop support for Python 3.8 and Python 3.9.
     * Drop support for Python 3.8's neutered TypedDict,
       which lacks metadata present in later versions.
 * Drop support for Pytype type checker, since it has been 

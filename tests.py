@@ -2724,16 +2724,11 @@ class TestCheckCast(TestCase):
         else:
             self.fail(f"Expected {tp}")
 
+    # TODO: Inline unique implementation
     @staticmethod
     def _typing_error_messages(template: str) -> List[str]:
-        python_3_9 = (
-            template.replace("Literal", "typing.Literal")
-            .replace("NoReturn", "typing.NoReturn")
-            .replace("Union", "typing.Union")
-        )
         return [
             template,
-            python_3_9,  # for Python 3.9
         ]
 
 
