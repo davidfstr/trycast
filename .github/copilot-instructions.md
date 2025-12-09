@@ -108,3 +108,7 @@ Special handling for string type annotations:
 ## Publishing
 
 `make publish` builds with Poetry and pushes to PyPI, then creates git tag from version in `pyproject.toml` (look for `# publish: version` comment).
+
+## Getting Started
+
+Activate the local venv using `source venv/bin/activate`. If `venv` directory missing then prefix commands with `poetry run ...`.
