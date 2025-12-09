@@ -77,7 +77,7 @@ skip_glob = [
 
 # Formatter: Black
 [tool.black]
-line_length = 88
+line-length = 88
 
 # Tests
 [tool.tox]
