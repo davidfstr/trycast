@@ -30,10 +30,11 @@ Single-file implementation in `trycast/__init__.py` (~1300 lines).
 
 **Debugging workflow for version-related breakage**:
 1. Compare CPython source code between the new Python version and the last working version
-2. Look at `Lib/typing.py` in CPython repo: https://github.com/python/cpython/blob/main/Lib/typing.py
+2. Locate `typing.py` locally (for Python 3.10) with: `source venv3.10/bin/activate && python3 -c "import os.path; import typing; print(os.path.dirname(typing.__file__) + os.sep + 'typing.py')"`
 3. Identify signature changes, renamed internals, or behavioral differences
 4. Add version-specific conditional imports/wrappers (see `eval_type` pattern above)
-5. Test thoroughly with `make testall` across all Python versions
+5. Test with `make test` in the new Python version
+6. Test with `make testall` across all Python versions
 
 ### Type Validation Core
 
