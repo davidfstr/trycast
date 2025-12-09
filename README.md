@@ -514,13 +514,14 @@ raised exceptions, and other details.
 ### main (v2.0.0)
 
 * Add support for Python 3.14.
-* Drop support for Python 3.8 and Python 3.9.
+* Drop support for Python 3.8 and Python 3.9. **(Breaking change)**
     * Drop support for Python 3.8's neutered TypedDict,
       which lacks metadata present in later versions.
 * Drop support for Pytype type checker, since it has been 
   [deprecated](https://github.com/google/pytype/blob/main/README.md)
-  as of Aug 2025.
+  as of Aug 2025. **(Breaking change)**
 * Drop support for mypy_extensions.TypedDict, since it was deprecated in Aug 2023.
+  **(Breaking change)**
 
 ### v1.2.1
 
