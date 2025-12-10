@@ -147,13 +147,19 @@ try:
 
     _typed_dict_meta_list.append(_MypyExtensionsTypedDictMeta)  # type: ignore[16]  # pyre
 except ImportError:
-    pass
+    _MypyExtensionsTypedDictMeta = None
 
 _typed_dict_metas = tuple(_typed_dict_meta_list)
 
 
 def _is_typed_dict(tp: object) -> bool:
     return isinstance(tp, _typed_dict_metas)
+
+
+def _is_mypy_extensions_typed_dict(tp: object) -> bool:
+    return _MypyExtensionsTypedDictMeta is not None and isinstance(
+        tp, _MypyExtensionsTypedDictMeta
+    )
 
 
 # _is_newtype
@@ -756,6 +762,18 @@ def _checkcast_inner(
             new_tp = tp.__value__  # type: ignore[attr-defined]  # mypy
         return _checkcast_inner(new_tp, value, options)  # type: ignore[16]  # pyre
 
+    # NOTE: Must come before the generic _GenericAlias check
+    if _is_typed_dict(type_origin):  # T[X1, X2, ...] where T extends TypedDict
+        # Build substitution map from TypeVars to concrete types
+        type_params = getattr(type_origin, "__parameters__", ())
+        type_args = get_args(tp)
+        typevar_substitutions = dict(
+            zip(type_params, type_args)
+        )  # type: Dict[object, object]
+        return _checkcast_typeddict(
+            tp, type_origin, value, options, typevar_substitutions
+        )
+
     if isinstance(tp, _GenericAlias):  # type: ignore[16]  # pyre
         raise TypeNotSupportedError(
             f"{options.funcname} does not know how to recognize generic type "
@@ -763,61 +781,7 @@ def _checkcast_inner(
         )
 
     if _is_typed_dict(tp):  # T extends TypedDict
-        if isinstance(value, Mapping):
-            if options.eval:
-                resolved_annotations = get_type_hints(  # does use eval()
-                    tp  # type: ignore[arg-type]  # mypy
-                )  # resolve ForwardRefs in tp.__annotations__
-            else:
-                resolved_annotations = tp.__annotations__  # type: ignore[attribute-error]  # pytype
-
-            try:
-                # {typing in Python 3.9+, typing_extensions}.TypedDict
-                required_keys = tp.__required_keys__  # type: ignore[attr-defined, attribute-error]  # mypy, pytype
-            except AttributeError:
-                # {typing in Python 3.8, mypy_extensions}.TypedDict
-                if options.strict:
-                    if sys.version_info[:2] >= (3, 9):
-                        advise = "Suggest use a typing.TypedDict instead."
-                    else:
-                        advise = "Suggest use a typing_extensions.TypedDict instead."
-                    advise2 = f"Or use {options.funcname}(..., strict=False)."
-                    raise TypeNotSupportedError(
-                        f"{options.funcname} cannot determine which keys are required "
-                        f"and which are potentially-missing for the "
-                        f"specified kind of TypedDict. {advise} {advise2}"
-                    )
-                else:
-                    if tp.__total__:  # type: ignore[attr-defined, attribute-error]  # mypy, pytype
-                        required_keys = resolved_annotations.keys()
-                    else:
-                        required_keys = frozenset()
-
-            for k, v in value.items():  # type: ignore[attribute-error]  # pytype
-                V = resolved_annotations.get(k, _MISSING)
-                if V is not _MISSING:
-                    e = _checkcast_inner(V, v, options)
-                    if e is not None:
-                        return ValidationError(
-                            tp,
-                            value,
-                            _causes=[e._with_prefix(_LazyStr(lambda: f"At key {k!r}"))],
-                        )
-
-            for k in required_keys:
-                if k not in value:  # type: ignore[unsupported-operands]  # pytype
-                    return ValidationError(
-                        tp,
-                        value,
-                        _causes=[
-                            ValidationError._from_message(
-                                _LazyStr(lambda: f"Required key {k!r} is missing")
-                            )
-                        ],
-                    )
-            return None
-        else:
-            return ValidationError(tp, value)
+        return _checkcast_typeddict(tp, tp, value, options, {})
 
     if _is_newtype(tp):
         if options.strict:
@@ -874,13 +838,118 @@ class UnresolvedForwardRefError(TypeError):
     pass
 
 
-def _substitute(tp: object, substitutions: Dict[object, object]) -> object:
-    if isinstance(tp, GenericAlias):  # ex: tuple[T1, T2]
-        return GenericAlias(  # type: ignore[reportCallIssue]  # pyright
-            tp.__origin__, tuple([_substitute(a, substitutions) for a in tp.__args__])
+def _checkcast_typeddict(
+    tp: object,
+    typed_dict_class: object,
+    value: object,
+    options: _TrycastOptions,
+    typevar_substitutions: Dict[object, object],
+) -> "Optional[ValidationError]":
+    """
+    Check if value matches a TypedDict type.
+
+    Parameters:
+    * tp -- The original type annotation (for error messages)
+    * typed_dict_class -- The TypedDict class (possibly parameterized origin)
+    * value -- The value to check
+    * options -- Validation options
+    * typevar_substitutions -- Mapping from TypeVars to concrete types (empty dict if not generic)
+    """
+    if not isinstance(value, Mapping):
+        return ValidationError(tp, value)
+
+    if options.eval:
+        resolved_annotations = get_type_hints(  # does use eval()
+            typed_dict_class  # type: ignore[arg-type]  # mypy
+        )  # resolve ForwardRefs in typed_dict_class.__annotations__
+    else:
+        resolved_annotations = typed_dict_class.__annotations__  # type: ignore[attr-defined]  # mypy
+    if (
+        resolved_annotations == {}
+        and _is_mypy_extensions_typed_dict(typed_dict_class)
+        and sys.version_info[:2] >= (3, 14)
+    ):
+        # NOTE: This is probably a bug in mypy_extensions.TypedDict or Python 3.14+.
+        #       But it is unlikely to be fixed because mypy_extensions.TypedDict is
+        #       deprecated.
+        raise TypeNotSupportedError(
+            f"{options.funcname} cannot determine which keys exist on a "
+            f"mypy_extensions.TypedDict in Python 3.14+"
         )
+
+    try:
+        # {typing in Python 3.9+, typing_extensions}.TypedDict
+        required_keys = typed_dict_class.__required_keys__  # type: ignore[attr-defined, attribute-error]  # mypy, pytype
+    except AttributeError:
+        # {typing in Python 3.8, mypy_extensions}.TypedDict
+        if options.strict:
+            if sys.version_info[:2] >= (3, 9):
+                advise = "Suggest use a typing.TypedDict instead."
+            else:
+                advise = "Suggest use a typing_extensions.TypedDict instead."
+            advise2 = f"Or use {options.funcname}(..., strict=False)."
+            raise TypeNotSupportedError(
+                f"{options.funcname} cannot determine which keys are required "
+                f"and which are potentially-missing for the "
+                f"specified kind of TypedDict. {advise} {advise2}"
+            )
+        else:
+            if typed_dict_class.__total__:  # type: ignore[attr-defined, attribute-error]  # mypy, pytype
+                required_keys = resolved_annotations.keys()
+            else:
+                required_keys = frozenset()
+
+    for k, v in value.items():
+        V = resolved_annotations.get(k, _MISSING)
+        if V is not _MISSING:
+            # Apply typevar substitutions to the annotation type
+            V_substituted = _substitute(V, typevar_substitutions)
+            e = _checkcast_inner(V_substituted, v, options)
+            if e is not None:
+                return ValidationError(
+                    tp,
+                    value,
+                    _causes=[e._with_prefix(_LazyStr(lambda: f"At key {k!r}"))],
+                )
+
+    for k in required_keys:
+        if k not in value:
+            return ValidationError(
+                tp,
+                value,
+                _causes=[
+                    ValidationError._from_message(
+                        _LazyStr(lambda: f"Required key {k!r} is missing")
+                    )
+                ],
+            )
+    return None
+
+
+def _substitute(tp: object, substitutions: Dict[object, object]) -> object:
     if isinstance(tp, TypeVar):  # type: ignore[wrong-arg-types]  # pytype
         return substitutions.get(tp, tp)
+    if isinstance(tp, GenericAlias):  # ex: tuple[T1, T2]
+        return GenericAlias(  # type: ignore[reportCallIssue]  # pyright
+            tp.__origin__,  # type: ignore[arg-type, reportArgumentType]  # mypy, pyright
+            tuple([_substitute(a, substitutions) for a in tp.__args__]),
+        )
+    if isinstance(tp, _GenericAlias):  # ex: List[T1], Dict[K, V]
+        return _GenericAlias(
+            tp.__origin__,  # type: ignore[reportAttributeAccessIssue]  # pyright
+            tuple([_substitute(a, substitutions) for a in tp.__args__]),  # type: ignore[reportAttributeAccessIssue]  # pyright
+        )
+    # Handle other generic types like Union, which may not be GenericAlias but have __origin__ and __args__
+    if hasattr(tp, "__origin__") and hasattr(tp, "__args__"):
+        # Recursively substitute in args
+        substituted_args = tuple([_substitute(a, substitutions) for a in tp.__args__])  # type: ignore[attr-defined]  # mypy
+        # Try to reconstruct the type with substituted args
+        # For Union types and similar, we can use __getitem__ on the origin
+        try:
+            return tp.__origin__[substituted_args]  # type: ignore[attr-defined, index]  # mypy
+        except (TypeError, AttributeError):
+            # If reconstruction fails, return original type
+            return tp
     return tp
 
 

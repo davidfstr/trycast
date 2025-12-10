@@ -527,6 +527,7 @@ raised exceptions, and other details.
 ### main (v1.3.0)
 
 * Add support for Python 3.14.
+* Support parameterized TypedDicts, like `Point[int]`.
 
 ### v1.2.1
 

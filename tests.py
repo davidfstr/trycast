@@ -1272,6 +1272,163 @@ class TestTryCast(TestCase):
         self.assertTryCastSuccess(NamedObject, MyNamedMapping("Isabelle"))
         self.assertTryCastFailure(ValuedObject, MyNamedMapping("Isabelle"))
 
+    if sys.version_info >= (3, 11):
+
+        def test_typeddict_generic(self) -> None:
+            class Point(RichTypedDict, Generic[_T]):
+                x: _T
+                y: _T
+
+            # Point[int]
+            self.assertTryCastSuccess(Point[int], {"x": 1, "y": 2})
+            self.assertTryCastFailure(Point[int], {"x": 1.5, "y": 2})
+            self.assertTryCastFailure(Point[int], {"x": 1, "y": 2.5})
+            self.assertTryCastFailure(Point[int], {"x": "a", "y": "b"})
+            self.assertTryCastFailure(Point[int], {"x": 1})  # missing y
+            self.assertTryCastSuccess(
+                Point[int], {"x": 1, "y": 2, "z": 3}
+            )  # extra key ok
+
+            # Point[str]
+            self.assertTryCastSuccess(Point[str], {"x": "a", "y": "b"})
+            self.assertTryCastFailure(Point[str], {"x": 1, "y": 2})
+            self.assertTryCastFailure(Point[str], {"x": "a", "y": 2})
+
+            # Point[float]
+            self.assertTryCastSuccess(Point[float], {"x": 1.5, "y": 2.5})
+            self.assertTryCastSuccess(
+                Point[float], {"x": 1, "y": 2}
+            )  # int -> float coercion
+
+            # Multiple type parameters
+            K = TypeVar("K")
+            V = TypeVar("V")
+
+            class Entry(RichTypedDict, Generic[K, V]):
+                key: K
+                value: V
+
+            # Entry[str, int]
+            self.assertTryCastSuccess(Entry[str, int], {"key": "name", "value": 42})
+            self.assertTryCastFailure(Entry[str, int], {"key": 1, "value": 42})
+            self.assertTryCastFailure(Entry[str, int], {"key": "name", "value": "42"})
+
+            # Entry[int, str]
+            self.assertTryCastSuccess(Entry[int, str], {"key": 1, "value": "42"})
+            self.assertTryCastFailure(Entry[int, str], {"key": "1", "value": "42"})
+
+            # Nested generics
+            self.assertTryCastSuccess(
+                Entry[str, List[int]], {"key": "numbers", "value": [1, 2, 3]}
+            )
+            self.assertTryCastFailure(
+                Entry[str, List[int]], {"key": "numbers", "value": [1, "2", 3]}
+            )
+
+        def test_typeddict_generic_with_partial(self) -> None:
+            class PartialPoint(RichTypedDict, Generic[_T], total=False):
+                x: _T
+                y: _T
+
+            # PartialPoint[int]
+            self.assertTryCastSuccess(PartialPoint[int], {"x": 1, "y": 2})
+            self.assertTryCastSuccess(PartialPoint[int], {"x": 1})
+            self.assertTryCastSuccess(PartialPoint[int], {"y": 2})
+            self.assertTryCastSuccess(PartialPoint[int], {})
+            self.assertTryCastFailure(PartialPoint[int], {"x": "a", "y": 2})
+
+        def test_typeddict_generic_with_union(self) -> None:
+            class Container(RichTypedDict, Generic[_T]):
+                value: Union[_T, None]
+
+            # Container[int] - Basic Union[T, None]
+            self.assertTryCastSuccess(Container[int], {"value": 42})
+            self.assertTryCastSuccess(Container[int], {"value": None})
+            self.assertTryCastFailure(Container[int], {"value": "42"})
+
+            # Container[str]
+            self.assertTryCastSuccess(Container[str], {"value": "hello"})
+            self.assertTryCastSuccess(Container[str], {"value": None})
+            self.assertTryCastFailure(Container[str], {"value": 42})
+
+            # Multiple types with Union
+            T1 = TypeVar("T1")
+            T2 = TypeVar("T2")
+
+            class TwoValueContainer(RichTypedDict, Generic[T1, T2]):
+                first: Union[T1, str]
+                second: Union[T2, int]
+
+            # TwoValueContainer[int, str]
+            self.assertTryCastSuccess(
+                TwoValueContainer[int, str], {"first": 42, "second": "hello"}
+            )
+            self.assertTryCastSuccess(
+                TwoValueContainer[int, str], {"first": "fallback", "second": "hello"}
+            )
+            self.assertTryCastSuccess(
+                TwoValueContainer[int, str], {"first": 42, "second": 99}
+            )
+            self.assertTryCastFailure(
+                TwoValueContainer[int, str], {"first": 1.5, "second": "hello"}
+            )
+
+            # Union[T, str] where T is also str (edge case)
+            self.assertTryCastSuccess(
+                TwoValueContainer[str, str], {"first": "a", "second": "b"}
+            )
+
+        def test_typeddict_generic_with_union_pipe_syntax(self) -> None:
+            # Test Python 3.10+ pipe syntax for unions
+            assert sys.version_info >= (3, 10)
+
+            # NOTE: Use exec() to avoid syntax errors in older Python versions
+            exec(
+                dedent(
+                    """
+                    class PipeContainer(RichTypedDict, Generic[_T]):
+                        value: _T | None
+
+                    # PipeContainer[int]
+                    self.assertTryCastSuccess(PipeContainer[int], {"value": 42})
+                    self.assertTryCastSuccess(PipeContainer[int], {"value": None})
+                    self.assertTryCastFailure(PipeContainer[int], {"value": "42"})
+
+                    # PipeContainer[List[str]]
+                    self.assertTryCastSuccess(PipeContainer[List[str]], {"value": ["a", "b"]})
+                    self.assertTryCastSuccess(PipeContainer[List[str]], {"value": None})
+                    self.assertTryCastFailure(PipeContainer[List[str]], {"value": [1, 2]})
+                    """
+                ),
+                {
+                    "RichTypedDict": RichTypedDict,
+                    "Generic": Generic,
+                    "_T": _T,
+                    "self": self,
+                    "List": List,
+                },
+            )
+
+        def test_typeddict_generic_with_complex_unions(self) -> None:
+            # Test more complex Union patterns with TypeVars
+            T = TypeVar("T")
+
+            class ComplexContainer(RichTypedDict, Generic[T]):
+                value: Union[T, List[T], None]
+
+            # ComplexContainer[int] - value can be int, List[int], or None
+            self.assertTryCastSuccess(ComplexContainer[int], {"value": 42})
+            self.assertTryCastSuccess(ComplexContainer[int], {"value": [1, 2, 3]})
+            self.assertTryCastSuccess(ComplexContainer[int], {"value": None})
+            self.assertTryCastFailure(ComplexContainer[int], {"value": "string"})
+            self.assertTryCastFailure(ComplexContainer[int], {"value": [1, "mixed"]})
+
+            # ComplexContainer[str]
+            self.assertTryCastSuccess(ComplexContainer[str], {"value": "hello"})
+            self.assertTryCastSuccess(ComplexContainer[str], {"value": ["a", "b"]})
+            self.assertTryCastSuccess(ComplexContainer[str], {"value": None})
+            self.assertTryCastFailure(ComplexContainer[str], {"value": [1, 2]})
+
     # === Tuples (Heterogeneous) ===
 
     if sys.version_info >= (3, 9):
@@ -1910,15 +2067,22 @@ class TestTryCast(TestCase):
         class Point3D(Point2D, total=False):  # type: ignore[reportGeneralTypeIssues]  # pyright
             z: int
 
-        self.assertRaisesRegex(
-            TypeNotSupportedError,
-            (
-                "trycast cannot determine which keys are required.*?"
-                "Suggest use a typing(_extensions)?.TypedDict.*?"
-                "strict=False"
-            ),
-            lambda: trycast(Point3D, {"x": 1, "y": 2}, strict=True),
-        )
+        if sys.version_info[:2] >= (3, 14):
+            self.assertRaisesRegex(
+                TypeNotSupportedError,
+                "trycast cannot determine which keys exist",
+                lambda: trycast(Point3D, {"x": 1, "y": 2}, strict=True),
+            )
+        else:
+            self.assertRaisesRegex(
+                TypeNotSupportedError,
+                (
+                    "trycast cannot determine which keys are required.*?"
+                    "Suggest use a typing(_extensions)?.TypedDict.*?"
+                    "strict=False"
+                ),
+                lambda: trycast(Point3D, {"x": 1, "y": 2}, strict=True),
+            )
 
     # NOTE: Cannot combine the following two if-checks with an `and`
     #       because that is too complicated for Pyre to understand.
@@ -1966,29 +2130,62 @@ class TestTryCast(TestCase):
         class TaggedMaybePoint1D(MaybePoint1D):
             name: str
 
-        self.assertTryCastSuccess(Point2D, {"x": 1, "y": 2}, strict=False)
-        self.assertTryCastFailure(Point2D, {"x": 1, "y": "string"}, strict=False)
-        self.assertTryCastFailure(Point2D, {"x": 1}, strict=False)
+        @contextmanager
+        def assert_raises_if_python_3_14_or_later() -> Iterator[None]:
+            try:
+                yield
+            except TypeNotSupportedError as e:
+                if (
+                    "cannot determine which keys exist on a mypy_extensions.TypedDict"
+                    in str(e)
+                ):
+                    if sys.version_info[:2] >= (3, 14):
+                        pass  # expected
+                    else:
+                        raise
+                else:
+                    raise
+            else:
+                if sys.version_info[:2] >= (3, 14):
+                    raise AssertionError("Expected TypeNotSupportedError to be raised")
 
-        self.assertTryCastSuccess(Point3D, {"x": 1, "y": 2, "z": 3}, strict=False)
-        self.assertTryCastFailure(
-            Point3D, {"x": 1, "y": 2, "z": "string"}, strict=False
-        )
-        self.assertTryCastSuccess(Point3D, {"x": 1, "y": 2}, strict=False)
-        self.assertTryCastSuccess(Point3D, {"x": 1}, strict=False)  # surprise!
-        self.assertTryCastSuccess(Point3D, {"q": 1}, strict=False)  # surprise!
+        with assert_raises_if_python_3_14_or_later():
+            self.assertTryCastSuccess(Point2D, {"x": 1, "y": 2}, strict=False)
+        with assert_raises_if_python_3_14_or_later():
+            self.assertTryCastFailure(Point2D, {"x": 1, "y": "string"}, strict=False)
+        with assert_raises_if_python_3_14_or_later():
+            self.assertTryCastFailure(Point2D, {"x": 1}, strict=False)
 
-        self.assertTryCastSuccess(MaybePoint1D, {"x": 1}, strict=False)
-        self.assertTryCastFailure(MaybePoint1D, {"x": "string"}, strict=False)
-        self.assertTryCastSuccess(MaybePoint1D, {}, strict=False)
-        self.assertTryCastSuccess(MaybePoint1D, {"q": 1}, strict=False)  # surprise!
+        with assert_raises_if_python_3_14_or_later():
+            self.assertTryCastSuccess(Point3D, {"x": 1, "y": 2, "z": 3}, strict=False)
+        with assert_raises_if_python_3_14_or_later():
+            self.assertTryCastFailure(
+                Point3D, {"x": 1, "y": 2, "z": "string"}, strict=False
+            )
+        with assert_raises_if_python_3_14_or_later():
+            self.assertTryCastSuccess(Point3D, {"x": 1, "y": 2}, strict=False)
+        with assert_raises_if_python_3_14_or_later():
+            self.assertTryCastSuccess(Point3D, {"x": 1}, strict=False)  # surprise!
+        with assert_raises_if_python_3_14_or_later():
+            self.assertTryCastSuccess(Point3D, {"q": 1}, strict=False)  # surprise!
 
-        self.assertTryCastSuccess(
-            TaggedMaybePoint1D, {"x": 1, "name": "one"}, strict=False
-        )
-        self.assertTryCastFailure(
-            TaggedMaybePoint1D, {"name": "one"}, strict=False
-        )  # surprise!
+        with assert_raises_if_python_3_14_or_later():
+            self.assertTryCastSuccess(MaybePoint1D, {"x": 1}, strict=False)
+        with assert_raises_if_python_3_14_or_later():
+            self.assertTryCastFailure(MaybePoint1D, {"x": "string"}, strict=False)
+        with assert_raises_if_python_3_14_or_later():
+            self.assertTryCastSuccess(MaybePoint1D, {}, strict=False)
+        with assert_raises_if_python_3_14_or_later():
+            self.assertTryCastSuccess(MaybePoint1D, {"q": 1}, strict=False)  # surprise!
+
+        with assert_raises_if_python_3_14_or_later():
+            self.assertTryCastSuccess(
+                TaggedMaybePoint1D, {"x": 1, "name": "one"}, strict=False
+            )
+        with assert_raises_if_python_3_14_or_later():
+            self.assertTryCastFailure(
+                TaggedMaybePoint1D, {"name": "one"}, strict=False
+            )  # surprise!
 
     # NOTE: Cannot combine the following two if-checks with an `and`
     #       because that is too complicated for Pyre to understand.
