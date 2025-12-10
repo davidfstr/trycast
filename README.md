@@ -513,7 +513,6 @@ raised exceptions, and other details.
 
 ### main (v2.0.0)
 
-* Add support for Python 3.14.
 * Drop support for Python 3.8 and Python 3.9. **(Breaking change)**
     * Drop support for Python 3.8's neutered TypedDict,
       which lacks metadata present in later versions.
@@ -522,6 +521,13 @@ raised exceptions, and other details.
   as of Aug 2025. **(Breaking change)**
 * Drop support for mypy_extensions.TypedDict, since it was deprecated in Aug 2023.
   **(Breaking change)**
+
+### v1.3.0
+
+* Add support for Python 3.14.
+  ([#35](https://github.com/davidfstr/trycast/issues/35))
+* Support parameterized TypedDicts, like `Point[int]`.
+  ([#28](https://github.com/davidfstr/trycast/issues/28))
 
 ### v1.2.1
 

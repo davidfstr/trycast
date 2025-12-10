@@ -2911,7 +2911,7 @@ class TestCheckCast(TestCase):
             converted = re.sub(r"Union\[([^\]]+)\]", convert_union, template)
             return [converted]
         else:
-            # Python <3.14
+            # Python 3.10 - 3.13
             return [template]
 
 
