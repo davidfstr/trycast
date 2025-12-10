@@ -527,7 +527,9 @@ raised exceptions, and other details.
 ### v1.3.0
 
 * Add support for Python 3.14.
+  ([#35](https://github.com/davidfstr/trycast/issues/35))
 * Support parameterized TypedDicts, like `Point[int]`.
+  ([#28](https://github.com/davidfstr/trycast/issues/28))
 
 ### v1.2.1
 
