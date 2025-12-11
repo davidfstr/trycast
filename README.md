@@ -76,19 +76,6 @@ def draw_shape_endpoint() -> HTTPResponse:
     return HTTPResponse(status=200)  # OK
 ```
 
-> **Important:** Current limitations in the mypy typechecker require that you
-> add an extra `cast(Optional[Shape], ...)` around the call to `trycast`
-> in the example so that it is accepted by the typechecker without complaining:
-> 
-> ```python
-> shape = cast(Optional[Shape], trycast(Shape, request_json))
-> if shape is None:
->     ...
-> ```
-> 
-> These limitations are in the process of being resolved by
-> [introducing TypeForm support to mypy](https://github.com/python/mypy/issues/9773).
-
 ### checkcast()
 
 `checkcast()` is similar to `trycast()` but instead of returning `None` 
@@ -148,20 +135,6 @@ def draw_shape_endpoint() -> HTTPResponse:
     draw_shape(request_json)  # type is narrowed to Shape
     return HTTPResponse(status=200)  # OK
 ```
-
-> **Important:** Current limitations in the mypy typechecker prevent the
-> automatic narrowing of the type of `request_json` in the above example to
-> `Shape`, so you must add an additional `cast()` to narrow the type manually:
-> 
-> ```python
-> if not isassignable(request_json, Shape):
->     ...
-> shape = cast(Shape, request_json)  # type is manually narrowed to Shape
-> draw_shape(shape)
-> ```
-> 
-> These limitations are in the process of being resolved by
-> [introducing TypeForm support to mypy](https://github.com/python/mypy/issues/9773).
 
 
 #### A better `isinstance()`
@@ -346,7 +319,7 @@ Trycast does type check successfully with the following type checkers:
 
 ```
 def trycast(
-    tp: TypeForm[T]† | TypeFormString[T]‡,
+    tp: TypeForm[T],
     value: object,
     /, failure: F = None,
     *, strict: bool = True,
@@ -416,20 +389,12 @@ Raises:
 * **UnresolvableTypeError** --
   If `tp` is a string that could not be resolved to a type.
 
-Footnotes:
-
-* † TypeForm[T] is a [type annotation object]. For example: `list[str]`
-
-* ‡ TypeFormString[T] is a stringified [type annotation object]. For example: `"list[str]"`
-
-[type annotation object]: https://github.com/python/mypy/issues/9773
-
 
 ### checkcast API
 
 ```
 def checkcast(
-    tp: TypeForm[T]† | TypeFormString[T]‡,
+    tp: TypeForm[T],
     value: object,
     /, *, strict: bool = True,
     eval: bool = True
@@ -476,7 +441,7 @@ Raises:
 ```
 def isassignable(
     value: object,
-    tp: TypeForm[T]† | TypeFormString[T]‡,
+    tp: TypeForm[T],
     /, *, eval: bool = True
 ) -> TypeGuard[T]: ...
 ```
@@ -513,6 +478,17 @@ raised exceptions, and other details.
 
 ### main (v2.0.0)
 
+* TypeForm is used in the signature for `trycast`, `checkcast`, and `isassignable`,
+  allowing for a more-precise return type. Most callers should no longer need
+  to wrap the return value of these functions in a `cast(T, ...)` expression.
+  ([#31](https://github.com/davidfstr/trycast/issues/31))
+    * You must use a typechecker version that supports `TypeForm`
+      to successfully typecheck calls to these functions.
+      **(Breaking change)**
+        * Mypy 2.2.0 or later (Jul 2026)
+        * Pyright 1.1.412 or later (Sep 2026)
+    * Require `typing-extensions` 4.13.0 or later, which provides `TypeForm`.
+      **(Breaking change)**
 * Drop support for Python 3.8 and Python 3.9. **(Breaking change)**
     * Drop support for Python 3.8's neutered TypedDict,
       which lacks metadata present in later versions.
@@ -521,6 +497,11 @@ raised exceptions, and other details.
   as of Aug 2025. **(Breaking change)**
 * Drop support for mypy_extensions.TypedDict, since it was deprecated in Aug 2023.
   **(Breaking change)**
+* Fix `trycast()` and `checkcast()` to no longer declare a `bool` return type
+  when `tp` is a string.
+* Documentation improvements:
+    * Eliminate mentions of TypeFormString[T],
+      since they are no longer distinct from TypeForm[T].
 
 ### v1.3.0
 

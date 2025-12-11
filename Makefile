@@ -69,7 +69,7 @@ typecheck: mypy pyright pyre  ## Run all typecheckers.
 
 .PHONY: mypy
 mypy:  ## Run mypy typechecker.
-	mypy --show-error-codes
+	mypy
 
 
 .PHONY: pyright

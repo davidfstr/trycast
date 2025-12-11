@@ -3031,17 +3031,14 @@ class TestIsAssignable(TestCase):
     def _demands_a_str(value: str) -> str:
         return value
 
-    # TODO: Add support for this case when TypeForm is implemented
-    #       (and it interacts with TypeGuard correctly). See:
-    #       https://github.com/python/mypy/issues/9773
-    # def test_return_type_is_typeguarded_positively_for_typeforms(self) -> None:
-    #    value = {"value": "contents"}
-    #    if isassignable(value, _Cell):
-    #        self._demands_a_typeddict(value)  # ensure typechecks
-    #
-    # @staticmethod
-    # def _demands_a_typeddict(cell: _Cell) -> object:
-    #    return cell["value"]
+    def test_return_type_is_typeguarded_positively_for_typeforms(self) -> None:
+        value = {"value": "contents"}  # type: object
+        if isassignable(value, _Cell):
+            self._demands_a_typeddict(value)  # ensure typechecks
+
+    @staticmethod
+    def _demands_a_typeddict(cell: _Cell) -> object:
+        return cell["value"]
 
     # TODO: Add support for this case if/when support for a "strict" TypeGuard
     #       of some kind is introduced that narrows in the negative case.

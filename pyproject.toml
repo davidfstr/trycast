@@ -32,8 +32,8 @@ classifiers = [  # https://pypi.org/classifiers/
 python = ">=3.10"
 
 [tool.poetry.group.dev.dependencies]
-mypy = "*"
-pyright = "*"
+mypy = ">=2.2.0"  # first version with TypeForm support enabled by default
+pyright = ">=1.1.412"  # first version with TypeForm support enabled by default
 pyre-check = "*"
 tox = ">=4.0.0,<5.0.0"
 black = "==24.3.0"
@@ -41,7 +41,7 @@ isort = "^5.9.1"
 flake8 = ">=6.0,<7.0"
 coverage = "*"
 # NOTE: Duplicated in: [tool.tox] > legacy_tox_ini > [testenv] > deps
-typing-extensions = ">=4.11.0rc1"  # for get_type_hints() that supports ReadOnly
+typing-extensions = ">=4.13.0"  # for TypeForm, and get_type_hints() that supports ReadOnly
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -55,6 +55,7 @@ build-backend = "poetry.core.masonry.api"
 files = "trycast/__init__.py,tests.py"
 mypy_path = "."
 strict_optional = true
+show_error_codes = true
 
 # Type Checker: Pyright
 # 
@@ -90,7 +91,7 @@ isolated_build = True
 [testenv]
 deps =
     mypy
-    typing-extensions >= 4.11.0rc1
+    typing-extensions >= 4.13.0
 commands =
     python3 -m unittest
 

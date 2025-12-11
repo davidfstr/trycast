@@ -118,6 +118,17 @@ else:
                     return bool
 
 
+# TypeForm
+try:
+    from typing_extensions import TypeForm
+except ImportError:
+    if not TYPE_CHECKING:
+
+        class TypeForm:
+            def __class_getitem__(cls, key):
+                return Never
+
+
 # _is_typed_dict
 _typed_dict_meta_list = []
 try:
@@ -232,16 +243,6 @@ _MISSING = object()
 # ------------------------------------------------------------------------------
 # trycast
 
-# TODO: Once support for TypeForm is implemented in mypy,
-#       replace the   `(Type[T]) -> Optional[T]` overload
-#       and the       `(object) -> Optional[object]` overload with
-#       the following `(TypeForm[T]) -> Optional[T]` overload:
-#
-#       See: https://github.com/python/mypy/issues/9773
-# @overload
-# def trycast(tp: TypeForm[_T], value: object) -> Optional[_T]: ...
-
-
 # Overload: (tp: str, eval: Literal[False]) -> NoReturn
 
 
@@ -249,29 +250,6 @@ _MISSING = object()
 def trycast(  # type: ignore[43]  # pyre
     tp: str, value: object, /, *, strict: bool = True, eval: Literal[False]
 ) -> NoReturn: ...  # pragma: no cover
-
-
-# Overload Group: (tp: str|Type[_T]|object, value: object) -> ...
-
-
-@overload
-def trycast(tp: str, value: object, /, *, strict: bool = True, eval: bool = True) -> bool:  # type: ignore[43]  # pyre
-    ...  # pragma: no cover
-
-
-@overload
-def trycast(  # type: ignore[43]  # pyre
-    tp: Type[_T], value: object, /, *, strict: bool = True, eval: bool = True
-) -> Optional[_T]: ...  # pragma: no cover
-
-
-@overload
-def trycast(  # type: ignore[43]  # pyre
-    tp: object, value: object, /, *, strict: bool = True, eval: bool = True
-) -> Optional[object]: ...  # pragma: no cover
-
-
-# Overload Group: (tp: str|Type[_T]|object, value: object, failure: object) -> ...
 
 
 @overload
@@ -284,6 +262,30 @@ def trycast(
     strict: bool = True,
     eval: Literal[False],
 ) -> NoReturn: ...  # pragma: no cover
+
+
+# Overload Group: (tp: Type[_T]|TypeForm[_T]|object, value: object) -> ...
+
+
+@overload
+def trycast(  # type: ignore[43]  # pyre
+    tp: Type[_T], value: object, /, *, strict: bool = True, eval: bool = True
+) -> Optional[_T]: ...  # pragma: no cover
+
+
+@overload
+def trycast(  # type: ignore[43]  # pyre
+    tp: TypeForm[_T], value: object, /, *, strict: bool = True, eval: bool = True
+) -> Optional[_T]: ...  # pragma: no cover
+
+
+@overload
+def trycast(  # type: ignore[overload-cannot-match, 43]  # mypy, pyre
+    tp: object, value: object, /, *, strict: bool = True, eval: bool = True
+) -> Optional[object]: ...  # pragma: no cover
+
+
+# Overload Group: (tp: Type[_T]|TypeForm[_T]|object, value: object, failure: object) -> ...
 
 
 @overload
@@ -300,6 +302,18 @@ def trycast(
 
 @overload
 def trycast(
+    tp: TypeForm[_T],
+    value: object,
+    /,
+    failure: _F,
+    *,
+    strict: bool = True,
+    eval: bool = True,
+) -> Union[_T, _F]: ...  # pragma: no cover
+
+
+@overload
+def trycast(  # type: ignore[overload-cannot-match]  # mypy
     tp: object, value: object, /, failure: _F, *, strict: bool = True, eval: bool = True
 ) -> Union[object, _F]: ...  # pragma: no cover
 
@@ -373,16 +387,6 @@ def trycast(tp, value, /, failure=None, *, strict=True, eval=True):
 # ------------------------------------------------------------------------------
 # checkcast
 
-# TODO: Once support for TypeForm is implemented in mypy,
-#       replace the   `(Type[T]) -> T` overload
-#       and the       `(object) -> object` overload with
-#       the following `(TypeForm[T]) -> T` overload:
-#
-#       See: https://github.com/python/mypy/issues/9773
-# @overload
-# def checkcast(tp: TypeForm[_T], value: object) -> _T: ...
-
-
 # Overload: (tp: str, eval: Literal[False]) -> NoReturn
 
 
@@ -398,12 +402,7 @@ def checkcast(  # type: ignore[43]  # pyre
 ) -> NoReturn: ...  # pragma: no cover
 
 
-# Overload Group: (tp: str|Type[_T]|object, value: object) -> ...
-
-
-@overload
-def checkcast(tp: str, value: object, /, *, strict: bool = True, eval: bool = True, _funcname: str = "checkcast") -> bool:  # type: ignore[43]  # pyre
-    ...  # pragma: no cover
+# Overload Group: (tp: Type[_T]|TypeForm[_T]|object, value: object) -> ...
 
 
 @overload
@@ -420,6 +419,18 @@ def checkcast(  # type: ignore[43]  # pyre
 
 @overload
 def checkcast(  # type: ignore[43]  # pyre
+    tp: TypeForm[_T],
+    value: object,
+    /,
+    *,
+    strict: bool = True,
+    eval: bool = True,
+    _funcname: str = "checkcast",
+) -> _T: ...  # pragma: no cover
+
+
+@overload
+def checkcast(  # type: ignore[overload-cannot-match, 43]  # mypy, pyre
     tp: object,
     value: object,
     /,
@@ -1074,14 +1085,7 @@ class _LazyStr(str):
 # ------------------------------------------------------------------------------
 # isassignable
 
-# TODO: Once support for TypeForm is implemented in mypy,
-#       replace the   `(Type[T]) -> TypeGuard[T]` overload
-#       and the       `(object) -> bool` overload with
-#       the following `(TypeForm[T]) -> TypeGuard[T]` overload:
-#
-#       See: https://github.com/python/mypy/issues/9773
-# @overload
-# def isassignable(value: object, tp: TypeForm[_T]) -> TypeGuard[_T]: ...
+# Overload: (value: object, tp: str, eval: Literal[False]) -> NoReturn
 
 
 @overload
@@ -1090,10 +1094,7 @@ def isassignable(
 ) -> NoReturn: ...  # pragma: no cover
 
 
-@overload
-def isassignable(
-    value: object, tp: str, /, *, eval: bool = True
-) -> bool: ...  # pragma: no cover
+# Overload Group: (value: object, tp: Type[_T]|TypeForm[_T]|object) -> ...
 
 
 @overload
@@ -1104,8 +1105,17 @@ def isassignable(
 
 @overload
 def isassignable(
+    value: object, tp: TypeForm[_T], /, *, eval: bool = True
+) -> TypeGuard[_T]: ...  # pragma: no cover
+
+
+@overload
+def isassignable(  # type: ignore[overload-cannot-match]  # mypy
     value: object, tp: object, /, *, eval: bool = True
 ) -> bool: ...  # pragma: no cover
+
+
+# Implementation
 
 
 def isassignable(value, tp, /, *, eval=True):
@@ -1154,13 +1164,8 @@ _EXTRA_ADVISE_IF_MOD_IS_BUILTINS = (
 )
 
 
-# TODO: Use this signature for eval_type_str once support for TypeForm is
-#       implemented in mypy. See: https://github.com/python/mypy/issues/9773
-# def eval_type_str(tp: str) -> TypeForm: ...
-
-
 @functools.lru_cache()
-def eval_type_str(tp: str, /) -> object:
+def eval_type_str(tp: str, /) -> TypeForm:
     """
     Resolves a string-reference to a type that can be imported,
     such as `'typing.List'`.
@@ -1236,7 +1241,7 @@ def eval_type_str(tp: str, /) -> object:
         member = _type_check(member, f"Could not resolve type {tp!r}: ")  # type: ignore[16]  # pyre
     except TypeError as e:
         raise UnresolvableTypeError(str(e))
-    return member
+    return cast(TypeForm, member)
 
 
 class UnresolvableTypeError(TypeError):
