@@ -635,7 +635,7 @@ def _checkcast_inner(
 
     if type_origin is Literal:  # Literal[...]
         for literal in get_args(tp):
-            if value == literal:
+            if type(value) is type(literal) and value == literal:
                 return None
         return ValidationError(tp, value)
 
