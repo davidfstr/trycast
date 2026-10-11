@@ -7,6 +7,7 @@ import subprocess
 import sys
 import typing
 from contextlib import contextmanager
+from enum import IntEnum
 from importlib.abc import MetaPathFinder
 from textwrap import dedent
 from typing import (
@@ -1485,6 +1486,56 @@ class TestTryCast(TestCase):
         self.assertTryCastFailure(Literal["circle"], {1: 1})
         self.assertTryCastFailure(Literal["circle"], {1})
         self.assertTryCastFailure(Literal["circle"], object())
+
+    def test_literal_requires_matching_types(self) -> None:
+        class Number(IntEnum):
+            ONE = 1
+
+        class OtherNumber(IntEnum):
+            ONE = 1
+
+        for tp, value in [
+            (Literal[1], True),
+            (Literal[0], False),
+            (Literal[True], 1),
+            (Literal[False], 0),
+            (Literal[1], 1.0),
+            (Literal[0], 0.0),
+            (Literal[True], 1.0),
+            (Literal[False], 0.0),
+            (Literal[1], 1 + 0j),
+            (Literal[1], Number.ONE),
+            (Literal[Number.ONE], 1),
+            (Literal[Number.ONE], True),
+            (Literal[Number.ONE], OtherNumber.ONE),
+        ]:
+            with self.subTest(tp=tp, value=value):
+                self.assertTryCastFailure(tp, value)
+                self.assertFalse(isassignable(value, tp))
+                with self.assertRaises(ValidationError):
+                    checkcast(tp, value)
+
+    def test_literal_mixed_types(self) -> None:
+        class Number(IntEnum):
+            ONE = 1
+
+        tp = Literal[0, False, 1, True, "circle", b"circle", Number.ONE, None]
+        for value in [0, False, 1, True, "circle", b"circle", Number.ONE, None]:
+            with self.subTest(value=value):
+                self.assertIs(value, trycast(tp, value, _FAILURE))
+                self.assertIs(value, checkcast(tp, value))
+                self.assertTrue(isassignable(value, tp))
+        self.assertTryCastFailure(tp, 1.0)
+
+    def test_literal_in_typeddict(self) -> None:
+        class Record(RichTypedDict):
+            kind: Literal[1]
+
+        self.assertTryCastFailure(Record, {"kind": True})
+        self.assertFalse(isassignable({"kind": True}, Record))
+        with self.assertRaises(ValidationError):
+            checkcast(Record, {"kind": True})
+        self.assertTryCastSuccess(Record, {"kind": 1})
 
     # === Callables ===
 
