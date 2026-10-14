@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**trycast** is a runtime type validation library that parses JSON-like values against Python type annotations (TypedDict, Union, Literal, etc.). Core API: `trycast()` returns value or None/failure, `checkcast()` raises ValidationError, `isassignable()` returns a TypeGuard-enhanced bool.
+**trycast** is a runtime type validation library that parses JSON-like values against Python type annotations (TypedDict, Union, Literal, etc.). Core API: `trycast()` returns value or None/failure, `checkcast()` raises ValidationError, `isassignable()` returns a TypeIs-enhanced bool.
 
 Single-file implementation in `trycast/__init__.py` (~1300 lines).
 

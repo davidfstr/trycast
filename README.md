@@ -443,7 +443,7 @@ def isassignable(
     value: object,
     tp: TypeForm[T],
     /, *, eval: bool = True
-) -> TypeGuard[T]: ...
+) -> TypeIs[T]: ...
 ```
 
 Returns whether `value` is in the shape of `tp`
@@ -489,6 +489,12 @@ raised exceptions, and other details.
         * Pyright 1.1.412 or later (Sep 2026)
     * Require `typing-extensions` 4.13.0 or later, which provides `TypeForm`.
       **(Breaking change)**
+* `isassignable` now returns a `TypeIs[T]` rather than a `TypeGuard[T]`,
+  so that typecheckers also narrow `value` in the negative case,
+  when `isassignable` returns False.
+  ([#36](https://github.com/davidfstr/trycast/issues/36))
+    * Code that relied on `value` *not* being narrowed after a failed
+      `isassignable` check may need adjustment. **(Breaking change)**
 * Drop support for Python 3.8 and Python 3.9. **(Breaking change)**
     * Drop support for Python 3.8's neutered TypedDict,
       which lacks metadata present in later versions.

@@ -3022,7 +3022,7 @@ class TestIsAssignable(TestCase):
         self.assertTrue(isassignable(1, float))
         self.assertTrue(isassignable(1.0, complex))
 
-    def test_return_type_is_typeguarded_positively_for_types(self) -> None:
+    def test_return_type_is_narrowed_positively_for_types(self) -> None:
         value = "words"
         if isassignable(value, str):
             self._demands_a_str(value)  # ensure typechecks
@@ -3031,7 +3031,7 @@ class TestIsAssignable(TestCase):
     def _demands_a_str(value: str) -> str:
         return value
 
-    def test_return_type_is_typeguarded_positively_for_typeforms(self) -> None:
+    def test_return_type_is_narrowed_positively_for_typeforms(self) -> None:
         value = {"value": "contents"}  # type: object
         if isassignable(value, _Cell):
             self._demands_a_typeddict(value)  # ensure typechecks
@@ -3040,16 +3040,14 @@ class TestIsAssignable(TestCase):
     def _demands_a_typeddict(cell: _Cell) -> object:
         return cell["value"]
 
-    # TODO: Add support for this case if/when support for a "strict" TypeGuard
-    #       of some kind is introduced that narrows in the negative case.
-    # def test_return_type_is_typeguarded_negatively(self) -> None:
-    #    value = 'words'
-    #    if not isassignable(value, str):
-    #        self._demands_a_never(value)  # ensure typechecks
-    #
-    # @staticmethod
-    # def _demands_a_never(value: NoReturn) -> NoReturn:
-    #    raise ValueError("expected this code to be unreachable")
+    def test_return_type_is_narrowed_negatively(self) -> None:
+        value = "words"
+        if not isassignable(value, str):
+            self._demands_a_never(value)  # ensure typechecks
+
+    @staticmethod
+    def _demands_a_never(value: NoReturn) -> NoReturn:
+        raise ValueError("expected this code to be unreachable")
 
 
 # ------------------------------------------------------------------------------

@@ -104,16 +104,16 @@ except ImportError:
     )
 
 
-# TypeGuard
-if sys.version_info >= (3, 10):
-    from typing import TypeGuard  # Python 3.10+
+# TypeIs
+if sys.version_info >= (3, 13):
+    from typing import TypeIs  # Python 3.13+
 else:
     try:
-        from typing_extensions import TypeGuard
+        from typing_extensions import TypeIs
     except ImportError:
         if not TYPE_CHECKING:
 
-            class TypeGuard:
+            class TypeIs:
                 def __class_getitem__(cls, key):
                     return bool
 
@@ -1100,13 +1100,13 @@ def isassignable(
 @overload
 def isassignable(
     value: object, tp: Type[_T], /, *, eval: bool = True
-) -> TypeGuard[_T]: ...  # pragma: no cover
+) -> TypeIs[_T]: ...  # pragma: no cover
 
 
 @overload
 def isassignable(
     value: object, tp: TypeForm[_T], /, *, eval: bool = True
-) -> TypeGuard[_T]: ...  # pragma: no cover
+) -> TypeIs[_T]: ...  # pragma: no cover
 
 
 @overload
@@ -1144,7 +1144,7 @@ def isassignable(value, tp, /, *, eval=True):
     result = e is None
     if isinstance(tp, type):
         return cast(
-            TypeGuard[_T],  # type: ignore[reportGeneralTypeIssues]  # pyright
+            TypeIs[_T],  # type: ignore[reportGeneralTypeIssues]  # pyright
             result,
         )
     else:
