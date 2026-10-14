@@ -10,7 +10,7 @@ Single-file implementation in `trycast/__init__.py` (~1300 lines).
 
 ### Version Compatibility Strategy
 
-**Critical**: trycast supports Python 3.10-3.14 with extensive conditional imports:
+**Critical**: trycast supports Python 3.10-3.15 with extensive conditional imports:
 - Use `sys.version_info >= (major, minor)` checks to conditionally import features
 - Import from `typing_extensions` as fallback for older Python versions
 - Example pattern (lines 43-50, 53-65, 67-77):

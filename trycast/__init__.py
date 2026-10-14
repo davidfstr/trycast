@@ -119,14 +119,17 @@ else:
 
 
 # TypeForm
-try:
-    from typing_extensions import TypeForm
-except ImportError:
-    if not TYPE_CHECKING:
+if sys.version_info >= (3, 15):
+    from typing import TypeForm  # Python 3.15+
+else:
+    try:
+        from typing_extensions import TypeForm
+    except ImportError:
+        if not TYPE_CHECKING:
 
-        class TypeForm:
-            def __class_getitem__(cls, key):
-                return Never
+            class TypeForm:
+                def __class_getitem__(cls, key):
+                    return Never
 
 
 # _is_typed_dict

@@ -2161,6 +2161,15 @@ class TestTryCast(TestCase):
                 self.assertTryCastFailure(str, 1)
                 self.assertTryCastFailure(int, "alpha")
 
+    if sys.version_info >= (3, 15):
+
+        def test_uses_typing_typeform_even_if_typing_extensions_unavailable(
+            self,
+        ) -> None:
+            with self._typing_extensions_not_importable():
+                with self._trycast_reimported():
+                    self.assertIs(typing.TypeForm, sys.modules["trycast"].TypeForm)
+
     @contextmanager
     def _typing_extensions_not_importable(self) -> Iterator[None]:
         old_te_module = sys.modules["typing_extensions"]

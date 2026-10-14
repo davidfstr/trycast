@@ -487,14 +487,16 @@ raised exceptions, and other details.
       **(Breaking change)**
         * Mypy 2.2.0 or later (Jul 2026)
         * Pyright 1.1.412 or later (Sep 2026)
-    * Require `typing-extensions` 4.13.0 or later, which provides `TypeForm`.
-      **(Breaking change)**
 * `isassignable` now returns a `TypeIs[T]` rather than a `TypeGuard[T]`,
   so that typecheckers also narrow `value` in the negative case,
   when `isassignable` returns False.
   ([#36](https://github.com/davidfstr/trycast/issues/36))
     * Code that relied on `value` *not* being narrowed after a failed
       `isassignable` check may need adjustment. **(Breaking change)**
+* Add support for Python 3.15.
+  ([#40](https://github.com/davidfstr/trycast/issues/40))
+    * On Python 3.15+, `typing.TypeForm` is used instead of
+      `typing_extensions.TypeForm`, so `typing-extensions` is not needed.
 * Drop support for Python 3.8 and Python 3.9. **(Breaking change)**
     * Drop support for Python 3.8's neutered TypedDict,
       which lacks metadata present in later versions.
