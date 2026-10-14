@@ -386,10 +386,10 @@ class TestTryCast(TestCase):
 
     def test_none(self) -> None:
         # None object, which is specially treated as type(None)
-        self.assertTryCastNoneSuccess(None)
+        self.assertTryCastNoneSuccess(None, eval=True)
 
         # Stringified None object, which is specially treated as type(None)
-        self.assertTryCastNoneSuccess("None")
+        self.assertTryCastNoneSuccess("None", eval=True)
 
     def test_none_type(self) -> None:
         # Actual None
@@ -1745,6 +1745,7 @@ class TestTryCast(TestCase):
         self.assertTryCastSuccess(
             test_data.forwardrefs_example.Circle,
             dict(type="circle", center=dict(x=50, y=50), radius=25),
+            eval=True,
         )
 
     def test_alias_to_union_with_forwardrefs(self) -> None:
@@ -1756,6 +1757,7 @@ class TestTryCast(TestCase):
                 None,
             ),
             dict(type="circle", center=dict(x=50, y=50), radius=25),
+            eval=True,
         )
 
         # Union with forward refs that have NOT been resolved
@@ -1772,6 +1774,7 @@ class TestTryCast(TestCase):
         self.assertTryCastSuccess(
             "test_data.forwardrefs_example.Shape",
             dict(type="circle", center=dict(x=50, y=50), radius=25),
+            eval=True,
         )
 
     def test_alias_to_list_with_forwardrefs(self) -> None:
@@ -1783,6 +1786,7 @@ class TestTryCast(TestCase):
                 None,
             ),
             [dict(x=50, y=50)],
+            eval=True,
         )
 
         # list with forward refs that have NOT been resolved
@@ -1796,7 +1800,9 @@ class TestTryCast(TestCase):
 
         # Stringified reference to: list with forward refs
         self.assertTryCastSuccess(
-            "test_data.forwardrefs_example.Scatterplot", [dict(x=50, y=50)]
+            "test_data.forwardrefs_example.Scatterplot",
+            [dict(x=50, y=50)],
+            eval=True,
         )
 
     def test_alias_to_dict_with_forwardrefs(self) -> None:
@@ -1808,6 +1814,7 @@ class TestTryCast(TestCase):
                 None,
             ),
             {"Target": dict(x=50, y=50)},
+            eval=True,
         )
 
         # dict with forward refs that have NOT been resolved
@@ -1824,6 +1831,7 @@ class TestTryCast(TestCase):
         self.assertTryCastSuccess(
             "test_data.forwardrefs_example.PointForLabel",
             {"Target": dict(x=50, y=50)},
+            eval=True,
         )
 
     # === type Statement ===
@@ -1837,6 +1845,7 @@ class TestTryCast(TestCase):
             self.assertTryCastSuccess(
                 test_data.forwardrefs_example_with_type_statement.Shape,
                 dict(type="circle", center=dict(x=50, y=50), radius=25),
+                eval=True,
             )
 
         def test_alias_to_list_defined_by_type_statement(self) -> None:
@@ -1846,6 +1855,7 @@ class TestTryCast(TestCase):
             self.assertTryCastSuccess(
                 test_data.forwardrefs_example_with_type_statement.Scatterplot,
                 [dict(x=50, y=50)],
+                eval=True,
             )
 
         def test_alias_to_dict_with_forwardrefs(self) -> None:
@@ -1855,6 +1865,7 @@ class TestTryCast(TestCase):
             self.assertTryCastSuccess(
                 test_data.forwardrefs_example_with_type_statement.PointForLabel,
                 {"Target": dict(x=50, y=50)},
+                eval=True,
             )
 
         def test_parameterized_alias(self) -> None:
@@ -1881,6 +1892,7 @@ class TestTryCast(TestCase):
         self.assertTryCastSuccess(
             "str",
             "hello",
+            eval=True,
         )
 
         if sys.version_info >= (3, 9):
@@ -1888,6 +1900,7 @@ class TestTryCast(TestCase):
             self.assertTryCastSuccess(
                 "list[int]",
                 [1, 2],
+                eval=True,
             )
 
             # builtin with non-builtin index expression
@@ -1897,6 +1910,7 @@ class TestTryCast(TestCase):
                 lambda: trycast(
                     "list[List]",
                     [[1, 2], [3, 4]],
+                    eval=True,
                 ),
             )
 
@@ -1907,6 +1921,7 @@ class TestTryCast(TestCase):
             lambda: trycast(
                 "List",
                 [1, 2],
+                eval=True,
             ),
         )
 
@@ -1917,6 +1932,7 @@ class TestTryCast(TestCase):
             lambda: trycast(
                 "List[int]",
                 [1, 2],
+                eval=True,
             ),
         )
 
@@ -1924,24 +1940,28 @@ class TestTryCast(TestCase):
         self.assertTryCastSuccess(
             "test_data.no_forwardrefs_example.Shape",
             dict(type="circle", center=dict(x=50, y=50), radius=25),
+            eval=True,
         )
 
         # Reference to importable type with forward references
         self.assertTryCastSuccess(
             "test_data.forwardrefs_example.Shape",
             dict(type="circle", center=dict(x=50, y=50), radius=25),
+            eval=True,
         )
 
         # Reference to importable type that is a stringified TypeAlias
         self.assertTryCastSuccess(
             "test_data.forwardrefs_example_with_import_annotations.Shape",
             dict(type="circle", center=dict(x=50, y=50), radius=25),
+            eval=True,
         )
 
         # Reference to importable type with builtin index expression
         self.assertTryCastSuccess(
             "typing.List[int]",
             [1, 2],
+            eval=True,
         )
 
         # Reference to importable type with non-builtin index expression
@@ -1949,6 +1969,7 @@ class TestTryCast(TestCase):
         self.assertTryCastSuccess(
             "typing.List[Any]",
             [1, 2],
+            eval=True,
         )
 
         # eval=False; stringified type as input
@@ -1973,12 +1994,49 @@ class TestTryCast(TestCase):
             ),
         )
 
+    def test_eval_is_false_by_default(self) -> None:
+        # trycast
+        self.assertRaisesRegex(
+            UnresolvableTypeError,
+            "appears to be a string reference.*?called with eval=False",
+            lambda: trycast("str", "hello"),  # type: ignore[no-matching-overload]  # mypy
+        )
+        # checkcast
+        self.assertRaisesRegex(
+            UnresolvableTypeError,
+            "appears to be a string reference.*?called with eval=False",
+            lambda: checkcast("str", "hello"),  # type: ignore[no-matching-overload]  # mypy
+        )
+        # isassignable
+        self.assertRaisesRegex(
+            UnresolvableTypeError,
+            "appears to be a string reference.*?called with eval=False",
+            lambda: isassignable("hello", "str"),  # type: ignore[no-matching-overload]  # mypy
+        )
+
+        # eval=True opts in
+        self.assertEqual("hello", trycast("str", "hello", eval=True))
+        self.assertEqual("hello", checkcast("str", "hello", eval=True))
+        self.assertTrue(isassignable("hello", "str", eval=True))
+
+        # TypedDict with a string-based forward reference
+        # is rejected by default, with advice to pass eval=True
+        self.assertRaisesRegex(
+            UnresolvedForwardRefError,
+            "contains a string-based forward reference.*?eval=True",
+            lambda: trycast(
+                test_data.forwardrefs_example_with_import_annotations.Circle,
+                dict(type="circle", center=dict(x=50, y=50), radius=25),
+            ),
+        )
+
     # === from __future__ import annotations ===
 
     def test_types_defined_in_module_with_import_annotations(self) -> None:
         self.assertTryCastSuccess(
             test_data.forwardrefs_example_with_import_annotations.Circle,
             dict(type="circle", center=dict(x=50, y=50), radius=25),
+            eval=True,
         )
 
         # Top-level stringified Union that has been resolved
@@ -1989,6 +2047,7 @@ class TestTryCast(TestCase):
                 None,
             ),
             dict(type="circle", center=dict(x=50, y=50), radius=25),
+            eval=True,
         )
 
         # Top-level stringified Union that has NOT been resolved
@@ -1998,6 +2057,7 @@ class TestTryCast(TestCase):
             lambda: trycast(
                 test_data.forwardrefs_example_with_import_annotations.Shape,
                 dict(type="circle", center=dict(x=50, y=50), radius=25),
+                eval=True,
             ),
         )
 
@@ -2005,6 +2065,7 @@ class TestTryCast(TestCase):
         self.assertTryCastSuccess(
             "test_data.forwardrefs_example_with_import_annotations.Shape",
             dict(type="circle", center=dict(x=50, y=50), radius=25),
+            eval=True,
         )
 
         # Top-level stringified List that has been resolved
@@ -2015,6 +2076,7 @@ class TestTryCast(TestCase):
                 None,
             ),
             [dict(x=50, y=50)],
+            eval=True,
         )
 
         # Top-level stringified List that has NOT been resolved
@@ -2024,6 +2086,7 @@ class TestTryCast(TestCase):
             lambda: trycast(
                 test_data.forwardrefs_example_with_import_annotations.Scatterplot,
                 [dict(x=50, y=50)],
+                eval=True,
             ),
         )
 
@@ -2031,6 +2094,7 @@ class TestTryCast(TestCase):
         self.assertTryCastSuccess(
             "test_data.forwardrefs_example_with_import_annotations.Scatterplot",
             [dict(x=50, y=50)],
+            eval=True,
         )
 
         # Top-level stringified Dict that has been resolved
@@ -2041,6 +2105,7 @@ class TestTryCast(TestCase):
                 None,
             ),
             {"Target": dict(x=50, y=50)},
+            eval=True,
         )
 
         # Top-level stringified Dict that has NOT been resolved
@@ -2050,6 +2115,7 @@ class TestTryCast(TestCase):
             lambda: trycast(
                 test_data.forwardrefs_example_with_import_annotations.PointForLabel,
                 {"Target": dict(x=50, y=50)},
+                eval=True,
             ),
         )
 
@@ -2057,6 +2123,7 @@ class TestTryCast(TestCase):
         self.assertTryCastSuccess(
             "test_data.forwardrefs_example_with_import_annotations.PointForLabel",
             {"Target": dict(x=50, y=50)},
+            eval=True,
         )
 
     # === strict=True mode ===
@@ -2208,9 +2275,16 @@ class TestTryCast(TestCase):
     # === Utility ===
 
     def assertTryCastSuccess(
-        self, tp: object, value: object, *, strict: Optional[bool] = None
+        self,
+        tp: object,
+        value: object,
+        *,
+        strict: Optional[bool] = None,
+        eval: Optional[bool] = None,
     ) -> None:
         kwargs = dict(strict=strict) if strict is not None else dict()
+        if eval is not None:
+            kwargs["eval"] = eval
         self.assertIs(
             value,
             trycast(tp, value, **kwargs),
@@ -2218,17 +2292,24 @@ class TestTryCast(TestCase):
         )
 
     def assertTryCastFailure(
-        self, tp: object, value: object, *, strict: Optional[bool] = None
+        self,
+        tp: object,
+        value: object,
+        *,
+        strict: Optional[bool] = None,
+        eval: Optional[bool] = None,
     ) -> None:
         kwargs = dict(strict=strict) if strict is not None else dict()
+        if eval is not None:
+            kwargs["eval"] = eval
         self.assertIs(
             None,
             trycast(tp, value, **kwargs),
             f"Expected trycast({tp}, {value}) to FAIL",
         )
 
-    def assertTryCastNoneSuccess(self, tp: object) -> None:
-        self.assertIs(None, trycast(tp, None, _FAILURE))
+    def assertTryCastNoneSuccess(self, tp: object, *, eval: bool = False) -> None:
+        self.assertIs(None, trycast(tp, None, _FAILURE, eval=eval))
 
 
 class _TypingExtensionsGoneLoader(MetaPathFinder):
@@ -2316,9 +2397,9 @@ class TestCheckCast(TestCase):
         self.assertRaisesEqual(
             ValidationError,
             "Expected NoneType but found 1",
-            lambda: checkcast(None, 1),
+            lambda: checkcast(None, 1, eval=True),
         )
-        checkcast(None, None)
+        checkcast(None, None, eval=True)
 
     def test_none_type(self) -> None:
         self.assertRaisesEqual(
@@ -2804,6 +2885,7 @@ class TestCheckCast(TestCase):
                     "content": {"type": None, "text": ""},
                 }
             },
+            eval=True,
         )
         self.assertRaisesEqual(
             ValidationError,
@@ -2826,6 +2908,7 @@ class TestCheckCast(TestCase):
                         "content": {"type": None, "text": ""},
                     }
                 },
+                eval=True,
             ),
         )
 
@@ -2845,6 +2928,7 @@ class TestCheckCast(TestCase):
                     },
                 }
             },
+            eval=True,
         )
         self.assertRaisesEqual(
             ValidationError,
@@ -2874,6 +2958,7 @@ class TestCheckCast(TestCase):
                         },
                     }
                 },
+                eval=True,
             ),
         )
         self.assertRaisesEqual(
@@ -2902,6 +2987,7 @@ class TestCheckCast(TestCase):
                         },
                     }
                 },
+                eval=True,
             ),
         )
 

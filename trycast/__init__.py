@@ -15,6 +15,7 @@ from types import ModuleType
 from typing import _GenericAlias  # type: ignore[attr-defined]
 from typing import (
     TYPE_CHECKING,
+    Annotated,
     Any,
     Callable,
     Dict,
@@ -90,6 +91,20 @@ else:
         __type_params__: Tuple[object, ...]
         __value__: object
         ...
+
+
+# _TYPEDDICT_QUALIFIERS: Required, NotRequired, ReadOnly (from typing and/or typing_extensions)
+_typeddict_qualifiers: List[object] = []
+for _mod_name in ["typing", "typing_extensions"]:
+    try:
+        _m = importlib.import_module(_mod_name)
+    except ImportError:  # pragma: no cover
+        continue
+    for _name in ["Required", "NotRequired", "ReadOnly"]:
+        if hasattr(_m, _name):
+            _typeddict_qualifiers.append(getattr(_m, _name))
+_TYPEDDICT_QUALIFIERS = tuple(_typeddict_qualifiers)
+del _mod_name, _m, _name
 
 
 # get_type_hints
@@ -248,7 +263,7 @@ _MISSING = object()
 
 @overload
 def trycast(  # type: ignore[43]  # pyre
-    tp: str, value: object, /, *, strict: bool = True, eval: Literal[False]
+    tp: str, value: object, /, *, strict: bool = True, eval: Literal[False] = False
 ) -> NoReturn: ...  # pragma: no cover
 
 
@@ -260,7 +275,7 @@ def trycast(
     failure: object,
     *,
     strict: bool = True,
-    eval: Literal[False],
+    eval: Literal[False] = False,
 ) -> NoReturn: ...  # pragma: no cover
 
 
@@ -269,19 +284,19 @@ def trycast(
 
 @overload
 def trycast(  # type: ignore[43]  # pyre
-    tp: Type[_T], value: object, /, *, strict: bool = True, eval: bool = True
+    tp: Type[_T], value: object, /, *, strict: bool = True, eval: bool = False
 ) -> Optional[_T]: ...  # pragma: no cover
 
 
 @overload
 def trycast(  # type: ignore[43]  # pyre
-    tp: TypeForm[_T], value: object, /, *, strict: bool = True, eval: bool = True
+    tp: TypeForm[_T], value: object, /, *, strict: bool = True, eval: bool = False
 ) -> Optional[_T]: ...  # pragma: no cover
 
 
 @overload
 def trycast(  # type: ignore[overload-cannot-match, 43]  # mypy, pyre
-    tp: object, value: object, /, *, strict: bool = True, eval: bool = True
+    tp: object, value: object, /, *, strict: bool = True, eval: bool = False
 ) -> Optional[object]: ...  # pragma: no cover
 
 
@@ -296,7 +311,7 @@ def trycast(
     failure: _F,
     *,
     strict: bool = True,
-    eval: bool = True,
+    eval: bool = False,
 ) -> Union[_T, _F]: ...  # pragma: no cover
 
 
@@ -308,20 +323,26 @@ def trycast(
     failure: _F,
     *,
     strict: bool = True,
-    eval: bool = True,
+    eval: bool = False,
 ) -> Union[_T, _F]: ...  # pragma: no cover
 
 
 @overload
 def trycast(  # type: ignore[overload-cannot-match]  # mypy
-    tp: object, value: object, /, failure: _F, *, strict: bool = True, eval: bool = True
+    tp: object,
+    value: object,
+    /,
+    failure: _F,
+    *,
+    strict: bool = True,
+    eval: bool = False,
 ) -> Union[object, _F]: ...  # pragma: no cover
 
 
 # Implementation
 
 
-def trycast(tp, value, /, failure=None, *, strict=True, eval=True):
+def trycast(tp, value, /, failure=None, *, strict=True, eval=False):
     """
     If `value` is in the shape of `tp` (as accepted by a Python typechecker
     conforming to PEP 484 "Type Hints") then returns it, otherwise returns
@@ -363,9 +384,10 @@ def trycast(tp, value, /, failure=None, *, strict=True, eval=True):
           TypeNotSupportedError because values of NewTypes at runtime
           are indistinguishable from their wrapped supertype.
     * eval --
-        If eval=False then this function will not attempt to resolve string
-        type references, which requires the use of the eval() function.
-        Otherwise string type references will be accepted.
+        If eval=False (the default) then this function will not attempt to
+        resolve string type references, which requires the use of the
+        eval() function. If eval=True then string type references will be
+        accepted, but only pass eval=True when the type argument is trusted.
 
     Raises:
     * TypeNotSupportedError --
@@ -397,7 +419,7 @@ def checkcast(  # type: ignore[43]  # pyre
     /,
     *,
     strict: bool = True,
-    eval: Literal[False],
+    eval: Literal[False] = False,
     _funcname: str = "checkcast",
 ) -> NoReturn: ...  # pragma: no cover
 
@@ -412,7 +434,7 @@ def checkcast(  # type: ignore[43]  # pyre
     /,
     *,
     strict: bool = True,
-    eval: bool = True,
+    eval: bool = False,
     _funcname: str = "checkcast",
 ) -> _T: ...  # pragma: no cover
 
@@ -424,7 +446,7 @@ def checkcast(  # type: ignore[43]  # pyre
     /,
     *,
     strict: bool = True,
-    eval: bool = True,
+    eval: bool = False,
     _funcname: str = "checkcast",
 ) -> _T: ...  # pragma: no cover
 
@@ -436,7 +458,7 @@ def checkcast(  # type: ignore[overload-cannot-match, 43]  # mypy, pyre
     /,
     *,
     strict: bool = True,
-    eval: bool = True,
+    eval: bool = False,
     _funcname: str = "checkcast",
 ) -> object: ...  # pragma: no cover
 
@@ -444,7 +466,7 @@ def checkcast(  # type: ignore[overload-cannot-match, 43]  # mypy, pyre
 # Implementation
 
 
-def checkcast(tp, value, /, *, strict=True, eval=True, _funcname="checkcast"):
+def checkcast(tp, value, /, *, strict=True, eval=False, _funcname="checkcast"):
     """
     If `value` is in the shape of `tp` (as accepted by a Python typechecker
     conforming to PEP 484 "Type Hints") then returns it, otherwise
@@ -498,7 +520,8 @@ def _checkcast_outer(
                 f"Could not resolve type {tp!r}: "
                 f"Type appears to be a string reference "
                 f"and {options.funcname}() was called with eval=False, "
-                f"disabling eval of string type references."
+                f"disabling eval of string type references. "
+                f"Try passing eval=True if the type is trusted."
             )
     else:
         try:
@@ -527,7 +550,8 @@ def _checkcast_outer(
         else:
             advise = (
                 f"{options.funcname}() cannot resolve string type references "
-                "because it was called with eval=False."
+                "because it was called with eval=False (the default). "
+                "Try passing eval=True if the type is trusted."
             )
         raise UnresolvedForwardRefError(
             f"{options.funcname} does not support checking against type form {tp!r} "
@@ -838,7 +862,11 @@ def _checkcast_typeddict(
             typed_dict_class  # type: ignore[arg-type]  # mypy
         )  # resolve ForwardRefs in typed_dict_class.__annotations__
     else:
-        resolved_annotations = typed_dict_class.__annotations__  # type: ignore[attr-defined]  # mypy
+        # NOTE: Unlike get_type_hints(), does not resolve ForwardRefs
+        resolved_annotations = {
+            k: _strip_typeddict_qualifiers(v)
+            for k, v in typed_dict_class.__annotations__.items()  # type: ignore[attr-defined]  # mypy
+        }
 
     # {typing, typing_extensions}.TypedDict
     required_keys = typed_dict_class.__required_keys__  # type: ignore[attr-defined, union-attr]  # mypy
@@ -1090,7 +1118,7 @@ class _LazyStr(str):
 
 @overload
 def isassignable(
-    value: object, tp: str, /, *, eval: Literal[False]
+    value: object, tp: str, /, *, eval: Literal[False] = False
 ) -> NoReturn: ...  # pragma: no cover
 
 
@@ -1099,26 +1127,26 @@ def isassignable(
 
 @overload
 def isassignable(
-    value: object, tp: Type[_T], /, *, eval: bool = True
+    value: object, tp: Type[_T], /, *, eval: bool = False
 ) -> TypeIs[_T]: ...  # pragma: no cover
 
 
 @overload
 def isassignable(
-    value: object, tp: TypeForm[_T], /, *, eval: bool = True
+    value: object, tp: TypeForm[_T], /, *, eval: bool = False
 ) -> TypeIs[_T]: ...  # pragma: no cover
 
 
 @overload
 def isassignable(  # type: ignore[overload-cannot-match]  # mypy
-    value: object, tp: object, /, *, eval: bool = True
+    value: object, tp: object, /, *, eval: bool = False
 ) -> bool: ...  # pragma: no cover
 
 
 # Implementation
 
 
-def isassignable(value, tp, /, *, eval=True):
+def isassignable(value, tp, /, *, eval=False):
     """
     Returns whether `value` is in the shape of `tp`
     (as accepted by a Python typechecker conforming to PEP 484 "Type Hints").
@@ -1149,6 +1177,20 @@ def isassignable(value, tp, /, *, eval=True):
         )
     else:
         return result
+
+
+def _strip_typeddict_qualifiers(tp: object) -> object:
+    """
+    Unwraps Required[], NotRequired[], ReadOnly[], and Annotated[] from the
+    annotation of a TypedDict key, like get_type_hints() does,
+    but without evaluating any string annotations.
+    """
+    while True:
+        origin = get_origin(tp)
+        if origin is Annotated or origin in _TYPEDDICT_QUALIFIERS:
+            tp = get_args(tp)[0]
+        else:
+            return tp
 
 
 # ------------------------------------------------------------------------------

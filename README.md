@@ -323,7 +323,7 @@ def trycast(
     value: object,
     /, failure: F = None,
     *, strict: bool = True,
-    eval: bool = True
+    eval: bool = False
 ) -> T | F: ...
 ```
 
@@ -374,9 +374,10 @@ Parameters:
       TypeNotSupportedError because values of NewTypes at runtime
       are indistinguishable from their wrapped supertype.
 * **eval** --
-  If eval=False then this function will not attempt to resolve string
-  type references, which requires the use of the eval() function.
-  Otherwise string type references will be accepted.
+  If eval=False (the default) then this function will not attempt to resolve
+  string type references, which requires the use of the eval() function.
+  If eval=True then string type references will be accepted, but only
+  pass eval=True when the type argument is trusted.
 
 Raises:
 
@@ -397,7 +398,7 @@ def checkcast(
     tp: TypeForm[T],
     value: object,
     /, *, strict: bool = True,
-    eval: bool = True
+    eval: bool = False
 ) -> T: ...
 ```
 
@@ -442,7 +443,7 @@ Raises:
 def isassignable(
     value: object,
     tp: TypeForm[T],
-    /, *, eval: bool = True
+    /, *, eval: bool = False
 ) -> TypeIs[T]: ...
 ```
 
@@ -495,6 +496,15 @@ raised exceptions, and other details.
   ([#36](https://github.com/davidfstr/trycast/issues/36))
     * Code that relied on `value` *not* being narrowed after a failed
       `isassignable` check may need adjustment. **(Breaking change)**
+* `trycast`, `checkcast`, and `isassignable` now use `eval=False` by default
+  rather than `eval=True`, so string type references are no longer resolved
+  (via `eval()`) unless requested. **(Breaking change)**
+  ([#41](https://github.com/davidfstr/trycast/issues/41))
+    * Pass `eval=True` to restore the old behavior, which is needed when
+      `tp` is a string or a `TypedDict` contains string-based forward references
+      (such as under `from __future__ import annotations`).
+    * Python 3.14+'s deferred evaluation of annotations (PEP 649) eliminates
+      most needs for string type references.
 * Drop support for Python 3.8 and Python 3.9. **(Breaking change)**
     * Drop support for Python 3.8's neutered TypedDict,
       which lacks metadata present in later versions.
