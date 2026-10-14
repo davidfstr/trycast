@@ -11,7 +11,7 @@ from collections.abc import MutableMapping as CMutableMapping
 from collections.abc import MutableSequence as CMutableSequence
 from collections.abc import Sequence as CSequence
 from inspect import Parameter
-from types import ModuleType
+from types import GenericAlias, ModuleType, UnionType
 from typing import _GenericAlias  # type: ignore[attr-defined]
 from typing import (
     TYPE_CHECKING,
@@ -48,29 +48,6 @@ if sys.version_info >= (3, 13):
 
 else:
     from typing import _eval_type as eval_type  # type: ignore[attr-defined]
-
-# GenericAlias
-if sys.version_info >= (3, 9):
-    from types import GenericAlias
-else:
-
-    class GenericAlias(type):  # type: ignore[no-redef]
-        __origin__: object
-        __args__: Tuple[object, ...]
-
-        def __init__(self, origin: object, args: Tuple[object, ...]) -> None: ...
-
-        ...
-
-
-# UnionType
-if sys.version_info >= (3, 10):
-    from types import UnionType  # type: ignore[attr-defined]
-else:
-
-    class UnionType(type):  # type: ignore[no-redef]
-        ...
-
 
 # Never
 if sys.version_info >= (3, 11):
@@ -157,41 +134,6 @@ _typed_dict_metas = tuple(_typed_dict_meta_list)
 
 def _is_typed_dict(tp: object) -> bool:
     return isinstance(tp, _typed_dict_metas)
-
-
-# _is_newtype
-# TODO: Inline unique implementation
-if NewType.__class__.__name__ == "type":  # type: ignore[reportGeneralTypeIssues]  # pyright
-    # Python 3.10+
-    def _is_newtype(tp: object) -> bool:
-        return isinstance(tp, NewType)  # type: ignore[arg-type]
-
-else:
-    raise AssertionError(
-        "Do not know how to recognize NewType in this version of Python"
-    )
-
-
-# _inspect_signature
-if sys.version_info >= (3, 10):
-
-    def _inspect_signature(value):
-        return inspect.signature(
-            value,
-            # Don't auto-unwrap decorated functions
-            follow_wrapped=False,
-            # Don't need annotation information
-            eval_str=False,
-        )
-
-else:
-
-    def _inspect_signature(value):
-        return inspect.signature(
-            value,
-            # Don't auto-unwrap decorated functions
-            follow_wrapped=False,
-        )
 
 
 # _type_check
@@ -695,7 +637,13 @@ def _checkcast_inner(
             # Callable[[Any * N], Any]
             if callable(value):
                 try:
-                    sig = _inspect_signature(value)
+                    sig = inspect.signature(
+                        value,
+                        # Don't auto-unwrap decorated functions
+                        follow_wrapped=False,
+                        # Don't need annotation information
+                        eval_str=False,
+                    )
                 except TypeError:
                     # Not a callable
                     return ValidationError(tp, value)
@@ -761,7 +709,7 @@ def _checkcast_inner(
     if _is_typed_dict(tp):  # T extends TypedDict
         return _checkcast_typeddict(tp, tp, value, options, {})
 
-    if _is_newtype(tp):
+    if isinstance(tp, NewType):  # type: ignore[arg-type]
         if options.strict:
             supertype_repr = type_repr(tp.__supertype__)  # type: ignore[attr-defined]  # mypy
             tp_name_repr = repr(tp.__name__)  # type: ignore[attr-defined]  # mypy

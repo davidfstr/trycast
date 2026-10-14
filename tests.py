@@ -724,21 +724,19 @@ class TestTryCast(TestCase):
 
     # === Generic Collections ===
 
-    if sys.version_info >= (3, 9):
+    def test_list_t(self) -> None:
+        # Actual list[T]
+        self.assertTryCastSuccess(list[int], [])
+        self.assertTryCastSuccess(list[int], [1])
+        self.assertTryCastSuccess(list[int], [1, 2])
 
-        def test_list_t(self) -> None:
-            # Actual list[T]
-            self.assertTryCastSuccess(list[int], [])
-            self.assertTryCastSuccess(list[int], [1])
-            self.assertTryCastSuccess(list[int], [1, 2])
-
-            # non-list[T]s
-            self.assertTryCastFailure(list[int], 0)
-            self.assertTryCastFailure(list[int], "foo")
-            self.assertTryCastFailure(list[int], ["1"])
-            self.assertTryCastFailure(list[int], {1: 1})
-            self.assertTryCastFailure(list[int], {1})
-            self.assertTryCastFailure(list[int], object())
+        # non-list[T]s
+        self.assertTryCastFailure(list[int], 0)
+        self.assertTryCastFailure(list[int], "foo")
+        self.assertTryCastFailure(list[int], ["1"])
+        self.assertTryCastFailure(list[int], {1: 1})
+        self.assertTryCastFailure(list[int], {1})
+        self.assertTryCastFailure(list[int], object())
 
     def test_big_list_t(self) -> None:
         # Actual list[T]
@@ -754,21 +752,19 @@ class TestTryCast(TestCase):
         self.assertTryCastFailure(List[int], {1})
         self.assertTryCastFailure(List[int], object())
 
-    if sys.version_info >= (3, 9):
+    def test_set_t(self) -> None:
+        # Actual set[T]
+        self.assertTryCastSuccess(set[int], set())
+        self.assertTryCastSuccess(set[int], {1})
+        self.assertTryCastSuccess(set[int], {1, 2})
 
-        def test_set_t(self) -> None:
-            # Actual set[T]
-            self.assertTryCastSuccess(set[int], set())
-            self.assertTryCastSuccess(set[int], {1})
-            self.assertTryCastSuccess(set[int], {1, 2})
-
-            # non-set[T]s
-            self.assertTryCastFailure(set[int], 0)
-            self.assertTryCastFailure(set[int], "foo")
-            self.assertTryCastFailure(set[int], ["1"])
-            self.assertTryCastFailure(set[int], {1: 1})
-            self.assertTryCastFailure(set[int], [1])
-            self.assertTryCastFailure(set[int], object())
+        # non-set[T]s
+        self.assertTryCastFailure(set[int], 0)
+        self.assertTryCastFailure(set[int], "foo")
+        self.assertTryCastFailure(set[int], ["1"])
+        self.assertTryCastFailure(set[int], {1: 1})
+        self.assertTryCastFailure(set[int], [1])
+        self.assertTryCastFailure(set[int], object())
 
     def test_big_set_t(self) -> None:
         # Actual set[T]
@@ -784,24 +780,22 @@ class TestTryCast(TestCase):
         self.assertTryCastFailure(Set[int], [1])
         self.assertTryCastFailure(Set[int], object())
 
-    if sys.version_info >= (3, 9):
+    def test_frozenset_t(self) -> None:
+        # Actual frozenset[T]
+        self.assertTryCastSuccess(frozenset[int], frozenset())
+        self.assertTryCastSuccess(frozenset[int], frozenset({1}))
+        self.assertTryCastSuccess(frozenset[int], frozenset({1, 2}))
 
-        def test_frozenset_t(self) -> None:
-            # Actual frozenset[T]
-            self.assertTryCastSuccess(frozenset[int], frozenset())
-            self.assertTryCastSuccess(frozenset[int], frozenset({1}))
-            self.assertTryCastSuccess(frozenset[int], frozenset({1, 2}))
+        # frozenset-like sets
+        self.assertTryCastFailure(frozenset[int], {1})
 
-            # frozenset-like sets
-            self.assertTryCastFailure(frozenset[int], {1})
-
-            # non-frozenset[T]s
-            self.assertTryCastFailure(frozenset[int], 0)
-            self.assertTryCastFailure(frozenset[int], "foo")
-            self.assertTryCastFailure(frozenset[int], ["1"])
-            self.assertTryCastFailure(frozenset[int], {1: 1})
-            self.assertTryCastFailure(frozenset[int], [1])
-            self.assertTryCastFailure(frozenset[int], object())
+        # non-frozenset[T]s
+        self.assertTryCastFailure(frozenset[int], 0)
+        self.assertTryCastFailure(frozenset[int], "foo")
+        self.assertTryCastFailure(frozenset[int], ["1"])
+        self.assertTryCastFailure(frozenset[int], {1: 1})
+        self.assertTryCastFailure(frozenset[int], [1])
+        self.assertTryCastFailure(frozenset[int], object())
 
     def test_big_frozenset_t(self) -> None:
         # Actual frozenset[T]
@@ -820,21 +814,19 @@ class TestTryCast(TestCase):
         self.assertTryCastFailure(FrozenSet[int], [1])
         self.assertTryCastFailure(FrozenSet[int], object())
 
-    if sys.version_info >= (3, 9):
+    def test_tuple_t_ellipsis(self) -> None:
+        # Actual tuple[T, ...]
+        self.assertTryCastSuccess(tuple[int, ...], ())  # type: ignore[6]  # pyre
+        self.assertTryCastSuccess(tuple[int, ...], (1,))  # type: ignore[6]  # pyre
+        self.assertTryCastSuccess(tuple[int, ...], (1, 2))  # type: ignore[6]  # pyre
 
-        def test_tuple_t_ellipsis(self) -> None:
-            # Actual tuple[T, ...]
-            self.assertTryCastSuccess(tuple[int, ...], ())  # type: ignore[6]  # pyre
-            self.assertTryCastSuccess(tuple[int, ...], (1,))  # type: ignore[6]  # pyre
-            self.assertTryCastSuccess(tuple[int, ...], (1, 2))  # type: ignore[6]  # pyre
-
-            # non-tuple[T, ...]s
-            self.assertTryCastFailure(tuple[int, ...], 0)  # type: ignore[6]  # pyre
-            self.assertTryCastFailure(tuple[int, ...], "foo")  # type: ignore[6]  # pyre
-            self.assertTryCastFailure(tuple[int, ...], ["1"])  # type: ignore[6]  # pyre
-            self.assertTryCastFailure(tuple[int, ...], {1: 1})  # type: ignore[6]  # pyre
-            self.assertTryCastFailure(tuple[int, ...], {1})  # type: ignore[6]  # pyre
-            self.assertTryCastFailure(tuple[int, ...], object())  # type: ignore[6]  # pyre
+        # non-tuple[T, ...]s
+        self.assertTryCastFailure(tuple[int, ...], 0)  # type: ignore[6]  # pyre
+        self.assertTryCastFailure(tuple[int, ...], "foo")  # type: ignore[6]  # pyre
+        self.assertTryCastFailure(tuple[int, ...], ["1"])  # type: ignore[6]  # pyre
+        self.assertTryCastFailure(tuple[int, ...], {1: 1})  # type: ignore[6]  # pyre
+        self.assertTryCastFailure(tuple[int, ...], {1})  # type: ignore[6]  # pyre
+        self.assertTryCastFailure(tuple[int, ...], object())  # type: ignore[6]  # pyre
 
     def test_big_tuple_t_ellipsis(self) -> None:
         # Actual tuple[T, ...]
@@ -879,21 +871,19 @@ class TestTryCast(TestCase):
         self.assertTryCastFailure(MutableSequence[int], object())
         self.assertTryCastFailure(MutableSequence[str], "foo")
 
-    if sys.version_info >= (3, 9):
+    def test_dict_k_v(self) -> None:
+        # Actual dict[K, V]
+        self.assertTryCastSuccess(dict[str, int], {})
+        self.assertTryCastSuccess(dict[str, int], {"x": 1})
+        self.assertTryCastSuccess(dict[str, int], {"x": 1, "y": 2})
 
-        def test_dict_k_v(self) -> None:
-            # Actual dict[K, V]
-            self.assertTryCastSuccess(dict[str, int], {})
-            self.assertTryCastSuccess(dict[str, int], {"x": 1})
-            self.assertTryCastSuccess(dict[str, int], {"x": 1, "y": 2})
-
-            # non-dict[K, V]s
-            self.assertTryCastFailure(dict[str, int], 0)
-            self.assertTryCastFailure(dict[str, int], "foo")
-            self.assertTryCastFailure(dict[str, int], [1])
-            self.assertTryCastFailure(dict[str, int], {1: 1})
-            self.assertTryCastFailure(dict[str, int], {1})
-            self.assertTryCastFailure(dict[str, int], object())
+        # non-dict[K, V]s
+        self.assertTryCastFailure(dict[str, int], 0)
+        self.assertTryCastFailure(dict[str, int], "foo")
+        self.assertTryCastFailure(dict[str, int], [1])
+        self.assertTryCastFailure(dict[str, int], {1: 1})
+        self.assertTryCastFailure(dict[str, int], {1})
+        self.assertTryCastFailure(dict[str, int], object())
 
     def test_big_dict_k_v(self) -> None:
         # Actual dict[K, V]
@@ -1331,35 +1321,19 @@ class TestTryCast(TestCase):
             )
 
         def test_typeddict_generic_with_union_pipe_syntax(self) -> None:
-            # Test Python 3.10+ pipe syntax for unions
-            assert sys.version_info >= (3, 10)
+            # Test pipe syntax for unions
+            class PipeContainer(RichTypedDict, Generic[_T]):
+                value: _T | None
 
-            # NOTE: Use exec() to avoid syntax errors in older Python versions
-            exec(
-                dedent(
-                    """
-                    class PipeContainer(RichTypedDict, Generic[_T]):
-                        value: _T | None
+            # PipeContainer[int]
+            self.assertTryCastSuccess(PipeContainer[int], {"value": 42})
+            self.assertTryCastSuccess(PipeContainer[int], {"value": None})
+            self.assertTryCastFailure(PipeContainer[int], {"value": "42"})
 
-                    # PipeContainer[int]
-                    self.assertTryCastSuccess(PipeContainer[int], {"value": 42})
-                    self.assertTryCastSuccess(PipeContainer[int], {"value": None})
-                    self.assertTryCastFailure(PipeContainer[int], {"value": "42"})
-
-                    # PipeContainer[List[str]]
-                    self.assertTryCastSuccess(PipeContainer[List[str]], {"value": ["a", "b"]})
-                    self.assertTryCastSuccess(PipeContainer[List[str]], {"value": None})
-                    self.assertTryCastFailure(PipeContainer[List[str]], {"value": [1, 2]})
-                    """
-                ),
-                {
-                    "RichTypedDict": RichTypedDict,
-                    "Generic": Generic,
-                    "_T": _T,
-                    "self": self,
-                    "List": List,
-                },
-            )
+            # PipeContainer[List[str]]
+            self.assertTryCastSuccess(PipeContainer[List[str]], {"value": ["a", "b"]})
+            self.assertTryCastSuccess(PipeContainer[List[str]], {"value": None})
+            self.assertTryCastFailure(PipeContainer[List[str]], {"value": [1, 2]})
 
         def test_typeddict_generic_with_complex_unions(self) -> None:
             # Test more complex Union patterns with TypeVars
@@ -1383,31 +1357,29 @@ class TestTryCast(TestCase):
 
     # === Tuples (Heterogeneous) ===
 
-    if sys.version_info >= (3, 9):
+    def test_tuple_ts(self) -> None:
+        # tuple[Ts]
+        self.assertTryCastSuccess(tuple[int], (1,))  # type: ignore[6]  # pyre
+        self.assertTryCastSuccess(tuple[int, str], (1, "a"))  # type: ignore[6]  # pyre
+        self.assertTryCastSuccess(tuple[int, str, bool], (1, "a", True))  # type: ignore[6]  # pyre
 
-        def test_tuple_ts(self) -> None:
-            # tuple[Ts]
-            self.assertTryCastSuccess(tuple[int], (1,))  # type: ignore[6]  # pyre
-            self.assertTryCastSuccess(tuple[int, str], (1, "a"))  # type: ignore[6]  # pyre
-            self.assertTryCastSuccess(tuple[int, str, bool], (1, "a", True))  # type: ignore[6]  # pyre
+        # tuple[Ts]-like tuples
+        self.assertTryCastFailure(tuple[int], ("A",))
+        self.assertTryCastFailure(tuple[int, str], (1, 2))  # type: ignore[6]  # pyre
+        self.assertTryCastFailure(tuple[int, str, bool], (1, "a", object()))  # type: ignore[6]  # pyre
 
-            # tuple[Ts]-like tuples
-            self.assertTryCastFailure(tuple[int], ("A",))
-            self.assertTryCastFailure(tuple[int, str], (1, 2))  # type: ignore[6]  # pyre
-            self.assertTryCastFailure(tuple[int, str, bool], (1, "a", object()))  # type: ignore[6]  # pyre
+        # tuple[Ts]-like lists
+        self.assertTryCastFailure(tuple[int], [1])
+        self.assertTryCastFailure(tuple[int, str], [1, "a"])  # type: ignore[6]  # pyre
+        self.assertTryCastFailure(tuple[int, str, bool], [1, "a", True])  # type: ignore[6]  # pyre
 
-            # tuple[Ts]-like lists
-            self.assertTryCastFailure(tuple[int], [1])
-            self.assertTryCastFailure(tuple[int, str], [1, "a"])  # type: ignore[6]  # pyre
-            self.assertTryCastFailure(tuple[int, str, bool], [1, "a", True])  # type: ignore[6]  # pyre
-
-            # non-tuple[Ts]
-            self.assertTryCastFailure(tuple[int], 0)
-            self.assertTryCastFailure(tuple[int], "foo")
-            self.assertTryCastFailure(tuple[int], ["1"])
-            self.assertTryCastFailure(tuple[int], {1: 1})
-            self.assertTryCastFailure(tuple[int], {1})
-            self.assertTryCastFailure(tuple[int], object())
+        # non-tuple[Ts]
+        self.assertTryCastFailure(tuple[int], 0)
+        self.assertTryCastFailure(tuple[int], "foo")
+        self.assertTryCastFailure(tuple[int], ["1"])
+        self.assertTryCastFailure(tuple[int], {1: 1})
+        self.assertTryCastFailure(tuple[int], {1})
+        self.assertTryCastFailure(tuple[int], object())
 
     def test_big_tuple_ts(self) -> None:
         # Tuple[Ts]
@@ -1451,20 +1423,18 @@ class TestTryCast(TestCase):
         # non-Optional[str]
         self.assertTryCastFailure(Optional[str], [])
 
-    if sys.version_info >= (3, 10):
+    def test_uniontype(self) -> None:
+        # int | str, equivalent to Union[int, str]
+        self.assertTryCastSuccess(int | str, 1)  # type: ignore[operator]
+        self.assertTryCastSuccess(int | str, "foo")  # type: ignore[operator]
 
-        def test_uniontype(self) -> None:
-            # int | str, equivalent to Union[int, str]
-            self.assertTryCastSuccess(int | str, 1)  # type: ignore[operator]
-            self.assertTryCastSuccess(int | str, "foo")  # type: ignore[operator]
+        # non-(int | str)
+        self.assertTryCastFailure(int | str, [])  # type: ignore[operator]
 
-            # non-(int | str)
-            self.assertTryCastFailure(int | str, [])  # type: ignore[operator]
-
-            # UnionType with TypedDict
-            self.assertTryCastSuccess(_Movie | None, _Movie(name="Blade Runner", year=1982))  # type: ignore[operator]
-            self.assertTryCastSuccess(_Movie | None, None)  # type: ignore[operator]
-            self.assertTryCastFailure(_Movie | None, {})  # type: ignore[operator]
+        # UnionType with TypedDict
+        self.assertTryCastSuccess(_Movie | None, _Movie(name="Blade Runner", year=1982))  # type: ignore[operator]
+        self.assertTryCastSuccess(_Movie | None, None)  # type: ignore[operator]
+        self.assertTryCastFailure(_Movie | None, {})  # type: ignore[operator]
 
     # === Literals ===
 
@@ -1883,22 +1853,21 @@ class TestTryCast(TestCase):
             "hello",
         )
 
-        if sys.version_info >= (3, 9):
-            # builtin with builtin index expression
-            self.assertTryCastSuccess(
-                "list[int]",
-                [1, 2],
-            )
+        # builtin with builtin index expression
+        self.assertTryCastSuccess(
+            "list[int]",
+            [1, 2],
+        )
 
-            # builtin with non-builtin index expression
-            self.assertRaisesRegex(
-                UnresolvableTypeError,
-                "inside module 'builtins'.*?Try altering the type argument to be a string reference",
-                lambda: trycast(
-                    "list[List]",
-                    [[1, 2], [3, 4]],
-                ),
-            )
+        # builtin with non-builtin index expression
+        self.assertRaisesRegex(
+            UnresolvableTypeError,
+            "inside module 'builtins'.*?Try altering the type argument to be a string reference",
+            lambda: trycast(
+                "list[List]",
+                [[1, 2], [3, 4]],
+            ),
+        )
 
         # List[]
         self.assertRaisesRegex(
@@ -2062,32 +2031,6 @@ class TestTryCast(TestCase):
     # === strict=True mode ===
 
     # (TODO: Add test related to NewTypes)
-
-    # NOTE: Cannot combine the following two if-checks with an `and`
-    #       because that is too complicated for Pyre to understand.
-    #
-    #       For more info about the forms that Pyre supports, see its tests:
-    #       https://github.com/facebook/pyre-check/blob/ee6d16129c112fb1feb1435a245d5e6a114e58d9/analysis/test/preprocessingTest.ml#L626
-    if sys.version_info >= (3, 8):
-        if sys.version_info < (3, 9):
-
-            def test_rejects_python_3_8_typeddict_when_strict_is_true(self) -> None:
-                class Point2D(typing.TypedDict):
-                    x: int
-                    y: int
-
-                class Point3D(Point2D, total=False):
-                    z: int
-
-                self.assertRaisesRegex(
-                    TypeNotSupportedError,
-                    (
-                        "trycast cannot determine which keys are required.*?"
-                        "Suggest use a typing(_extensions)?.TypedDict.*?"
-                        "strict=False"
-                    ),
-                    lambda: trycast(Point3D, {"x": 1, "y": 2}, strict=True),
-                )
 
     # === strict=False mode ===
 
@@ -2364,34 +2307,32 @@ class TestCheckCast(TestCase):
 
     # === Generic Collections ===
 
-    if sys.version_info >= (3, 9):
-
-        def test_list_t(self) -> None:
-            self.assertRaisesEqual(
-                ValidationError,
-                "Expected list[int] but found None",
-                lambda: checkcast(list[int], None),
-            )
-            self.assertRaisesEqual(
-                ValidationError,
-                dedent(
-                    """\
-                    Expected list[int] but found ['1']
-                      At index 0: Expected int but found '1'
-                    """.rstrip()
-                ),
-                lambda: checkcast(list[int], ["1"]),
-            )
-            self.assertRaisesEqual(
-                ValidationError,
-                dedent(
-                    """\
-                    Expected list[int] but found [0, 1, None, 3, None, 5]
-                      At index 2: Expected int but found None
-                    """.rstrip()
-                ),
-                lambda: checkcast(list[int], [0, 1, None, 3, None, 5]),
-            )
+    def test_list_t(self) -> None:
+        self.assertRaisesEqual(
+            ValidationError,
+            "Expected list[int] but found None",
+            lambda: checkcast(list[int], None),
+        )
+        self.assertRaisesEqual(
+            ValidationError,
+            dedent(
+                """\
+                Expected list[int] but found ['1']
+                  At index 0: Expected int but found '1'
+                """.rstrip()
+            ),
+            lambda: checkcast(list[int], ["1"]),
+        )
+        self.assertRaisesEqual(
+            ValidationError,
+            dedent(
+                """\
+                Expected list[int] but found [0, 1, None, 3, None, 5]
+                  At index 2: Expected int but found None
+                """.rstrip()
+            ),
+            lambda: checkcast(list[int], [0, 1, None, 3, None, 5]),
+        )
 
     def test_big_list_t(self) -> None:
         self.assertRaisesEqual(
@@ -2420,35 +2361,33 @@ class TestCheckCast(TestCase):
             lambda: checkcast(List[int], [0, 1, None, 3, None, 5]),
         )
 
-    if sys.version_info >= (3, 9):
-
-        def test_tuple_t_ellipsis(self) -> None:
-            # non-tuple[T, ...]s
-            self.assertRaisesEqual(
-                ValidationError,
-                "Expected tuple[int, ...] but found None",
-                lambda: checkcast(tuple[int, ...], None),  # type: ignore[6]  # pyre
-            )
-            self.assertRaisesEqual(
-                ValidationError,
-                dedent(
-                    """\
-                    Expected tuple[int, ...] but found ('1',)
-                      At index 0: Expected int but found '1'
-                    """.rstrip()
-                ),
-                lambda: checkcast(tuple[int, ...], ("1",)),  # type: ignore[6]  # pyre
-            )
-            self.assertRaisesEqual(
-                ValidationError,
-                dedent(
-                    """\
-                    Expected tuple[int, ...] but found (0, 1, None, 3, None, 5)
-                      At index 2: Expected int but found None
-                    """.rstrip()
-                ),
-                lambda: checkcast(tuple[int, ...], (0, 1, None, 3, None, 5)),  # type: ignore[6]  # pyre
-            )
+    def test_tuple_t_ellipsis(self) -> None:
+        # non-tuple[T, ...]s
+        self.assertRaisesEqual(
+            ValidationError,
+            "Expected tuple[int, ...] but found None",
+            lambda: checkcast(tuple[int, ...], None),  # type: ignore[6]  # pyre
+        )
+        self.assertRaisesEqual(
+            ValidationError,
+            dedent(
+                """\
+                Expected tuple[int, ...] but found ('1',)
+                  At index 0: Expected int but found '1'
+                """.rstrip()
+            ),
+            lambda: checkcast(tuple[int, ...], ("1",)),  # type: ignore[6]  # pyre
+        )
+        self.assertRaisesEqual(
+            ValidationError,
+            dedent(
+                """\
+                Expected tuple[int, ...] but found (0, 1, None, 3, None, 5)
+                  At index 2: Expected int but found None
+                """.rstrip()
+            ),
+            lambda: checkcast(tuple[int, ...], (0, 1, None, 3, None, 5)),  # type: ignore[6]  # pyre
+        )
 
     def test_big_tuple_t_ellipsis(self) -> None:
         self.assertRaisesEqual(
@@ -2477,56 +2416,54 @@ class TestCheckCast(TestCase):
             lambda: checkcast(Tuple[int, ...], (0, 1, None, 3, None, 5)),
         )
 
-    if sys.version_info >= (3, 9):
-
-        def test_dict_k_v(self) -> None:
-            self.assertRaisesEqual(
-                ValidationError,
-                "Expected dict[str, int] but found None",
-                lambda: checkcast(dict[str, int], None),
-            )
-            self.assertRaisesEqual(
-                ValidationError,
-                dedent(
-                    """\
-                    Expected dict[int, str] but found {'1': 'foo'}
-                      Key '1': Expected int but found '1'
-                    """.rstrip()
-                ),
-                lambda: checkcast(dict[int, str], {"1": "foo"}),
-            )
-            self.assertRaisesEqual(
-                ValidationError,
-                dedent(
-                    """\
-                    Expected dict[int, str] but found {1: 'foo', '900': 'foo', 2: 'foo', '901': 'foo'}
-                      Key '900': Expected int but found '900'
-                    """.rstrip()
-                ),
-                lambda: checkcast(
-                    dict[int, str], {1: "foo", "900": "foo", 2: "foo", "901": "foo"}
-                ),
-            )
-            self.assertRaisesEqual(
-                ValidationError,
-                dedent(
-                    """\
-                    Expected dict[int, str] but found {1: 999}
-                      At key 1: Expected str but found 999
-                    """.rstrip()
-                ),
-                lambda: checkcast(dict[int, str], {1: 999}),
-            )
-            self.assertRaisesEqual(
-                ValidationError,
-                dedent(
-                    """\
-                    Expected dict[int, str] but found {1: 'foo', 2: 900, 3: 'foo', 4: 901}
-                      At key 2: Expected str but found 900
-                    """.rstrip()
-                ),
-                lambda: checkcast(dict[int, str], {1: "foo", 2: 900, 3: "foo", 4: 901}),
-            )
+    def test_dict_k_v(self) -> None:
+        self.assertRaisesEqual(
+            ValidationError,
+            "Expected dict[str, int] but found None",
+            lambda: checkcast(dict[str, int], None),
+        )
+        self.assertRaisesEqual(
+            ValidationError,
+            dedent(
+                """\
+                Expected dict[int, str] but found {'1': 'foo'}
+                  Key '1': Expected int but found '1'
+                """.rstrip()
+            ),
+            lambda: checkcast(dict[int, str], {"1": "foo"}),
+        )
+        self.assertRaisesEqual(
+            ValidationError,
+            dedent(
+                """\
+                Expected dict[int, str] but found {1: 'foo', '900': 'foo', 2: 'foo', '901': 'foo'}
+                  Key '900': Expected int but found '900'
+                """.rstrip()
+            ),
+            lambda: checkcast(
+                dict[int, str], {1: "foo", "900": "foo", 2: "foo", "901": "foo"}
+            ),
+        )
+        self.assertRaisesEqual(
+            ValidationError,
+            dedent(
+                """\
+                Expected dict[int, str] but found {1: 999}
+                  At key 1: Expected str but found 999
+                """.rstrip()
+            ),
+            lambda: checkcast(dict[int, str], {1: 999}),
+        )
+        self.assertRaisesEqual(
+            ValidationError,
+            dedent(
+                """\
+                Expected dict[int, str] but found {1: 'foo', 2: 900, 3: 'foo', 4: 901}
+                  At key 2: Expected str but found 900
+                """.rstrip()
+            ),
+            lambda: checkcast(dict[int, str], {1: "foo", 2: 900, 3: "foo", 4: 901}),
+        )
 
     def test_big_dict_k_v(self) -> None:
         self.assertRaisesEqual(
@@ -2644,34 +2581,32 @@ class TestCheckCast(TestCase):
 
     # === Tuples (Heterogeneous) ===
 
-    if sys.version_info >= (3, 9):
-
-        def test_tuple_ts(self) -> None:
-            self.assertRaisesEqual(
-                ValidationError,
-                "Expected tuple[int] but found None",
-                lambda: checkcast(tuple[int], None),
-            )
-            self.assertRaisesEqual(
-                ValidationError,
-                dedent(
-                    """\
-                    Expected tuple[int] but found ('A',)
-                      At index 0: Expected int but found 'A'
-                    """.rstrip()
-                ),
-                lambda: checkcast(tuple[int], ("A",)),
-            )
-            self.assertRaisesEqual(
-                ValidationError,
-                dedent(
-                    """\
-                    Expected tuple[int, str] but found (1, 2)
-                      At index 1: Expected str but found 2
-                    """.rstrip()
-                ),
-                lambda: checkcast(tuple[int, str], (1, 2)),  # type: ignore[6]  # pyre
-            )
+    def test_tuple_ts(self) -> None:
+        self.assertRaisesEqual(
+            ValidationError,
+            "Expected tuple[int] but found None",
+            lambda: checkcast(tuple[int], None),
+        )
+        self.assertRaisesEqual(
+            ValidationError,
+            dedent(
+                """\
+                Expected tuple[int] but found ('A',)
+                  At index 0: Expected int but found 'A'
+                """.rstrip()
+            ),
+            lambda: checkcast(tuple[int], ("A",)),
+        )
+        self.assertRaisesEqual(
+            ValidationError,
+            dedent(
+                """\
+                Expected tuple[int, str] but found (1, 2)
+                  At index 1: Expected str but found 2
+                """.rstrip()
+            ),
+            lambda: checkcast(tuple[int, str], (1, 2)),  # type: ignore[6]  # pyre
+        )
 
     def test_big_tuple_ts(self) -> None:
         self.assertRaisesEqual(
@@ -2737,21 +2672,19 @@ class TestCheckCast(TestCase):
         checkcast(Optional[str], "words")
         checkcast(Optional[str], None)
 
-    if sys.version_info >= (3, 10):
-
-        def test_uniontype(self) -> None:
-            self.assertRaisesEqual(
-                ValidationError,
-                dedent(
-                    """\
-                    Expected int | str but found None
-                      Expected int but found None
-                      Expected str but found None
-                    """.rstrip()
-                ),
-                lambda: checkcast(int | str, None),
-            )
-            checkcast(int | str, "words")
+    def test_uniontype(self) -> None:
+        self.assertRaisesEqual(
+            ValidationError,
+            dedent(
+                """\
+                Expected int | str but found None
+                  Expected int but found None
+                  Expected str but found None
+                """.rstrip()
+            ),
+            lambda: checkcast(int | str, None),
+        )
+        checkcast(int | str, "words")
 
     # === Literals ===
 
