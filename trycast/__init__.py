@@ -677,12 +677,12 @@ def _checkcast_inner(
 
     if isinstance(type_origin, TypeAliasType):
         if len(type_origin.__type_params__) > 0:
-            substitutions = dict(
+            substitutions: dict[object, object] = dict(
                 zip(
                     type_origin.__type_params__,
                     get_args(tp) + ((Any,) * len(type_origin.__type_params__)),
                 )
-            )  # type: Dict[object, object]
+            )
             new_tp = _substitute(tp.__value__, substitutions)  # type: ignore[attr-defined]  # mypy
         else:
             new_tp = tp.__value__  # type: ignore[attr-defined]  # mypy

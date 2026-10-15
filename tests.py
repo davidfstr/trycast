@@ -1176,8 +1176,8 @@ class TestTryCast(TestCase):
             year: int
 
         class ReadOnlyMovie(typing_extensions.TypedDict):
-            title: ReadOnly[str]
-            year: ReadOnly[int]
+            title: ReadOnly[str]  # pyrefly: ignore[invalid-annotation]
+            year: ReadOnly[int]  # pyrefly: ignore[invalid-annotation]
 
         # Movie
         self.assertTryCastSuccess(Movie, {"title": "Blade Runner", "year": 1982})
@@ -3079,6 +3079,19 @@ class TestTypechecks(TestCase):
         except subprocess.CalledProcessError as e:  # pragma: no cover
             self.fail(
                 f'pyright typechecking failed:\n\n{e.output.decode("utf-8").strip()}'
+            )
+
+    @_tag("pyrefly")
+    def test_no_pyrefly_typechecker_errors_exist(self) -> None:
+        try:
+            subprocess.check_output(
+                ["pyrefly", "check"],
+                env={"LANG": "en_US.UTF-8", "PATH": os.environ.get("PATH", "")},
+                stderr=subprocess.STDOUT,
+            )
+        except subprocess.CalledProcessError as e:  # pragma: no cover
+            self.fail(
+                f'pyrefly typechecking failed:\n\n{e.output.decode("utf-8").strip()}'
             )
 
 

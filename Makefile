@@ -61,7 +61,7 @@ flake:  ## Run flake8 linter.
 
 
 .PHONY: typecheck
-typecheck: mypy pyright  ## Run all typecheckers.
+typecheck: mypy pyright pyrefly  ## Run all typecheckers.
 
 
 .PHONY: mypy
@@ -72,6 +72,11 @@ mypy:  ## Run mypy typechecker.
 .PHONY: pyright
 pyright:  ## Run pyright typechecker.
 	pyright
+
+
+.PHONY: pyrefly
+pyrefly:  ## Run pyrefly typechecker.
+	pyrefly check
 
 
 .PHONY: coverage
