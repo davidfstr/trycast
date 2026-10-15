@@ -478,40 +478,45 @@ raised exceptions, and other details.
 
 ### main (v2.0.0)
 
-* TypeForm is used in the signature for `trycast`, `checkcast`, and `isassignable`,
-  allowing for a more-precise return type. Most callers should no longer need
-  to wrap the return value of these functions in a `cast(T, ...)` expression.
-  ([#31](https://github.com/davidfstr/trycast/issues/31))
-    * You must use a typechecker version that supports `TypeForm`
-      to successfully typecheck calls to these functions.
+* Major ergonomic improvements
+    * TypeForm is used in the signature for `trycast`, `checkcast`, and `isassignable`,
+      allowing for a more-precise return type. Most callers should no longer need
+      to wrap the return value of these functions in a `cast(T, ...)` expression.
+      ([#31](https://github.com/davidfstr/trycast/issues/31))
+        * You must use a typechecker version that supports `TypeForm`
+          to successfully typecheck calls to these functions.
+          **(Breaking change)**
+            * Mypy 2.2.0 or later (Jul 2026)
+            * Pyright 1.1.412 or later (Sep 2026)
+    * `isassignable` now returns a `TypeIs[T]` rather than a `TypeGuard[T]`,
+      so that typecheckers also narrow `value` in the negative case,
+      when `isassignable` returns False.
+      ([#36](https://github.com/davidfstr/trycast/issues/36))
+        * Code that relied on `value` *not* being narrowed after a failed
+          `isassignable` check may need adjustment. **(Breaking change)**
+* Python version support changes
+    * Add support for Python 3.15.
+      ([#40](https://github.com/davidfstr/trycast/issues/40))
+        * On Python 3.15+, `typing.TypeForm` is used instead of
+          `typing_extensions.TypeForm`, so `typing-extensions` is not needed.
+    * Drop support for Python 3.8 and Python 3.9. **(Breaking change)**
+        * Drop support for Python 3.8's neutered TypedDict,
+          which lacks metadata present in later versions.
+* Type checker support changes
+    * Add support for the [Pyrefly] type checker.
+      ([#37](https://github.com/davidfstr/trycast/issues/37))
+    * Drop support for Pyre type checker, since it has been
+      [replaced by Pyrefly](https://github.com/facebook/pyre-check/blob/main/README.md).
       **(Breaking change)**
-        * Mypy 2.2.0 or later (Jul 2026)
-        * Pyright 1.1.412 or later (Sep 2026)
-* `isassignable` now returns a `TypeIs[T]` rather than a `TypeGuard[T]`,
-  so that typecheckers also narrow `value` in the negative case,
-  when `isassignable` returns False.
-  ([#36](https://github.com/davidfstr/trycast/issues/36))
-    * Code that relied on `value` *not* being narrowed after a failed
-      `isassignable` check may need adjustment. **(Breaking change)**
-* Add support for Python 3.15.
-  ([#40](https://github.com/davidfstr/trycast/issues/40))
-    * On Python 3.15+, `typing.TypeForm` is used instead of
-      `typing_extensions.TypeForm`, so `typing-extensions` is not needed.
-* Drop support for Python 3.8 and Python 3.9. **(Breaking change)**
-    * Drop support for Python 3.8's neutered TypedDict,
-      which lacks metadata present in later versions.
-* Add support for the [Pyrefly] type checker.
-  ([#37](https://github.com/davidfstr/trycast/issues/37))
-* Drop support for Pyre type checker, since it has been
-  [replaced by Pyrefly](https://github.com/facebook/pyre-check/blob/main/README.md).
-  **(Breaking change)**
-* Drop support for Pytype type checker, since it has been 
-  [deprecated](https://github.com/google/pytype/blob/main/README.md)
-  as of Aug 2025. **(Breaking change)**
-* Drop support for mypy_extensions.TypedDict, since it was deprecated in Aug 2023.
-  **(Breaking change)**
-* Fix `trycast()` and `checkcast()` to no longer declare a `bool` return type
-  when `tp` is a string.
+    * Drop support for Pytype type checker, since it has been 
+      [deprecated](https://github.com/google/pytype/blob/main/README.md)
+      as of Aug 2025. **(Breaking change)**
+* Typing features
+    * Drop support for mypy_extensions.TypedDict, since it was deprecated in Aug 2023.
+      **(Breaking change)**
+* Miscellaneous changes
+    * Fix `trycast()` and `checkcast()` to no longer declare a `bool` return type
+      when `tp` is a string.
 * Documentation improvements:
     * Eliminate mentions of TypeFormString[T],
       since they are no longer distinct from TypeForm[T].
