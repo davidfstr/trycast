@@ -13,7 +13,7 @@ Single-file implementation in `trycast/__init__.py` (~1300 lines).
 **Critical**: trycast supports Python 3.10-3.15 with extensive conditional imports:
 - Use `sys.version_info >= (major, minor)` checks to conditionally import features
 - Import from `typing_extensions` as fallback for older Python versions
-- Example pattern (lines 43-50, 53-65, 67-77):
+- Example pattern (`eval_type` in `trycast/__init__.py`):
   ```python
   if sys.version_info >= (3, 13):
       from typing import _eval_type
