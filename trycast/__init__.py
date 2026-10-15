@@ -181,7 +181,7 @@ __all__ = (
 _T = TypeVar("_T")
 _F = TypeVar("_F")
 _SimpleTypeVar = TypeVar("_SimpleTypeVar")
-_SimpleTypeVarCo = TypeVar("_SimpleTypeVarCo", covariant=True)  # type: ignore[not-supported-yet]  # pytest
+_SimpleTypeVarCo = TypeVar("_SimpleTypeVarCo", covariant=True)
 
 _MISSING = object()
 
