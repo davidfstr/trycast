@@ -1,4 +1,3 @@
-# pyre-ignore-all-errors
 # flake8: noqa
 
 type FancyTuple[T1, T2] = tuple[T1, T2]  # type: ignore[valid-type, name-defined]  # mypy

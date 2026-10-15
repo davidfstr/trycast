@@ -309,7 +309,6 @@ Trycast does type check successfully with the following type checkers:
 
 * [Mypy]
 * [Pyright] / [Pylance]
-* [Pyre]
 
 
 ## API Reference

@@ -48,17 +48,16 @@ The validation logic uses a recursive pattern:
 
 Code contains extensive typechecker annotations:
 - `# type: ignore[error-code]` for mypy
-- `# pyre` for pyre  
 - `# pyright` for pyright
 
-When adding features, test against all typecheckers: `make typecheck` runs mypy, pyright, and pyre.
+When adding features, test against all typecheckers: `make typecheck` runs mypy and pyright.
 
 ## Development Workflows
 
 ### Testing Commands (Makefile)
 - `make test` - Run tests against current Python version
 - `make testall` - Run tests across all supported Python versions (uses venv3.10/, venv3.11/, etc.)
-- `make typecheck` - Run all typecheckers (mypy, pyright, pyre)
+- `make typecheck` - Run all typecheckers (mypy, pyright)
 - `make format` - Format with black + isort
 - `make lint` - Check black/isort/flake8 compliance
 

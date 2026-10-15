@@ -35,7 +35,6 @@ python = ">=3.10"
 [tool.poetry.group.dev.dependencies]
 mypy = ">=2.2.0"  # first version with TypeForm support enabled by default
 pyright = ">=1.1.412"  # first version with TypeForm support enabled by default
-pyre-check = "*"
 tox = ">=4.0.0,<5.0.0"
 black = "==24.3.0"
 isort = "^5.9.1"
