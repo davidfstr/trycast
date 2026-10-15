@@ -497,8 +497,7 @@ raised exceptions, and other details.
 * Python version support changes
     * Add support for Python 3.15.
       ([#40](https://github.com/davidfstr/trycast/issues/40))
-        * On Python 3.15+, `typing.TypeForm` is used instead of
-          `typing_extensions.TypeForm`, so `typing-extensions` is not needed.
+        * Free-threaded Python 3.15t is also supported.
     * Drop support for Python 3.8 and Python 3.9. **(Breaking change)**
         * Drop support for Python 3.8's neutered TypedDict,
           which lacks metadata present in later versions.
@@ -512,6 +511,11 @@ raised exceptions, and other details.
       [deprecated](https://github.com/google/pytype/blob/main/README.md)
       as of Aug 2025. **(Breaking change)**
 * Typing features
+    * Literal values are now matched by type as well as by equality,
+      following the [typing specification](https://typing.python.org/en/latest/spec/literal.html#equivalence-of-two-literals).
+      ([#39](https://github.com/davidfstr/trycast/pull/39))
+        * For example `trycast(Literal[1], True)` and `trycast(Literal[1], 1.0)`
+          now fail instead of succeeding. **(Breaking change)**
     * Drop support for mypy_extensions.TypedDict, since it was deprecated in Aug 2023.
       **(Breaking change)**
 * Miscellaneous changes
