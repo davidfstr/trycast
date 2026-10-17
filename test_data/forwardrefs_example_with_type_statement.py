@@ -1,4 +1,3 @@
-# pyre-ignore-all-errors
 # flake8: noqa
 
 import sys

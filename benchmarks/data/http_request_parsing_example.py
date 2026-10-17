@@ -9,7 +9,7 @@ class _ProxiedHttpRequestEnvelope(RichTypedDict):
 
 class _ProxiedHttpRequest(RichTypedDict):
     url: str
-    method: "_ProxiedHttpMethod"  # type: ignore[98]  # pyre
+    method: "_ProxiedHttpMethod"
     headers: Mapping[str, str]
     content: "_ProxiedHttpContent"
 
@@ -31,8 +31,8 @@ class _ProxiedHttpContent(RichTypedDict):
 
 
 class _HttpContentTypeDescriptor(RichTypedDict):
-    family: "_HttpContentTypeFamily"  # type: ignore[6]  # pyre
-    value: "_HttpContentType"  # type: ignore[6]  # pyre
+    family: "_HttpContentTypeFamily"
+    value: "_HttpContentType"
 
 
 _HttpContentTypeFamily = Literal[

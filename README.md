@@ -309,7 +309,7 @@ Trycast does type check successfully with the following type checkers:
 
 * [Mypy]
 * [Pyright] / [Pylance]
-* [Pyre]
+* [Pyrefly]
 
 
 ## API Reference
@@ -478,35 +478,50 @@ raised exceptions, and other details.
 
 ### main (v2.0.0)
 
-* TypeForm is used in the signature for `trycast`, `checkcast`, and `isassignable`,
-  allowing for a more-precise return type. Most callers should no longer need
-  to wrap the return value of these functions in a `cast(T, ...)` expression.
-  ([#31](https://github.com/davidfstr/trycast/issues/31))
-    * You must use a typechecker version that supports `TypeForm`
-      to successfully typecheck calls to these functions.
+* Major ergonomic improvements
+    * TypeForm is used in the signature for `trycast`, `checkcast`, and `isassignable`,
+      allowing for a more-precise return type. Most callers should no longer need
+      to wrap the return value of these functions in a `cast(T, ...)` expression.
+      ([#31](https://github.com/davidfstr/trycast/issues/31))
+        * You must use a typechecker version that supports `TypeForm`
+          to successfully typecheck calls to these functions.
+          **(Breaking change)**
+            * Mypy 2.2.0 or later (Jul 2026)
+            * Pyright 1.1.412 or later (Sep 2026)
+    * `isassignable` now returns a `TypeIs[T]` rather than a `TypeGuard[T]`,
+      so that typecheckers also narrow `value` in the negative case,
+      when `isassignable` returns False.
+      ([#36](https://github.com/davidfstr/trycast/issues/36))
+        * Code that relied on `value` *not* being narrowed after a failed
+          `isassignable` check may need adjustment. **(Breaking change)**
+* Python version support changes
+    * Add support for Python 3.15.
+      ([#40](https://github.com/davidfstr/trycast/issues/40))
+        * Free-threaded Python 3.15t is also supported.
+    * Drop support for Python 3.8 and Python 3.9. **(Breaking change)**
+        * Drop support for Python 3.8's neutered TypedDict,
+          which lacks metadata present in later versions.
+* Type checker support changes
+    * Add support for the [Pyrefly] type checker.
+      ([#37](https://github.com/davidfstr/trycast/issues/37))
+    * Drop support for Pyre type checker, since it has been
+      [replaced by Pyrefly](https://github.com/facebook/pyre-check/blob/main/README.md).
       **(Breaking change)**
-        * Mypy 2.2.0 or later (Jul 2026)
-        * Pyright 1.1.412 or later (Sep 2026)
-* `isassignable` now returns a `TypeIs[T]` rather than a `TypeGuard[T]`,
-  so that typecheckers also narrow `value` in the negative case,
-  when `isassignable` returns False.
-  ([#36](https://github.com/davidfstr/trycast/issues/36))
-    * Code that relied on `value` *not* being narrowed after a failed
-      `isassignable` check may need adjustment. **(Breaking change)**
-* Add support for Python 3.15.
-  ([#40](https://github.com/davidfstr/trycast/issues/40))
-    * On Python 3.15+, `typing.TypeForm` is used instead of
-      `typing_extensions.TypeForm`, so `typing-extensions` is not needed.
-* Drop support for Python 3.8 and Python 3.9. **(Breaking change)**
-    * Drop support for Python 3.8's neutered TypedDict,
-      which lacks metadata present in later versions.
-* Drop support for Pytype type checker, since it has been 
-  [deprecated](https://github.com/google/pytype/blob/main/README.md)
-  as of Aug 2025. **(Breaking change)**
-* Drop support for mypy_extensions.TypedDict, since it was deprecated in Aug 2023.
-  **(Breaking change)**
-* Fix `trycast()` and `checkcast()` to no longer declare a `bool` return type
-  when `tp` is a string.
+    * Drop support for Pytype type checker, since it has been 
+      [deprecated](https://github.com/google/pytype/blob/main/README.md)
+      as of Aug 2025. **(Breaking change)**
+* Typing features
+    * Literal values are now matched by type as well as by equality,
+      following the [typing specification](https://typing.python.org/en/latest/spec/literal.html#equivalence-of-two-literals).
+      ([#39](https://github.com/davidfstr/trycast/pull/39),
+      thanks to [@bensynapse](https://github.com/bensynapse))
+        * For example `trycast(Literal[1], True)` and `trycast(Literal[1], 1.0)`
+          now fail instead of succeeding. **(Breaking change)**
+    * Drop support for mypy_extensions.TypedDict, since it was deprecated in Aug 2023.
+      **(Breaking change)**
+* Miscellaneous changes
+    * Fix `trycast()` and `checkcast()` to no longer declare a `bool` return type
+      when `tp` is a string.
 * Documentation improvements:
     * Eliminate mentions of TypeFormString[T],
       since they are no longer distinct from TypeForm[T].
@@ -524,7 +539,8 @@ raised exceptions, and other details.
   ([#34](https://github.com/davidfstr/trycast/issues/34))
 * Add `py.typed` file so that typecheckers know that the `trycast` module
   bundles its own types.
-  ([#32](https://github.com/davidfstr/trycast/issues/32))
+  ([#32](https://github.com/davidfstr/trycast/issues/32),
+  thanks to [@tusharsadhwani](https://github.com/tusharsadhwani))
 
 ### v1.2.0
 
@@ -580,6 +596,8 @@ raised exceptions, and other details.
 
 * Support X|Y syntax for Union types from 
   [PEP 604](https://peps.python.org/pep-0604/).
+  ([#13](https://github.com/davidfstr/trycast/pull/13),
+  thanks to [@d-k-bo](https://github.com/d-k-bo))
 * Documentation improvements:
     * Improve introduction.
     * Add API reference.
@@ -620,6 +638,7 @@ raised exceptions, and other details.
 [Pyright]: https://github.com/microsoft/pyright#readme
 [Pylance]: https://github.com/microsoft/pylance-release#readme
 [Pyre]: https://pyre-check.org/
+[Pyrefly]: https://pyrefly.org/
 [Pytype]: https://google.github.io/pytype/
 
 ### v0.6.1
@@ -657,6 +676,8 @@ raised exceptions, and other details.
       typecheckers such as mypy.
 * Extend `trycast()` to recognize `Required[]` and `NotRequired[]` from
   [PEP 655], as imported from `typing_extensions`.
+  ([#12](https://github.com/davidfstr/trycast/pull/12),
+  thanks to [@d-k-bo](https://github.com/d-k-bo))
 * Extend `trycast()` to support a `strict` parameter that controls whether it
   accepts `mypy_extensions.TypedDict` or Python 3.8 `typing.TypedDict`
   instances (which lack certain runtime type information necessary for

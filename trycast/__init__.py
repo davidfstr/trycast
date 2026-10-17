@@ -60,7 +60,7 @@ else:
 
 # TypeAliasType
 if sys.version_info >= (3, 12):
-    from typing import TypeAliasType  # type: ignore[21]  # pyre
+    from typing import TypeAliasType
 else:
 
     class TypeAliasType(type):  # type: ignore[no-redef]
@@ -116,7 +116,7 @@ try:
         _TypedDictMeta as _TypingTypedDictMeta,  # type: ignore[reportGeneralTypeIssues]  # pyright
     )
 
-    _typed_dict_meta_list.append(_TypingTypedDictMeta)  # type: ignore[16]  # pyre
+    _typed_dict_meta_list.append(_TypingTypedDictMeta)
 except ImportError:
     pass
 
@@ -125,7 +125,7 @@ try:
         _TypedDictMeta as _TypingExtensionsTypedDictMeta,  # type: ignore[reportGeneralTypeIssues]  # pyright
     )
 
-    _typed_dict_meta_list.append(_TypingExtensionsTypedDictMeta)  # type: ignore[16]  # pyre
+    _typed_dict_meta_list.append(_TypingExtensionsTypedDictMeta)
 except ImportError:
     pass
 
@@ -192,7 +192,7 @@ _MISSING = object()
 
 
 @overload
-def trycast(  # type: ignore[43]  # pyre
+def trycast(
     tp: str, value: object, /, *, strict: bool = True, eval: Literal[False]
 ) -> NoReturn: ...  # pragma: no cover
 
@@ -213,19 +213,19 @@ def trycast(
 
 
 @overload
-def trycast(  # type: ignore[43]  # pyre
+def trycast(
     tp: Type[_T], value: object, /, *, strict: bool = True, eval: bool = True
 ) -> Optional[_T]: ...  # pragma: no cover
 
 
 @overload
-def trycast(  # type: ignore[43]  # pyre
+def trycast(
     tp: TypeForm[_T], value: object, /, *, strict: bool = True, eval: bool = True
 ) -> Optional[_T]: ...  # pragma: no cover
 
 
 @overload
-def trycast(  # type: ignore[overload-cannot-match, 43]  # mypy, pyre
+def trycast(  # type: ignore[overload-cannot-match]  # mypy
     tp: object, value: object, /, *, strict: bool = True, eval: bool = True
 ) -> Optional[object]: ...  # pragma: no cover
 
@@ -336,7 +336,7 @@ def trycast(tp, value, /, failure=None, *, strict=True, eval=True):
 
 
 @overload
-def checkcast(  # type: ignore[43]  # pyre
+def checkcast(
     tp: str,
     value: object,
     /,
@@ -351,7 +351,7 @@ def checkcast(  # type: ignore[43]  # pyre
 
 
 @overload
-def checkcast(  # type: ignore[43]  # pyre
+def checkcast(
     tp: Type[_T],
     value: object,
     /,
@@ -363,7 +363,7 @@ def checkcast(  # type: ignore[43]  # pyre
 
 
 @overload
-def checkcast(  # type: ignore[43]  # pyre
+def checkcast(
     tp: TypeForm[_T],
     value: object,
     /,
@@ -375,7 +375,7 @@ def checkcast(  # type: ignore[43]  # pyre
 
 
 @overload
-def checkcast(  # type: ignore[overload-cannot-match, 43]  # mypy, pyre
+def checkcast(  # type: ignore[overload-cannot-match]  # mypy
     tp: object,
     value: object,
     /,
@@ -449,7 +449,7 @@ def _checkcast_outer(
         try:
             # TODO: Eliminate format operation done by f-string
             #       from the hot path of _checkcast_outer()
-            tp = _type_check(  # type: ignore[16]  # pyre
+            tp = _type_check(
                 tp,
                 f"{options.funcname}() requires a type as its first argument.",
             )
@@ -675,18 +675,18 @@ def _checkcast_inner(
             else:
                 return ValidationError(tp, value)
 
-    if isinstance(type_origin, TypeAliasType):  # type: ignore[16]  # pyre
+    if isinstance(type_origin, TypeAliasType):
         if len(type_origin.__type_params__) > 0:
-            substitutions = dict(
+            substitutions: dict[object, object] = dict(
                 zip(
                     type_origin.__type_params__,
                     get_args(tp) + ((Any,) * len(type_origin.__type_params__)),
                 )
-            )  # type: Dict[object, object]
+            )
             new_tp = _substitute(tp.__value__, substitutions)  # type: ignore[attr-defined]  # mypy
         else:
             new_tp = tp.__value__  # type: ignore[attr-defined]  # mypy
-        return _checkcast_inner(new_tp, value, options)  # type: ignore[16]  # pyre
+        return _checkcast_inner(new_tp, value, options)
 
     # NOTE: Must come before the generic _GenericAlias check
     if _is_typed_dict(type_origin):  # T[X1, X2, ...] where T extends TypedDict
@@ -700,7 +700,7 @@ def _checkcast_inner(
             tp, type_origin, value, options, typevar_substitutions
         )
 
-    if isinstance(tp, _GenericAlias):  # type: ignore[16]  # pyre
+    if isinstance(tp, _GenericAlias):
         raise TypeNotSupportedError(
             f"{options.funcname} does not know how to recognize generic type "
             f"{type_repr(type_origin)}."
@@ -737,15 +737,15 @@ def _checkcast_inner(
     if tp is Never or tp is NoReturn:
         return ValidationError(tp, value)
 
-    if isinstance(tp, TypeAliasType):  # type: ignore[16]  # pyre
-        if len(tp.__type_params__) > 0:  # type: ignore[16]  # pyre
+    if isinstance(tp, TypeAliasType):
+        if len(tp.__type_params__) > 0:
             substitutions = dict(
                 zip(tp.__type_params__, ((Any,) * len(tp.__type_params__)))
             )
             new_tp = _substitute(tp.__value__, substitutions)
         else:
             new_tp = tp.__value__
-        return _checkcast_inner(new_tp, value, options)  # type: ignore[16]  # pyre
+        return _checkcast_inner(new_tp, value, options)
 
     if isinstance(tp, ForwardRef):
         raise UnresolvedForwardRefError()
@@ -992,7 +992,7 @@ class ValidationError(ValueError):
 
     # Private builder method
     def _with_prefix(
-        self: _SelfValidationError, prefix: "_LazyStr", /  # type: ignore[11]  # pyre  # noqa: W504
+        self: _SelfValidationError, prefix: "_LazyStr", /  # noqa: W504
     ) -> _SelfValidationError:
         self._prefix = prefix
         return self
@@ -1017,7 +1017,7 @@ class ValidationError(ValueError):
             parts.append(": ")
         parts.append(super().__str__())
         if len(self._causes) > 0:
-            for c in self._causes:  # type: ignore[16]  # pyre
+            for c in self._causes:
                 parts.append("\n")
                 c._format_to(parts, indent=indent + 1)
 
@@ -1178,7 +1178,7 @@ def eval_type_str(tp: str, /) -> TypeForm:
 
     # Resolve any ForwardRef instances inside the type
     try:
-        member = eval_type(member, mod.__dict__, None)  # type: ignore[16]  # pyre
+        member = eval_type(member, mod.__dict__, None)
     except Exception:
         raise UnresolvableTypeError(
             f"Could not resolve type {tp!r}: "
@@ -1189,7 +1189,7 @@ def eval_type_str(tp: str, /) -> TypeForm:
     # 1. Ensure the object is actually a type
     # 2. As a special case, interpret None as type(None)
     try:
-        member = _type_check(member, f"Could not resolve type {tp!r}: ")  # type: ignore[16]  # pyre
+        member = _type_check(member, f"Could not resolve type {tp!r}: ")
     except TypeError as e:
         raise UnresolvableTypeError(str(e))
     return cast(TypeForm, member)

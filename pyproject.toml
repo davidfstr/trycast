@@ -35,7 +35,7 @@ python = ">=3.10"
 [tool.poetry.group.dev.dependencies]
 mypy = ">=2.2.0"  # first version with TypeForm support enabled by default
 pyright = ">=1.1.412"  # first version with TypeForm support enabled by default
-pyre-check = "*"
+pyrefly = "*"
 tox = ">=4.0.0,<5.0.0"
 black = "==24.3.0"
 isort = "^5.9.1"
@@ -65,6 +65,13 @@ show_error_codes = true
 include = ["trycast", "tests.py"]
 pythonPlatform = "All"
 #typeCheckingMode = "strict"  # TODO: try this
+
+# Type Checker: Pyrefly
+# 
+# Config Syntax Reference:
+# https://pyrefly.org/en/docs/configuration/
+[tool.pyrefly]
+project-includes = ["trycast", "tests.py"]
 
 # Formatter: Isort
 [tool.isort]

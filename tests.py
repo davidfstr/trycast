@@ -1,7 +1,6 @@
 # flake8: noqa
 import functools
 import os
-import platform
 import re
 import subprocess
 import sys
@@ -56,7 +55,7 @@ if sys.version_info >= (3, 11):
 try:
     from typing import ReadOnly  # type: ignore[attr-defined]
 except ImportError:
-    from typing_extensions import ReadOnly  # type: ignore[21]  # pyre
+    from typing_extensions import ReadOnly
 
 # eval_type
 if sys.version_info >= (3, 13):
@@ -362,7 +361,7 @@ class TestTryCast(TestCase):
         """
         Verifies that trycast agrees with special typechecker
         rules for {bool, int, float, complex}, as least as far
-        as {mypy, pyre, pyright} are concerned as of 2022-05-07.
+        as {mypy, pyright} are concerned as of 2022-05-07.
         """
         self.assertTryCastSuccess(bool, True)
         self.assertTryCastSuccess(int, True)
@@ -816,17 +815,17 @@ class TestTryCast(TestCase):
 
     def test_tuple_t_ellipsis(self) -> None:
         # Actual tuple[T, ...]
-        self.assertTryCastSuccess(tuple[int, ...], ())  # type: ignore[6]  # pyre
-        self.assertTryCastSuccess(tuple[int, ...], (1,))  # type: ignore[6]  # pyre
-        self.assertTryCastSuccess(tuple[int, ...], (1, 2))  # type: ignore[6]  # pyre
+        self.assertTryCastSuccess(tuple[int, ...], ())
+        self.assertTryCastSuccess(tuple[int, ...], (1,))
+        self.assertTryCastSuccess(tuple[int, ...], (1, 2))
 
         # non-tuple[T, ...]s
-        self.assertTryCastFailure(tuple[int, ...], 0)  # type: ignore[6]  # pyre
-        self.assertTryCastFailure(tuple[int, ...], "foo")  # type: ignore[6]  # pyre
-        self.assertTryCastFailure(tuple[int, ...], ["1"])  # type: ignore[6]  # pyre
-        self.assertTryCastFailure(tuple[int, ...], {1: 1})  # type: ignore[6]  # pyre
-        self.assertTryCastFailure(tuple[int, ...], {1})  # type: ignore[6]  # pyre
-        self.assertTryCastFailure(tuple[int, ...], object())  # type: ignore[6]  # pyre
+        self.assertTryCastFailure(tuple[int, ...], 0)
+        self.assertTryCastFailure(tuple[int, ...], "foo")
+        self.assertTryCastFailure(tuple[int, ...], ["1"])
+        self.assertTryCastFailure(tuple[int, ...], {1: 1})
+        self.assertTryCastFailure(tuple[int, ...], {1})
+        self.assertTryCastFailure(tuple[int, ...], object())
 
     def test_big_tuple_t_ellipsis(self) -> None:
         # Actual tuple[T, ...]
@@ -981,7 +980,7 @@ class TestTryCast(TestCase):
         class PacketWithExtra(Packet):
             extra: str
 
-        p = PacketWithExtra(type="hello", payload="v1", extra="english")  # type: ignore[28]  # pyre
+        p = PacketWithExtra(type="hello", payload="v1", extra="english")
         p2: Packet = p
 
         self.assertTryCastSuccess(PacketWithExtra, p)
@@ -1139,8 +1138,8 @@ class TestTryCast(TestCase):
         import typing_extensions
 
         if sys.version_info >= (3, 11):
-            self.assertIs(typing.Required, typing_extensions.Required)  # type: ignore[16]  # pyre
-            self.assertIs(typing.NotRequired, typing_extensions.NotRequired)  # type: ignore[16]  # pyre
+            self.assertIs(typing.Required, typing_extensions.Required)
+            self.assertIs(typing.NotRequired, typing_extensions.NotRequired)
 
         class TotalMovie(typing_extensions.TypedDict):
             title: str
@@ -1170,15 +1169,15 @@ class TestTryCast(TestCase):
         import typing_extensions
 
         if sys.version_info >= (3, 13):
-            self.assertIs(typing.ReadOnly, typing_extensions.ReadOnly)  # type: ignore[attr-defined, 16]  # mypy, pyre
+            self.assertIs(typing.ReadOnly, typing_extensions.ReadOnly)  # type: ignore[attr-defined]  # mypy
 
         class Movie(typing_extensions.TypedDict):
             title: str
             year: int
 
         class ReadOnlyMovie(typing_extensions.TypedDict):
-            title: ReadOnly[str]
-            year: ReadOnly[int]
+            title: ReadOnly[str]  # pyrefly: ignore[invalid-annotation]
+            year: ReadOnly[int]  # pyrefly: ignore[invalid-annotation]
 
         # Movie
         self.assertTryCastSuccess(Movie, {"title": "Blade Runner", "year": 1982})
@@ -1359,19 +1358,19 @@ class TestTryCast(TestCase):
 
     def test_tuple_ts(self) -> None:
         # tuple[Ts]
-        self.assertTryCastSuccess(tuple[int], (1,))  # type: ignore[6]  # pyre
-        self.assertTryCastSuccess(tuple[int, str], (1, "a"))  # type: ignore[6]  # pyre
-        self.assertTryCastSuccess(tuple[int, str, bool], (1, "a", True))  # type: ignore[6]  # pyre
+        self.assertTryCastSuccess(tuple[int], (1,))
+        self.assertTryCastSuccess(tuple[int, str], (1, "a"))
+        self.assertTryCastSuccess(tuple[int, str, bool], (1, "a", True))
 
         # tuple[Ts]-like tuples
         self.assertTryCastFailure(tuple[int], ("A",))
-        self.assertTryCastFailure(tuple[int, str], (1, 2))  # type: ignore[6]  # pyre
-        self.assertTryCastFailure(tuple[int, str, bool], (1, "a", object()))  # type: ignore[6]  # pyre
+        self.assertTryCastFailure(tuple[int, str], (1, 2))
+        self.assertTryCastFailure(tuple[int, str, bool], (1, "a", object()))
 
         # tuple[Ts]-like lists
         self.assertTryCastFailure(tuple[int], [1])
-        self.assertTryCastFailure(tuple[int, str], [1, "a"])  # type: ignore[6]  # pyre
-        self.assertTryCastFailure(tuple[int, str, bool], [1, "a", True])  # type: ignore[6]  # pyre
+        self.assertTryCastFailure(tuple[int, str], [1, "a"])
+        self.assertTryCastFailure(tuple[int, str, bool], [1, "a", True])
 
         # non-tuple[Ts]
         self.assertTryCastFailure(tuple[int], 0)
@@ -1523,113 +1522,113 @@ class TestTryCast(TestCase):
             TypeNotSupportedError,
             r"trycast cannot reliably determine whether value is a typing\.Callable.*"
             r"callables at runtime do not always have a declared return type",
-            lambda: trycast(Callable[[], None], lambda: None),  # type: ignore[6]  # pyre
+            lambda: trycast(Callable[[], None], lambda: None),
         )
         self.assertRaisesRegex(
             TypeNotSupportedError,
             r"trycast cannot reliably determine whether value is a typing\.Callable.*"
             r"callables at runtime do not always have a declared return type",
-            lambda: trycast(Callable[[], None], self._expects_zero_args),  # type: ignore[6]  # pyre
+            lambda: trycast(Callable[[], None], self._expects_zero_args),
         )
         self.assertRaisesRegex(
             TypeNotSupportedError,
             r"trycast cannot reliably determine whether value is a typing\.Callable.*"
             r"callables at runtime do not always have a declared return type",
-            lambda: trycast(Callable[[], None], _CallableObjectWithZeroArgs()),  # type: ignore[6]  # pyre
+            lambda: trycast(Callable[[], None], _CallableObjectWithZeroArgs()),
         )
         self.assertRaisesRegex(
             TypeNotSupportedError,
             r"trycast cannot reliably determine whether value is a typing\.Callable.*"
             r"callables at runtime do not always have a declared return type",
-            lambda: trycast(Callable[[], None], _TypeWithZeroArgConstructor),  # type: ignore[6]  # pyre
+            lambda: trycast(Callable[[], None], _TypeWithZeroArgConstructor),
         )
 
         # Callable[[], Any]
         if True:
-            self.assertTryCastSuccess(Callable[[], Any], lambda: None)  # type: ignore[6]  # pyre
-            self.assertTryCastSuccess(Callable[[], Any], self._expects_zero_args)  # type: ignore[6]  # pyre
-            self.assertTryCastSuccess(Callable[[], Any], self._expects_variable_args)  # type: ignore[6]  # pyre
-            self.assertTryCastSuccess(Callable[[], Any], _CallableObjectWithZeroArgs())  # type: ignore[6]  # pyre
-            self.assertTryCastSuccess(Callable[[], Any], _TypeWithZeroArgConstructor)  # type: ignore[6]  # pyre
+            self.assertTryCastSuccess(Callable[[], Any], lambda: None)
+            self.assertTryCastSuccess(Callable[[], Any], self._expects_zero_args)
+            self.assertTryCastSuccess(Callable[[], Any], self._expects_variable_args)
+            self.assertTryCastSuccess(Callable[[], Any], _CallableObjectWithZeroArgs())
+            self.assertTryCastSuccess(Callable[[], Any], _TypeWithZeroArgConstructor)
 
-            self.assertTryCastFailure(Callable[[], Any], lambda x: None)  # type: ignore[6]  # pyre
-            self.assertTryCastFailure(Callable[[], Any], self._expects_one_arg)  # type: ignore[6]  # pyre
-            self.assertTryCastFailure(Callable[[], Any], _CallableObjectWithOneArg())  # type: ignore[6]  # pyre
-            self.assertTryCastFailure(Callable[[], Any], _TypeWithOneArgConstructor)  # type: ignore[6]  # pyre
+            self.assertTryCastFailure(Callable[[], Any], lambda x: None)
+            self.assertTryCastFailure(Callable[[], Any], self._expects_one_arg)
+            self.assertTryCastFailure(Callable[[], Any], _CallableObjectWithOneArg())
+            self.assertTryCastFailure(Callable[[], Any], _TypeWithOneArgConstructor)
 
             # NOTE: Cannot introspect constructor for certain built-in types lacking __signature__.
             #       See: https://github.com/davidfstr/trycast/issues/15
             if sys.version_info >= (3, 13):
-                self.assertTryCastSuccess(Callable[[], Any], bool)  # type: ignore[6]  # pyre
+                self.assertTryCastSuccess(Callable[[], Any], bool)
             else:
-                self.assertTryCastFailure(Callable[[], Any], bool)  # type: ignore[6]  # pyre
-            self.assertTryCastFailure(Callable[[], Any], int)  # type: ignore[6]  # pyre
-            self.assertTryCastSuccess(Callable[[], Any], float)  # type: ignore[6]  # pyre
-            self.assertTryCastSuccess(Callable[[], Any], complex)  # type: ignore[6]  # pyre
-            self.assertTryCastFailure(Callable[[], Any], str)  # type: ignore[6]  # pyre
-            self.assertTryCastSuccess(Callable[[], Any], list)  # type: ignore[6]  # pyre
-            self.assertTryCastFailure(Callable[[], Any], dict)  # type: ignore[6]  # pyre
-            self.assertTryCastSuccess(Callable[[], Any], tuple)  # type: ignore[6]  # pyre
+                self.assertTryCastFailure(Callable[[], Any], bool)
+            self.assertTryCastFailure(Callable[[], Any], int)
+            self.assertTryCastSuccess(Callable[[], Any], float)
+            self.assertTryCastSuccess(Callable[[], Any], complex)
+            self.assertTryCastFailure(Callable[[], Any], str)
+            self.assertTryCastSuccess(Callable[[], Any], list)
+            self.assertTryCastFailure(Callable[[], Any], dict)
+            self.assertTryCastSuccess(Callable[[], Any], tuple)
 
         # Callable[[Any], Any]
         if True:
-            self.assertTryCastSuccess(Callable[[Any], Any], lambda x: None)  # type: ignore[6]  # pyre
-            self.assertTryCastSuccess(Callable[[Any], Any], self._expects_one_arg)  # type: ignore[6]  # pyre
-            self.assertTryCastSuccess(Callable[[Any], Any], self._expects_variable_args)  # type: ignore[6]  # pyre
-            self.assertTryCastSuccess(Callable[[Any], Any], _CallableObjectWithOneArg())  # type: ignore[6]  # pyre
-            self.assertTryCastSuccess(Callable[[Any], Any], _TypeWithOneArgConstructor)  # type: ignore[6]  # pyre
+            self.assertTryCastSuccess(Callable[[Any], Any], lambda x: None)
+            self.assertTryCastSuccess(Callable[[Any], Any], self._expects_one_arg)
+            self.assertTryCastSuccess(Callable[[Any], Any], self._expects_variable_args)
+            self.assertTryCastSuccess(Callable[[Any], Any], _CallableObjectWithOneArg())
+            self.assertTryCastSuccess(Callable[[Any], Any], _TypeWithOneArgConstructor)
 
-            self.assertTryCastFailure(Callable[[Any], Any], lambda: None)  # type: ignore[6]  # pyre
-            self.assertTryCastFailure(Callable[[Any], Any], self._expects_zero_args)  # type: ignore[6]  # pyre
+            self.assertTryCastFailure(Callable[[Any], Any], lambda: None)
+            self.assertTryCastFailure(Callable[[Any], Any], self._expects_zero_args)
             self.assertTryCastFailure(
-                Callable[[Any], Any], _CallableObjectWithZeroArgs()  # type: ignore[6]  # pyre
+                Callable[[Any], Any], _CallableObjectWithZeroArgs()
             )
-            self.assertTryCastFailure(Callable[[Any], Any], _TypeWithZeroArgConstructor)  # type: ignore[6]  # pyre
+            self.assertTryCastFailure(Callable[[Any], Any], _TypeWithZeroArgConstructor)
 
             # NOTE: Cannot introspect constructor for certain built-in types lacking __signature__.
             #       See: https://github.com/davidfstr/trycast/issues/15
             if sys.version_info >= (3, 13):
-                self.assertTryCastSuccess(Callable[[Any], Any], bool)  # type: ignore[6]  # pyre
+                self.assertTryCastSuccess(Callable[[Any], Any], bool)
             else:
-                self.assertTryCastFailure(Callable[[Any], Any], bool)  # type: ignore[6]  # pyre
-            self.assertTryCastFailure(Callable[[Any], Any], int)  # type: ignore[6]  # pyre
-            self.assertTryCastSuccess(Callable[[Any], Any], float)  # type: ignore[6]  # pyre
-            self.assertTryCastSuccess(Callable[[Any], Any], complex)  # type: ignore[6]  # pyre
-            self.assertTryCastFailure(Callable[[Any], Any], str)  # type: ignore[6]  # pyre
-            self.assertTryCastSuccess(Callable[[Any], Any], list)  # type: ignore[6]  # pyre
-            self.assertTryCastFailure(Callable[[Any], Any], dict)  # type: ignore[6]  # pyre
-            self.assertTryCastSuccess(Callable[[Any], Any], tuple)  # type: ignore[6]  # pyre
+                self.assertTryCastFailure(Callable[[Any], Any], bool)
+            self.assertTryCastFailure(Callable[[Any], Any], int)
+            self.assertTryCastSuccess(Callable[[Any], Any], float)
+            self.assertTryCastSuccess(Callable[[Any], Any], complex)
+            self.assertTryCastFailure(Callable[[Any], Any], str)
+            self.assertTryCastSuccess(Callable[[Any], Any], list)
+            self.assertTryCastFailure(Callable[[Any], Any], dict)
+            self.assertTryCastSuccess(Callable[[Any], Any], tuple)
 
         # Callable[[T], Any]
         self.assertRaisesRegex(
             TypeNotSupportedError,
             r"trycast cannot reliably determine whether value is a typing\.Callable.*"
             r"callables at runtime do not always have declared parameter types",
-            lambda: trycast(Callable[[str], Any], lambda x: None),  # type: ignore[6]  # pyre
+            lambda: trycast(Callable[[str], Any], lambda x: None),
         )
         self.assertRaisesRegex(
             TypeNotSupportedError,
             r"trycast cannot reliably determine whether value is a typing\.Callable.*"
             r"callables at runtime do not always have declared parameter types",
-            lambda: trycast(Callable[[str], Any], self._expects_one_arg),  # type: ignore[6]  # pyre
+            lambda: trycast(Callable[[str], Any], self._expects_one_arg),
         )
         self.assertRaisesRegex(
             TypeNotSupportedError,
             r"trycast cannot reliably determine whether value is a typing\.Callable.*"
             r"callables at runtime do not always have declared parameter types",
-            lambda: trycast(Callable[[str], Any], _CallableObjectWithOneArg()),  # type: ignore[6]  # pyre
+            lambda: trycast(Callable[[str], Any], _CallableObjectWithOneArg()),
         )
         self.assertRaisesRegex(
             TypeNotSupportedError,
             r"trycast cannot reliably determine whether value is a typing\.Callable.*"
             r"callables at runtime do not always have declared parameter types",
-            lambda: trycast(Callable[[str], Any], _TypeWithOneArgConstructor),  # type: ignore[6]  # pyre
+            lambda: trycast(Callable[[str], Any], _TypeWithOneArgConstructor),
         )
 
         # Ensure looks at unwrapped version of decorated function
-        self.assertTryCastSuccess(Callable[[], Any], self._expects_int_arg)  # type: ignore[6]  # pyre
-        self.assertTryCastSuccess(Callable[[Any], Any], self._expects_int_arg)  # type: ignore[6]  # pyre
-        self.assertTryCastSuccess(Callable[[Any, Any], Any], self._expects_int_arg)  # type: ignore[6]  # pyre
+        self.assertTryCastSuccess(Callable[[], Any], self._expects_int_arg)
+        self.assertTryCastSuccess(Callable[[Any], Any], self._expects_int_arg)
+        self.assertTryCastSuccess(Callable[[Any, Any], Any], self._expects_int_arg)
 
     @staticmethod
     def _expects_zero_args() -> None:
@@ -1643,7 +1642,7 @@ class TestTryCast(TestCase):
     def _expects_variable_args(*args: str) -> None:
         pass
 
-    @_count_arguments  # type: ignore[56]  # pyre
+    @_count_arguments
     @staticmethod
     def _expects_int_arg(value: int) -> None:
         pass
@@ -1720,7 +1719,7 @@ class TestTryCast(TestCase):
     def test_alias_to_union_with_forwardrefs(self) -> None:
         # Union with forward refs that have been resolved
         self.assertTryCastSuccess(
-            eval_type(  # type: ignore[16]  # pyre
+            eval_type(
                 test_data.forwardrefs_example.Shape,
                 test_data.forwardrefs_example.__dict__,
                 None,
@@ -1747,7 +1746,7 @@ class TestTryCast(TestCase):
     def test_alias_to_list_with_forwardrefs(self) -> None:
         # list with forward refs that have been resolved
         self.assertTryCastSuccess(
-            eval_type(  # type: ignore[16]  # pyre
+            eval_type(
                 test_data.forwardrefs_example.Scatterplot,
                 test_data.forwardrefs_example.__dict__,
                 None,
@@ -1772,7 +1771,7 @@ class TestTryCast(TestCase):
     def test_alias_to_dict_with_forwardrefs(self) -> None:
         # dict with forward refs that have been resolved
         self.assertTryCastSuccess(
-            eval_type(  # type: ignore[16]  # pyre
+            eval_type(
                 test_data.forwardrefs_example.PointForLabel,
                 test_data.forwardrefs_example.__dict__,
                 None,
@@ -2201,7 +2200,7 @@ class _ProxiedHttpRequestEnvelope(RichTypedDict):
 
 class _ProxiedHttpRequest(RichTypedDict):
     url: str
-    method: "_ProxiedHttpMethod"  # type: ignore[98]  # pyre
+    method: "_ProxiedHttpMethod"
     headers: Mapping[str, str]
     content: "_ProxiedHttpContent"
 
@@ -2223,8 +2222,8 @@ class _ProxiedHttpContent(RichTypedDict):
 
 
 class _HttpContentTypeDescriptor(RichTypedDict):
-    family: "_HttpContentTypeFamily"  # type: ignore[6]  # pyre
-    value: "_HttpContentType"  # type: ignore[6]  # pyre
+    family: "_HttpContentTypeFamily"
+    value: "_HttpContentType"
 
 
 _HttpContentTypeFamily = Literal[
@@ -2366,7 +2365,7 @@ class TestCheckCast(TestCase):
         self.assertRaisesEqual(
             ValidationError,
             "Expected tuple[int, ...] but found None",
-            lambda: checkcast(tuple[int, ...], None),  # type: ignore[6]  # pyre
+            lambda: checkcast(tuple[int, ...], None),
         )
         self.assertRaisesEqual(
             ValidationError,
@@ -2376,7 +2375,7 @@ class TestCheckCast(TestCase):
                   At index 0: Expected int but found '1'
                 """.rstrip()
             ),
-            lambda: checkcast(tuple[int, ...], ("1",)),  # type: ignore[6]  # pyre
+            lambda: checkcast(tuple[int, ...], ("1",)),
         )
         self.assertRaisesEqual(
             ValidationError,
@@ -2386,7 +2385,7 @@ class TestCheckCast(TestCase):
                   At index 2: Expected int but found None
                 """.rstrip()
             ),
-            lambda: checkcast(tuple[int, ...], (0, 1, None, 3, None, 5)),  # type: ignore[6]  # pyre
+            lambda: checkcast(tuple[int, ...], (0, 1, None, 3, None, 5)),
         )
 
     def test_big_tuple_t_ellipsis(self) -> None:
@@ -2605,7 +2604,7 @@ class TestCheckCast(TestCase):
                   At index 1: Expected str but found 2
                 """.rstrip()
             ),
-            lambda: checkcast(tuple[int, str], (1, 2)),  # type: ignore[6]  # pyre
+            lambda: checkcast(tuple[int, str], (1, 2)),
         )
 
     def test_big_tuple_ts(self) -> None:
@@ -3031,15 +3030,15 @@ class TestIsTypedDict(TestCase):
 _P = ParamSpec("_P")
 
 
-def _tag(tag_name: str) -> Callable[[Callable[_P, _R]], Callable[_P, _R]]:  # type: ignore[34]  # pyre
+def _tag(tag_name: str) -> Callable[[Callable[_P, _R]], Callable[_P, _R]]:
     """
     Adds a tag to a test method, so that it can be skipped using the
     TRYCAST_SKIP_TEST_TAGS environment variable.
 
     Examples:
-        $ TRYCAST_SKIP_TEST_TAGS=pyright,pyre make test
+        $ TRYCAST_SKIP_TEST_TAGS=pyright make test
     or
-        $ TRYCAST_SKIP_TEST_TAGS=pyright,pyre python -m unittest
+        $ TRYCAST_SKIP_TEST_TAGS=pyright python -m unittest
     """
 
     def decorate(f: Callable[_P, _R]) -> Callable[_P, _R]:
@@ -3082,27 +3081,18 @@ class TestTypechecks(TestCase):
                 f'pyright typechecking failed:\n\n{e.output.decode("utf-8").strip()}'
             )
 
-    @_tag("pyre")
-    def test_no_pyre_typechecker_errors_exist(self) -> None:
+    @_tag("pyrefly")
+    def test_no_pyrefly_typechecker_errors_exist(self) -> None:
         try:
             subprocess.check_output(
-                ["pyre", "check"],
+                ["pyrefly", "check"],
                 env={"LANG": "en_US.UTF-8", "PATH": os.environ.get("PATH", "")},
                 stderr=subprocess.STDOUT,
             )
         except subprocess.CalledProcessError as e:  # pragma: no cover
-            output_str = e.output.decode("utf-8").strip()
-
-            # Don't run pyre during automated tests on macOS 10.14
-            # because pyre won't run on that macOS version.
-            # See: https://github.com/facebook/pyre-check/issues/545
-            if "___darwin_check_fd_set_overflow" in output_str and platform.mac_ver()[
-                0
-            ].startswith("10.14."):
-                self.skipTest("Cannot run Pyre on macOS 10.14")
-                return
-
-            self.fail(f"pyre typechecking failed:\n\n{output_str}")
+            self.fail(
+                f'pyrefly typechecking failed:\n\n{e.output.decode("utf-8").strip()}'
+            )
 
 
 # ------------------------------------------------------------------------------
