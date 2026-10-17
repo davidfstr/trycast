@@ -513,7 +513,8 @@ raised exceptions, and other details.
 * Typing features
     * Literal values are now matched by type as well as by equality,
       following the [typing specification](https://typing.python.org/en/latest/spec/literal.html#equivalence-of-two-literals).
-      ([#39](https://github.com/davidfstr/trycast/pull/39))
+      ([#39](https://github.com/davidfstr/trycast/pull/39),
+      thanks to [@bensynapse](https://github.com/bensynapse))
         * For example `trycast(Literal[1], True)` and `trycast(Literal[1], 1.0)`
           now fail instead of succeeding. **(Breaking change)**
     * Drop support for mypy_extensions.TypedDict, since it was deprecated in Aug 2023.
@@ -538,7 +539,8 @@ raised exceptions, and other details.
   ([#34](https://github.com/davidfstr/trycast/issues/34))
 * Add `py.typed` file so that typecheckers know that the `trycast` module
   bundles its own types.
-  ([#32](https://github.com/davidfstr/trycast/issues/32))
+  ([#32](https://github.com/davidfstr/trycast/issues/32),
+  thanks to [@tusharsadhwani](https://github.com/tusharsadhwani))
 
 ### v1.2.0
 
@@ -594,6 +596,8 @@ raised exceptions, and other details.
 
 * Support X|Y syntax for Union types from 
   [PEP 604](https://peps.python.org/pep-0604/).
+  ([#13](https://github.com/davidfstr/trycast/pull/13),
+  thanks to [@d-k-bo](https://github.com/d-k-bo))
 * Documentation improvements:
     * Improve introduction.
     * Add API reference.
@@ -672,6 +676,8 @@ raised exceptions, and other details.
       typecheckers such as mypy.
 * Extend `trycast()` to recognize `Required[]` and `NotRequired[]` from
   [PEP 655], as imported from `typing_extensions`.
+  ([#12](https://github.com/davidfstr/trycast/pull/12),
+  thanks to [@d-k-bo](https://github.com/d-k-bo))
 * Extend `trycast()` to support a `strict` parameter that controls whether it
   accepts `mypy_extensions.TypedDict` or Python 3.8 `typing.TypedDict`
   instances (which lack certain runtime type information necessary for
