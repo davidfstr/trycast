@@ -479,7 +479,7 @@ raised exceptions, and other details.
 
 * See the [Roadmap](https://github.com/davidfstr/trycast/wiki/Roadmap).
 
-### main (v2.0.0)
+### v2.0.0
 
 * Major ergonomic improvements
     * TypeForm is used in the signature for `trycast`, `checkcast`, and `isassignable`,
