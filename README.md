@@ -307,9 +307,12 @@ make help
 
 Trycast does type check successfully with the following type checkers:
 
-* [Mypy]
-* [Pyright] / [Pylance]
+* [Mypy] 2.2.0 or later
+* [Pyright] 1.1.412 or later / [Pylance]
 * [Pyrefly]
+
+Earlier versions of Mypy and Pyright lack support for `TypeForm`,
+which trycast uses in its function signatures.
 
 
 ## API Reference
